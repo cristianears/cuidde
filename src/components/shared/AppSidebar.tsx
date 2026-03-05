@@ -58,7 +58,7 @@ const sidebarItems: Record<UserRole, SidebarItem[]> = {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
     { icon: ClipboardCheck, label: 'Aprovações', href: '/admin/approvals' },
     { icon: DollarSign, label: 'Financeiro', href: '/admin/finance' },
-    { icon: Shield, label: 'Segurança', href: '/admin/security' },
+    { icon: Shield, label: 'Log do sistema', href: '/admin/security' },
   ],
 };
 
