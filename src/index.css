@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 15%;
+
+    --primary: 213 80% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 97%;
+    --secondary-foreground: 220 30% 15%;
+
+    --muted: 210 30% 96%;
+    --muted-foreground: 220 15% 45%;
+
+    --accent: 152 60% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 213 80% 50%;
+
+    --radius: 0.75rem;
+
+    /* CuidaBem custom tokens - Hero echoes */
+    --hero-gradient: linear-gradient(180deg, hsl(220 30% 12% / 0.75) 0%, hsl(213 80% 25% / 0.5) 50%, hsl(213 80% 50% / 0.3) 100%);
+    --section-muted: 210 35% 98%;
+    --section-warm: 25 30% 97%;
+    --footer-bg: 220 50% 12%;
+    --footer-foreground: 210 30% 90%;
+    --icon-bg: 213 80% 95%;
+    --icon-color: 213 80% 50%;
+    
+    /* Card shadows - refined */
+    --card-shadow: 0 1px 3px 0 hsl(220 30% 15% / 0.04), 0 4px 16px -2px hsl(220 30% 15% / 0.06);
+    --card-shadow-hover: 0 4px 12px -2px hsl(220 30% 15% / 0.08), 0 8px 24px -4px hsl(220 30% 15% / 0.1);
+    
+    /* Hero-derived echo gradients */
+    --echo-blue: linear-gradient(135deg, hsl(213 60% 97%) 0%, hsl(200 50% 98%) 100%);
+    --echo-warm: linear-gradient(135deg, hsl(30 40% 98%) 0%, hsl(25 35% 97%) 100%);
+    --echo-blend: linear-gradient(180deg, hsl(213 40% 98%) 0%, hsl(0 0% 100%) 50%, hsl(25 30% 98%) 100%);
+    
+    /* More expressive echo gradients */
+    --echo-primary-soft: linear-gradient(180deg, hsl(213 60% 97%) 0%, hsl(213 40% 99%) 100%);
+    --echo-warm-visible: linear-gradient(135deg, hsl(30 35% 96%) 0%, hsl(25 30% 98%) 100%);
+    --echo-pink-soft: linear-gradient(135deg, hsl(340 30% 97%) 0%, hsl(330 25% 98%) 100%);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+}
