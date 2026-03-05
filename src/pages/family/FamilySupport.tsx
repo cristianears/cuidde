@@ -13,36 +13,32 @@ import { useToast } from "@/hooks/use-toast";
 
 const faqItems = [
   {
-    question: "Como funciona a CuidaBem?",
-    answer: "A CuidaBem é uma plataforma que conecta famílias a cuidadores de idosos verificados. Você pode buscar profissionais por especialidade, localização e disponibilidade, e contratar diretamente o cuidador ideal para suas necessidades."
+    question: "O cadastro do profissional é realmente gratuito?",
+    answer: "Sim. Profissionais de cuidado podem criar seu perfil gratuitamente, adicionar certificações, cursos e informações relevantes. A Cuidde não cobra comissão sobre os atendimentos realizados."
   },
   {
-    question: "Quem faz a contratação do cuidador?",
-    answer: "A contratação é sempre feita diretamente pela família. A CuidaBem atua como plataforma de conexão, facilitando a busca, verificação e match entre famílias e cuidadores. Oferecemos suporte e orientação durante todo o processo."
+    question: "Quem faz a contratação do profissional?",
+    answer: "A contratação é sempre feita diretamente pela família. A Cuidde é uma plataforma de conexão — facilitamos a busca e o contato, mas a negociação de valores, forma de trabalho e vínculo são definidos exclusivamente entre família e profissional, sem intermediação nossa."
   },
   {
-    question: "A CuidaBem é responsável pelo vínculo empregatício?",
-    answer: "Não. A CuidaBem é uma plataforma de conexão entre famílias e cuidadores. A contratação e o vínculo empregatício são definidos diretamente entre as partes, podendo ser MEI, CLT ou outras modalidades conforme acordado."
+    question: "Como funcionam os documentos e informações do perfil?",
+    answer: "Cada profissional preenche seu próprio perfil e pode anexar documentos e declarações (como certificações e certidões, quando desejar). A Cuidde organiza essas informações para facilitar a avaliação da família. A responsabilidade pela veracidade e atualização do que é enviado é do profissional, e a decisão final é sempre da família."
   },
   {
-    question: "Como são feitos os pagamentos?",
-    answer: "A família realiza o pagamento à CuidaBem apenas referente ao plano de uso da plataforma. O pagamento pelo serviço do cuidador é feito diretamente a ele, conforme valores e condições acordadas entre família e profissional."
+    question: "O que consigo ver no plano gratuito?",
+    answer: "No plano gratuito, você consegue explorar a plataforma com limitações (por exemplo, busca limitada e visualização parcial de perfis), além de ver avaliações. Para liberar chat ilimitado e visualizar documentos completos enviados pelo profissional, é necessário assinar um plano."
   },
   {
-    question: "Os cuidadores são verificados?",
-    answer: "Sim! Todos os cuidadores passam por um processo rigoroso que inclui validação de documentos, análise de antecedentes criminais, verificação de referências profissionais e validação de certificações. Apenas profissionais aprovados podem atender famílias."
+    question: "Posso cancelar minha assinatura a qualquer momento?",
+    answer: "Sim. Não há fidelidade. Você pode cancelar quando quiser, sem multa. O acesso continua ativo até o fim do período já pago (mensal, trimestral ou anual)."
   },
   {
-    question: "Posso substituir o cuidador se não me adaptar?",
-    answer: "Sim. Dependendo do seu plano, você pode solicitar a substituição do cuidador. O plano Match, por exemplo, oferece até 3 substituições em 90 dias. Basta entrar em contato pelo suporte ou buscar um novo profissional na plataforma."
+    question: "A Cuidde é responsável pelo vínculo empregatício?",
+    answer: "Não. A Cuidde é uma plataforma de conexão entre famílias e profissionais de cuidado. A contratação, o vínculo e o pagamento pelo serviço são definidos e realizados diretamente entre as partes. A Cuidde não é empregadora e não intermedia contratos."
   },
   {
-    question: "Como funciona o atendimento em emergências?",
-    answer: "Com o plano Essencial, você tem acesso à localização de profissionais disponíveis nas proximidades em tempo real, além de suporte para emergências e substituições rápidas. O plano Daily também oferece fluxo rápido de contratação para necessidades pontuais."
-  },
-  {
-    question: "Como falo com a equipe da CuidaBem?",
-    answer: "Você pode entrar em contato com a equipe da CuidaBem pelo formulário abaixo nesta página ou pelo e-mail suporte@cuidabem.com. Nossa equipe responde em até 24 horas úteis."
+    question: "Como funcionam os pagamentos?",
+    answer: "A família paga à Cuidde apenas a assinatura do plano escolhido para uso da plataforma. O pagamento pelo serviço prestado pelo profissional é feito diretamente a ele, nos valores e condições acordados entre as partes. A Cuidde não intermedia nem processa pagamentos de serviços de cuidado."
   }
 ];
 
@@ -83,7 +79,7 @@ const FamilySupport = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           <PageHeader
             title="Suporte"
-            description="Tire suas dúvidas e entre em contato com a equipe CuidaBem."
+            description="Tire suas dúvidas e entre em contato com a equipe Cuidde."
           />
 
           <div className="space-y-6 max-w-4xl">
@@ -101,13 +97,17 @@ const FamilySupport = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion type="single" collapsible className="space-y-2.5">
                   {faqItems.map((item, index) => (
-                    <AccordionItem key={index} value={`item-${index}`}>
-                      <AccordionTrigger className="text-left hover:no-underline">
+                    <AccordionItem
+                      key={index}
+                      value={`item-${index}`}
+                      className="bg-card rounded-xl px-5 border border-border/30 shadow-card data-[state=open]:shadow-card-hover transition-all duration-300"
+                    >
+                      <AccordionTrigger className="text-left text-foreground font-medium py-4 hover:no-underline text-sm">
                         {item.question}
                       </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
+                      <AccordionContent className="text-muted-foreground pb-4 leading-relaxed text-xs md:text-sm">
                         {item.answer}
                       </AccordionContent>
                     </AccordionItem>
@@ -124,9 +124,9 @@ const FamilySupport = () => {
                     <MessageSquare className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Fale com a CuidaBem</CardTitle>
+                    <CardTitle className="text-lg">Falar com o suporte</CardTitle>
                     <CardDescription>
-                      Envie sua dúvida ou sugestão para nossa equipe.
+                      Use este formulário para enviar dúvidas, problemas técnicos ou questões sobre sua conta.
                     </CardDescription>
                   </div>
                 </div>
@@ -134,7 +134,7 @@ const FamilySupport = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
                   <Mail className="h-4 w-4 flex-shrink-0" />
-                  <span>Você também pode nos escrever em <strong className="text-foreground">suporte@cuidabem.com</strong></span>
+                  <span>Você também pode nos escrever em <strong className="text-foreground">suporte@cuidde.com.br</strong></span>
                 </div>
 
                 <div className="space-y-2">
