@@ -28,12 +28,6 @@ const healthConditionOptions = [
   "Outros"
 ];
 
-const contractTypeOptions = [
-  { value: "mei-mensalista", label: "MEI (mensalista)" },
-  { value: "mei-plantonista", label: "MEI (plantonista)" },
-  { value: "clt-mensalista", label: "CLT (mensalista)" }
-];
-
 const serviceFormatOptions = [
   { value: "plantoes", label: "Plantões avulsos" },
   { value: "diarias", label: "Diárias" },
@@ -119,7 +113,6 @@ const FamilyProfile = () => {
   const [careNeeds, setCareNeeds] = useState(currentUser.elderlyInfo.careNeeds);
 
   // Preferences
-  const [selectedContractTypes, setSelectedContractTypes] = useState<string[]>(["mei-mensalista"]);
   const [selectedServiceFormats, setSelectedServiceFormats] = useState<string[]>(["diarias"]);
   const [hourlyRange, setHourlyRange] = useState([15, 35]);
   const [dailyRange, setDailyRange] = useState([150, 350]);
@@ -130,14 +123,6 @@ const FamilyProfile = () => {
       prev.includes(condition)
         ? prev.filter(c => c !== condition)
         : [...prev, condition]
-    );
-  };
-
-  const toggleContractType = (type: string) => {
-    setSelectedContractTypes(prev =>
-      prev.includes(type)
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
     );
   };
 
@@ -541,22 +526,6 @@ const FamilyProfile = () => {
               <CardDescription>Essas preferências ajudam a filtrar cuidadores e acelerar o match. Você pode alterar quando quiser.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>Preferência de tipo de contratação</Label>
-                <div className="flex flex-wrap gap-2">
-                  {contractTypeOptions.map((option) => (
-                    <Badge
-                      key={option.value}
-                      variant={selectedContractTypes.includes(option.value) ? "default" : "outline"}
-                      className="cursor-pointer transition-colors"
-                      onClick={() => toggleContractType(option.value)}
-                    >
-                      {option.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
               <div className="space-y-2">
                 <Label>Preferência de formato de atendimento</Label>
                 <div className="flex flex-wrap gap-2">
