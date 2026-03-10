@@ -26,7 +26,7 @@ const Hero = () => {
     navigate(`/onboarding?type=caregiver`);
   };
   const goLogin = () => {
-    navigate(`/onboarding`);
+    navigate('/login');
   };
   return (
     <section className="relative h-[100dvh] flex flex-col pt-16">
