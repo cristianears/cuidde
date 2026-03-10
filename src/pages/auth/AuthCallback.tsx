@@ -53,8 +53,8 @@ export default function AuthCallback() {
 
         navigate(roleHomeMap[pendingRole], { replace: true })
       } else {
-        // Google sem role — voltar ao onboarding para selecionar
-        navigate('/onboarding', { replace: true })
+        // Google sem role — ir para onboarding pulando step de email/senha
+        navigate('/onboarding?from=google', { replace: true })
       }
     }
 

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import {
   Heart,
   Users,
@@ -24,6 +24,8 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { signUpWithEmail, signInWithGoogleForSignup } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 
 type ProfileType = 'family' | 'caregiver' | null
 
@@ -43,7 +45,7 @@ interface FormData {
   description: string
 }
 
-const steps = [
+const ALL_STEPS = [
   { id: 1, label: 'Perfil' },
   { id: 2, label: 'Dados' },
   { id: 3, label: 'Telefone' },
@@ -52,9 +54,28 @@ const steps = [
   { id: 6, label: 'Confirmação' },
 ]
 
+const GoogleIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+  </svg>
+)
+
 const Onboarding = () => {
   const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(1)
+  const [searchParams] = useSearchParams()
+  const { user } = useAuth()
+
+  const isGoogleFlow = searchParams.get('from') === 'google'
+
+  // Passos ativos: Google flow pula o step 2 (email/senha)
+  const steps = isGoogleFlow ? ALL_STEPS.filter((s) => s.id !== 2) : ALL_STEPS
+
+  const [currentStepId, setCurrentStepId] = useState(1)
+  const currentStepIndex = steps.findIndex((s) => s.id === currentStepId)
+
   const [formData, setFormData] = useState<FormData>({
     profileType: null,
     name: '',
@@ -77,10 +98,58 @@ const Onboarding = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
+  // Pré-preencher dados a partir de query params (?type, ?cep, ?email)
+  useEffect(() => {
+    const type = searchParams.get('type') as ProfileType
+    const cepParam = searchParams.get('cep')
+    const emailParam = searchParams.get('email')
+
+    if (type === 'family' || type === 'caregiver') {
+      setFormData((prev) => ({ ...prev, profileType: type }))
+    }
+    if (emailParam) {
+      setFormData((prev) => ({ ...prev, email: emailParam }))
+    }
+    if (cepParam) {
+      const clean = cepParam.replace(/\D/g, '')
+      if (clean.length === 8) {
+        setFormData((prev) => ({ ...prev, cep: cepParam }))
+        fetchAddressByCep(clean).then((address) => {
+          if (address) {
+            setFormData((prev) => ({
+              ...prev,
+              street: address.street,
+              neighborhood: address.neighborhood,
+              city: address.city,
+              state: address.state,
+            }))
+            setCepFilled(true)
+          }
+        })
+      }
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pré-preencher nome/email do Google OAuth
+  useEffect(() => {
+    if (isGoogleFlow && user) {
+      const name =
+        (user.user_metadata?.full_name as string | undefined) ||
+        (user.user_metadata?.name as string | undefined) ||
+        ''
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || name,
+        email: prev.email || user.email || '',
+      }))
+    }
+  }, [isGoogleFlow, user])
+
   const hasMinLength = formData.password.length >= 8
   const hasUpperCase = /[A-Z]/.test(formData.password)
   const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
-  const passwordsMatch = formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
+  const passwordsMatch =
+    formData.password === formData.confirmPassword && formData.confirmPassword.length > 0
   const isPasswordStrong = hasMinLength && hasUpperCase && hasSpecialChar
 
   const updateFormData = (field: keyof FormData, value: string | ProfileType) => {
@@ -106,7 +175,6 @@ const Onboarding = () => {
         toast.error(error.message)
         setIsGoogleLoading(false)
       }
-      // Se sucesso, o redirect para Google acontece automaticamente
     } catch {
       setIsGoogleLoading(false)
     }
@@ -138,33 +206,54 @@ const Onboarding = () => {
   }
 
   const nextStep = () => {
-    if (currentStep < steps.length) setCurrentStep(currentStep + 1)
+    if (currentStepIndex < steps.length - 1) {
+      setCurrentStepId(steps[currentStepIndex + 1].id)
+    }
   }
   const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1)
+    if (currentStepIndex > 0) {
+      setCurrentStepId(steps[currentStepIndex - 1].id)
+    }
   }
 
   const handleSubmit = async () => {
     if (!formData.profileType) return
     setIsSubmitting(true)
     try {
-      const { error } = await signUpWithEmail(formData.email, formData.password, {
-        role: formData.profileType,
-        full_name: formData.name,
-        phone: formData.phone,
-      })
-      if (error) {
-        toast.error(error.message)
-        return
+      if (isGoogleFlow && user) {
+        // Usuário já autenticado via Google — apenas atualizar o perfil
+        await supabase
+          .from('profiles')
+          .update({ role: formData.profileType, phone: formData.phone })
+          .eq('id', user.id)
+
+        if (formData.profileType === 'caregiver') {
+          await supabase.from('caregiver_profiles').upsert({ id: user.id })
+        } else {
+          await supabase.from('family_profiles').upsert({ id: user.id })
+        }
+
+        navigate(formData.profileType === 'caregiver' ? '/caregiver' : '/family', { replace: true })
+      } else {
+        // Fluxo de email/senha
+        const { error } = await signUpWithEmail(formData.email, formData.password, {
+          role: formData.profileType,
+          full_name: formData.name,
+          phone: formData.phone,
+        })
+        if (error) {
+          toast.error(error.message)
+          return
+        }
+        navigate('/verify-email', { replace: true })
       }
-      navigate('/verify-email', { replace: true })
     } finally {
       setIsSubmitting(false)
     }
   }
 
   const canProceed = () => {
-    switch (currentStep) {
+    switch (currentStepId) {
       case 1:
         return formData.profileType !== null
       case 2:
@@ -201,31 +290,34 @@ const Onboarding = () => {
       </header>
 
       <main className="container mx-auto px-6 py-12 max-w-xl">
+        {/* Progress bar */}
         <div className="mb-12">
           <div className="flex items-center justify-between relative">
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-border mx-8" />
             <div
               className="absolute top-5 left-0 h-0.5 bg-accent mx-8 transition-all duration-500 ease-out"
-              style={{ width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 4rem)` }}
+              style={{
+                width: `calc(${(currentStepIndex / (steps.length - 1)) * 100}% - 4rem)`,
+              }}
             />
-            {steps.map((step) => (
+            {steps.map((step, idx) => (
               <div key={step.id} className="flex flex-col items-center relative z-10">
                 <div
                   className={cn(
                     'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 shadow-sm',
-                    currentStep > step.id
+                    currentStepIndex > idx
                       ? 'bg-accent text-accent-foreground shadow-accent/30'
-                      : currentStep === step.id
+                      : currentStepIndex === idx
                         ? 'bg-primary text-primary-foreground shadow-primary/30 ring-4 ring-primary/20'
                         : 'bg-card text-muted-foreground border-2 border-border',
                   )}
                 >
-                  {currentStep > step.id ? <CheckCircle2 className="w-5 h-5" /> : step.id}
+                  {currentStepIndex > idx ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
                 </div>
                 <span
                   className={cn(
                     'mt-3 text-xs font-medium transition-colors',
-                    currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground',
+                    currentStepIndex >= idx ? 'text-foreground' : 'text-muted-foreground',
                   )}
                 >
                   {step.label}
@@ -237,8 +329,9 @@ const Onboarding = () => {
 
         <Card className="shadow-card border-border/50 overflow-hidden">
           <CardContent className="p-8 sm:p-10">
-            {/* Step 1 */}
-            {currentStep === 1 && (
+
+            {/* ── STEP 1: PERFIL ── */}
+            {currentStepId === 1 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a cuidde?</h2>
@@ -332,43 +425,41 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Step 2 */}
-            {currentStep === 2 && (
+            {/* ── STEP 2: DADOS (email flow only) ── */}
+            {currentStepId === 2 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Crie sua conta</h2>
                   <p className="text-muted-foreground mt-2">Preencha seus dados para começar</p>
                 </div>
                 <div className="space-y-5">
-                  {/* Google OAuth */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 rounded-xl border-border/80 font-medium gap-3"
-                    onClick={handleGoogleSignup}
-                    disabled={isGoogleLoading}
-                  >
-                    {isGoogleLoading ? (
-                      <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                      </svg>
-                    )}
-                    Cadastrar com Google
-                  </Button>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border/60" />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-card px-3 text-muted-foreground">ou cadastre com email</span>
-                    </div>
-                  </div>
+                  {/* Google OAuth (só no flow email) */}
+                  {!isGoogleFlow && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-12 rounded-xl border-border/80 font-medium gap-3"
+                        onClick={handleGoogleSignup}
+                        disabled={isGoogleLoading}
+                      >
+                        {isGoogleLoading ? (
+                          <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <GoogleIcon />
+                        )}
+                        Cadastrar com Google
+                      </Button>
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-border/60" />
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="bg-card px-3 text-muted-foreground">ou cadastre com email</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <div>
                     <Label htmlFor="name" className="text-foreground font-medium">
@@ -480,8 +571,8 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Step 3 */}
-            {currentStep === 3 && (
+            {/* ── STEP 3: TELEFONE ── */}
+            {currentStepId === 3 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -514,8 +605,8 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Step 4 */}
-            {currentStep === 4 && (
+            {/* ── STEP 4: ENDEREÇO ── */}
+            {currentStepId === 4 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Qual é o seu endereço?</h2>
@@ -633,8 +724,8 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Step 5 */}
-            {currentStep === 5 && (
+            {/* ── STEP 5: INFORMAÇÕES ── */}
+            {currentStepId === 5 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">
@@ -672,8 +763,8 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Step 6 */}
-            {currentStep === 6 && (
+            {/* ── STEP 6: CONFIRMAÇÃO ── */}
+            {currentStepId === 6 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
@@ -681,9 +772,11 @@ const Onboarding = () => {
                   </div>
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Tudo pronto!</h2>
                   <p className="text-muted-foreground mt-2">
-                    {formData.profileType === 'family'
-                      ? 'Revise seus dados e confirme o cadastro.'
-                      : 'Revise seus dados e confirme o cadastro. Complete seu perfil após o login.'}
+                    {isGoogleFlow
+                      ? 'Revise seus dados e finalize o cadastro.'
+                      : formData.profileType === 'family'
+                        ? 'Revise seus dados e confirme o cadastro.'
+                        : 'Revise seus dados e confirme o cadastro. Complete seu perfil após o login.'}
                   </p>
                 </div>
                 <div className="bg-muted/50 rounded-2xl p-6 space-y-4">
@@ -694,14 +787,20 @@ const Onboarding = () => {
                         label: 'Tipo de perfil',
                         value: formData.profileType === 'family' ? 'Família' : 'Profissional de Saúde',
                       },
-                      { label: 'Nome', value: formData.name },
-                      { label: 'E-mail', value: formData.email },
-                      { label: 'Telefone', value: formData.phone },
-                      { label: 'Localização', value: `${formData.city}, ${formData.state}` },
+                      { label: 'Nome', value: formData.name || user?.user_metadata?.full_name || '—' },
+                      { label: 'E-mail', value: formData.email || user?.email || '—' },
+                      { label: 'Telefone', value: formData.phone || '—' },
+                      {
+                        label: 'Localização',
+                        value: formData.city && formData.state ? `${formData.city}, ${formData.state}` : '—',
+                      },
                     ].map((item, i, arr) => (
                       <div
                         key={i}
-                        className={cn('flex justify-between py-2', i < arr.length - 1 && 'border-b border-border/50')}
+                        className={cn(
+                          'flex justify-between py-2',
+                          i < arr.length - 1 && 'border-b border-border/50',
+                        )}
                       >
                         <span className="text-muted-foreground">{item.label}</span>
                         <span className="font-medium text-foreground">{item.value}</span>
@@ -712,9 +811,9 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Navigation */}
+            {/* ── NAVEGAÇÃO ── */}
             <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
-              {currentStep > 1 ? (
+              {currentStepIndex > 0 ? (
                 <Button
                   variant="ghost"
                   onClick={prevStep}
@@ -727,7 +826,7 @@ const Onboarding = () => {
                 <div />
               )}
 
-              {currentStep < steps.length ? (
+              {currentStepIndex < steps.length - 1 ? (
                 <Button
                   onClick={nextStep}
                   disabled={!canProceed()}
@@ -746,7 +845,7 @@ const Onboarding = () => {
                     <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      Criar conta
+                      {isGoogleFlow ? 'Finalizar cadastro' : 'Criar conta'}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
