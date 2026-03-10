@@ -38,6 +38,12 @@ export async function signInWithGoogle() {
   })
 }
 
+/** Usado no cadastro: salva o role no localStorage antes do redirect OAuth */
+export async function signInWithGoogleForSignup(role: string) {
+  localStorage.setItem('cuidde_pending_role', role)
+  return signInWithGoogle()
+}
+
 export async function signOut() {
   return supabase.auth.signOut()
 }

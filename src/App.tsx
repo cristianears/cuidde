@@ -9,6 +9,7 @@ import Index from './pages/Index'
 import NotFound from './pages/NotFound'
 import Login from './pages/auth/Login'
 import VerifyEmail from './pages/auth/VerifyEmail'
+import AuthCallback from './pages/auth/AuthCallback'
 import Onboarding from './pages/onboarding/Onboarding'
 import CaregiverDashboard from './pages/caregiver/CaregiverDashboard'
 import CaregiverProfile from './pages/caregiver/CaregiverProfile'
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/onboarding" element={<Onboarding />} />
 
             {/* Rotas de cuidador */}
