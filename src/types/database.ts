@@ -1,0 +1,408 @@
+// Tipos TypeScript derivados do schema do Supabase (SPEC.md)
+// NÃO editar manualmente — derivar sempre do schema real do banco
+
+// ─── Enums / Union Types ──────────────────────────────────────────────────────
+
+export type UserRole = 'caregiver' | 'family' | 'admin'
+
+export type CaregiverStatus = 'pending' | 'analyzing' | 'verified' | 'rejected'
+
+export type ProfissaoFormacao =
+  | 'cuidador'
+  | 'tecnico_enfermagem'
+  | 'auxiliar_enfermagem'
+  | 'enfermeiro'
+  | 'fisioterapeuta'
+  | 'terapeuta_ocupacional'
+  | 'outro'
+
+export type CategoriaCNH = 'A' | 'B' | 'AB' | 'C' | 'D' | 'E'
+
+export type ProfessionalRegType = 'coren' | 'crefito' | 'outros'
+
+export type DocumentType =
+  | 'rg_cnh'
+  | 'cnpj'
+  | 'curriculo'
+  | 'certificacao'
+  | 'antecedentes'
+
+export type DocumentStatus = 'pending' | 'sent' | 'approved' | 'rejected'
+
+export type SubscriptionPlan = 'monthly' | 'quarterly' | 'annual'
+
+export type SubscriptionStatus =
+  | 'free'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'incomplete'
+
+export type AppointmentType = 'plantão' | 'contínuo' | 'turno'
+
+export type AppointmentStatus = 'pendente' | 'ativo' | 'finalizado' | 'cancelado'
+
+export type CareShift = 'morning' | 'afternoon' | 'night'
+
+export type CareType =
+  | 'hygiene'
+  | 'medication'
+  | 'feeding'
+  | 'mobility'
+  | 'appointments'
+  | 'monitoring'
+  | 'other'
+
+export type InvoiceStatus = 'paid' | 'pending' | 'open' | 'overdue'
+
+export type SupportSubject =
+  | 'conta'
+  | 'documentos'
+  | 'atendimentos'
+  | 'avaliacoes'
+  | 'visibilidade'
+  | 'sugestoes'
+  | 'outro'
+
+export type SupportTicketStatus = 'enviado' | 'em_analise' | 'respondido'
+
+// ─── Tabela: profiles ────────────────────────────────────────────────────────
+
+export interface Profile {
+  id: string
+  role: UserRole
+  full_name: string | null
+  phone: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ─── Tabela: caregiver_profiles ──────────────────────────────────────────────
+
+export interface CaregiverProfile {
+  id: string
+  // Dados pessoais
+  photo_url: string | null
+  whatsapp: string | null
+  bio: string | null
+  // Endereço
+  cep: string | null
+  street: string | null
+  number: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  // Profissional
+  specialties: string[]
+  modalities: string[]
+  idiomas: string[]
+  experience_years: number
+  profissao_formacao: ProfissaoFormacao | null
+  formacao_complementar: string | null
+  // CNH
+  possui_cnh: boolean
+  categoria_cnh: CategoriaCNH | null
+  // Seguro
+  has_insurance: boolean
+  // Disponibilidade emergencial (C7)
+  emergency_available: boolean
+  // Preços
+  price_per_hour: number | null
+  price_per_day: number | null
+  // Registro profissional
+  professional_reg_type: ProfessionalRegType | null
+  professional_reg_number: string | null
+  professional_reg_uf: string | null
+  professional_reg_other_desc: string | null
+  // Status e visibilidade
+  status: CaregiverStatus
+  rejection_reason: string | null
+  is_visible: boolean
+  // Privacidade das referências
+  show_refs_to_subscribers: boolean
+  mask_reference_phones: boolean
+  show_reference_full_names: boolean
+  // Métricas
+  profile_views_30d: number
+  search_appearances_30d: number
+  interested_families_30d: number
+  average_rating: number
+  review_count: number
+  created_at: string
+  updated_at: string
+}
+
+// ─── Tabela: professional_references ─────────────────────────────────────────
+
+export interface ProfessionalReference {
+  id: string
+  caregiver_id: string
+  name: string
+  phone: string
+  workplace: string | null
+  position: string | null
+  work_duration: string | null
+  notes: string | null
+  created_at: string
+}
+
+// ─── Tabela: caregiver_documents ─────────────────────────────────────────────
+
+export interface CaregiverDocument {
+  id: string
+  caregiver_id: string
+  type: DocumentType
+  file_url: string | null
+  file_name: string | null
+  status: DocumentStatus
+  is_visible: boolean
+  required: boolean
+  reviewed_at: string | null
+  uploaded_at: string | null
+  created_at: string
+}
+
+// ─── Tabela: caregiver_availability ──────────────────────────────────────────
+
+export interface CaregiverAvailability {
+  id: string
+  caregiver_id: string
+  day_of_week: 0 | 1 | 2 | 3 | 4 | 5 | 6  // 0 = domingo, 6 = sábado
+  start_time: string  // formato 'HH:MM'
+  end_time: string    // formato 'HH:MM'
+  created_at: string
+}
+
+// ─── Tabela: family_profiles ──────────────────────────────────────────────────
+
+export interface FamilyProfile {
+  id: string
+  photo_url: string | null
+  // Responsável
+  relationship: string | null
+  // Endereço
+  cep: string | null
+  street: string | null
+  number: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  // Idoso
+  elderly_name: string | null
+  elderly_age: number | null
+  elderly_conditions: string[]
+  blood_type: string | null
+  pre_existing_conditions: string | null
+  allergies: string | null
+  continuous_medications: string | null
+  responsible_doctor: string | null
+  health_insurance: string | null
+  care_needs: string | null
+  // Preferências de contratação
+  service_formats: string[]
+  hourly_range_min: number | null
+  hourly_range_max: number | null
+  daily_range_min: number | null
+  daily_range_max: number | null
+  distance_preference: string | null
+  // Stripe
+  stripe_customer_id: string | null
+  plan: SubscriptionPlan | null
+  subscription_status: SubscriptionStatus
+  stripe_subscription_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ─── Tabela: appointments ─────────────────────────────────────────────────────
+
+export interface Appointment {
+  id: string
+  family_id: string
+  caregiver_id: string
+  type: AppointmentType
+  status: AppointmentStatus
+  start_date: string   // formato 'YYYY-MM-DD'
+  end_date: string | null
+  description: string | null
+  family_notes: string | null
+  modality: string | null
+  observations: string | null
+  total_amount: number | null
+  cancelled_by: string | null
+  cancel_reason: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ─── Tabela: care_routines ────────────────────────────────────────────────────
+
+export interface CareRoutine {
+  id: string
+  appointment_id: string
+  date: string          // formato 'YYYY-MM-DD'
+  shift: CareShift
+  care_types: CareType[]
+  observations: string | null
+  has_occurrence: boolean
+  occurrence_description: string | null
+  recorded_at: string
+}
+
+// ─── Tabela: messages ─────────────────────────────────────────────────────────
+
+export interface Message {
+  id: string
+  appointment_id: string
+  sender_id: string
+  content: string
+  read_at: string | null
+  created_at: string
+}
+
+// ─── Tabela: reviews ──────────────────────────────────────────────────────────
+
+export interface Review {
+  id: string
+  appointment_id: string | null
+  family_id: string
+  caregiver_id: string
+  family_name: string | null
+  family_photo: string | null
+  rating: number    // 1.0 a 5.0, permite decimal (ex: 4.5)
+  comment: string | null
+  created_at: string
+}
+
+// ─── Tabela: favorites ────────────────────────────────────────────────────────
+
+export interface Favorite {
+  id: string
+  family_id: string
+  caregiver_id: string
+  created_at: string
+}
+
+// ─── Tabela: invoices ─────────────────────────────────────────────────────────
+
+export interface Invoice {
+  id: string
+  family_id: string
+  invoice_ref: string | null    // ex: 'INV-2026-003'
+  period: string | null         // ex: 'Março 2026'
+  plan: SubscriptionPlan | null
+  amount: number
+  status: InvoiceStatus
+  stripe_invoice_id: string | null
+  stripe_payment_intent_id: string | null
+  due_date: string | null       // formato 'YYYY-MM-DD'
+  paid_at: string | null
+  created_at: string
+}
+
+// ─── Tabela: support_tickets ──────────────────────────────────────────────────
+
+export interface SupportTicket {
+  id: string
+  user_id: string
+  subject: SupportSubject
+  message: string
+  status: SupportTicketStatus
+  admin_reply: string | null
+  created_at: string
+  updated_at: string
+}
+
+// ─── Tabela: system_logs ──────────────────────────────────────────────────────
+
+export interface SystemLog {
+  id: string
+  user_id: string | null    // pode ser NULL se usuário foi deletado
+  user_name: string | null
+  user_role: UserRole | null
+  action: string
+  details: string | null
+  created_at: string
+}
+
+// ─── Tipo Database (usado para tipar o cliente Supabase) ─────────────────────
+
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: Profile
+        Insert: Omit<Profile, 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Profile, 'id' | 'created_at'>>
+      }
+      caregiver_profiles: {
+        Row: CaregiverProfile
+        Insert: Pick<CaregiverProfile, 'id'>
+        Update: Partial<Omit<CaregiverProfile, 'id' | 'created_at'>>
+      }
+      professional_references: {
+        Row: ProfessionalReference
+        Insert: Omit<ProfessionalReference, 'id' | 'created_at'>
+        Update: Partial<Omit<ProfessionalReference, 'id' | 'created_at'>>
+      }
+      caregiver_documents: {
+        Row: CaregiverDocument
+        Insert: Omit<CaregiverDocument, 'id' | 'created_at'>
+        Update: Partial<Omit<CaregiverDocument, 'id' | 'created_at'>>
+      }
+      caregiver_availability: {
+        Row: CaregiverAvailability
+        Insert: Omit<CaregiverAvailability, 'id' | 'created_at'>
+        Update: Partial<Omit<CaregiverAvailability, 'id' | 'created_at'>>
+      }
+      family_profiles: {
+        Row: FamilyProfile
+        Insert: Pick<FamilyProfile, 'id'>
+        Update: Partial<Omit<FamilyProfile, 'id' | 'created_at'>>
+      }
+      appointments: {
+        Row: Appointment
+        Insert: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<Appointment, 'id' | 'created_at'>>
+      }
+      care_routines: {
+        Row: CareRoutine
+        Insert: Omit<CareRoutine, 'id' | 'recorded_at'>
+        Update: Partial<Omit<CareRoutine, 'id' | 'recorded_at'>>
+      }
+      messages: {
+        Row: Message
+        Insert: Omit<Message, 'id' | 'created_at'>
+        Update: Partial<Omit<Message, 'id' | 'created_at'>>
+      }
+      reviews: {
+        Row: Review
+        Insert: Omit<Review, 'id' | 'created_at'>
+        Update: Partial<Omit<Review, 'id' | 'created_at'>>
+      }
+      favorites: {
+        Row: Favorite
+        Insert: Omit<Favorite, 'id' | 'created_at'>
+        Update: never
+      }
+      invoices: {
+        Row: Invoice
+        Insert: Omit<Invoice, 'id' | 'created_at'>
+        Update: Partial<Omit<Invoice, 'id' | 'created_at'>>
+      }
+      support_tickets: {
+        Row: SupportTicket
+        Insert: Omit<SupportTicket, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<SupportTicket, 'id' | 'created_at'>>
+      }
+      system_logs: {
+        Row: SystemLog
+        Insert: Omit<SystemLog, 'id' | 'created_at'>
+        Update: never
+      }
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+  }
+}
