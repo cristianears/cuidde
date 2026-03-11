@@ -305,43 +305,6 @@ const Onboarding = () => {
       </header>
 
       <main className="container mx-auto px-6 py-12 max-w-xl">
-        {/* Progress bar */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute top-5 left-0 right-0 h-0.5 bg-border mx-8" />
-            <div
-              className="absolute top-5 left-0 h-0.5 bg-accent mx-8 transition-all duration-500 ease-out"
-              style={{
-                width: `calc(${(currentStepIndex / (steps.length - 1)) * 100}% - 4rem)`,
-              }}
-            />
-            {steps.map((step, idx) => (
-              <div key={step.id} className="flex flex-col items-center relative z-10">
-                <div
-                  className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 shadow-sm',
-                    currentStepIndex > idx
-                      ? 'bg-accent text-accent-foreground shadow-accent/30'
-                      : currentStepIndex === idx
-                        ? 'bg-primary text-primary-foreground shadow-primary/30 ring-4 ring-primary/20'
-                        : 'bg-card text-muted-foreground border-2 border-border',
-                  )}
-                >
-                  {currentStepIndex > idx ? <CheckCircle2 className="w-5 h-5" /> : idx + 1}
-                </div>
-                <span
-                  className={cn(
-                    'mt-3 text-xs font-medium transition-colors',
-                    currentStepIndex >= idx ? 'text-foreground' : 'text-muted-foreground',
-                  )}
-                >
-                  {step.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <Card className="shadow-card border-border/50 overflow-hidden">
           <CardContent className="p-6 sm:p-8">
 
