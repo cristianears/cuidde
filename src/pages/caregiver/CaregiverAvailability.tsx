@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,9 +16,9 @@ import {
   MessageSquare,
   ArrowLeft,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { mockCaregivers } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile, useUpdateAvailability } from "@/hooks/useCaregiverProfile";
 
 const journeyTypes = [
   { id: "plantoes", label: "Plantões avulsos", desc: "Atendimentos pontuais e esporádicos" },
@@ -42,13 +42,28 @@ const radiusOptions = [
 
 const CaregiverAvailability = () => {
   const navigate = useNavigate();
-  const currentUser = mockCaregivers[0];
+  const { user } = useAuth()
+  const { data: profileData } = useCaregiverProfile()
+  const updateAvailability = useUpdateAvailability()
 
   const [isAvailable, setIsAvailable] = useState(true);
   const [selectedJourneyTypes, setSelectedJourneyTypes] = useState<string[]>(["diarias"]);
   const [areaType, setAreaType] = useState<"bairro" | "cidade" | "proximas">("cidade");
   const [radius, setRadius] = useState("10");
   const [observations, setObservations] = useState("");
+
+  // Sincronizar com dados reais quando carregarem
+  useEffect(() => {
+    if (profileData) {
+      setIsAvailable(profileData.is_available_for_new ?? true)
+      setSelectedJourneyTypes(
+        profileData.journey_types?.length ? profileData.journey_types : ["diarias"]
+      )
+      setAreaType((profileData.area_type ?? "cidade") as typeof areaType)
+      setRadius(profileData.area_radius ?? "10")
+      setObservations(profileData.availability_notes ?? "")
+    }
+  }, [profileData])
 
   const toggleJourneyType = (id: string) => {
     setSelectedJourneyTypes((prev) =>
@@ -57,12 +72,22 @@ const CaregiverAvailability = () => {
   };
 
   const handleSave = () => {
-    toast.success("Disponibilidade atualizada com sucesso");
+    updateAvailability.mutate({
+      is_available_for_new: isAvailable,
+      journey_types: selectedJourneyTypes,
+      area_type: areaType,
+      area_radius: areaType === "proximas" ? radius : null,
+      availability_notes: observations,
+    })
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar
+        role="caregiver"
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
+      />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-3xl space-y-4 md:space-y-6">
@@ -277,7 +302,14 @@ const CaregiverAvailability = () => {
               <ArrowLeft className="w-4 h-4" />
               Voltar
             </Button>
-            <Button onClick={handleSave} className="flex-1 sm:flex-none">
+            <Button
+              onClick={handleSave}
+              disabled={updateAvailability.isPending}
+              className="flex-1 sm:flex-none"
+            >
+              {updateAvailability.isPending ? (
+                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+              ) : null}
               Salvar disponibilidade
             </Button>
           </div>

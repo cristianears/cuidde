@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Save, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, Save } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 
 // Mock data for appointments
 const mockAppointments = [
@@ -57,6 +59,9 @@ const defaultSettings: VisibilitySettings = {
 
 const CaregiverVisibility = () => {
   const { toast } = useToast();
+  const { user } = useAuth()
+  const { data: profileData } = useCaregiverProfile()
+
   const [selectedAppointment, setSelectedAppointment] = useState<string>("");
   const [settings, setSettings] = useState<VisibilitySettings>(defaultSettings);
   const [isSaving, setIsSaving] = useState(false);
@@ -117,8 +122,8 @@ const CaregiverVisibility = () => {
     <div className="min-h-screen flex w-full bg-background">
       <AppSidebar
         role="caregiver"
-        userName="Ana Costa"
-        verificationStatus="verified"
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
       />
 
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">

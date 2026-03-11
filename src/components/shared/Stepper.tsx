@@ -11,9 +11,10 @@ interface StepperProps {
   steps: Step[];
   currentStep: number;
   className?: string;
+  onStepClick?: (stepId: number) => void;
 }
 
-const Stepper = ({ steps, currentStep, className }: StepperProps) => {
+const Stepper = ({ steps, currentStep, className, onStepClick }: StepperProps) => {
   return (
     <div className={cn("w-full", className)}>
       <div className="flex items-center justify-between">
@@ -21,9 +22,13 @@ const Stepper = ({ steps, currentStep, className }: StepperProps) => {
           <div key={step.id} className="flex items-center flex-1">
             {/* Step Circle */}
             <div className="flex flex-col items-center">
-              <div
+              <button
+                type="button"
+                onClick={() => onStepClick?.(step.id)}
+                disabled={!onStepClick}
                 className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center font-medium text-sm transition-all duration-300",
+                  onStepClick ? "cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" : "cursor-default",
                   currentStep > step.id
                     ? "bg-accent text-accent-foreground"
                     : currentStep === step.id
@@ -36,7 +41,7 @@ const Stepper = ({ steps, currentStep, className }: StepperProps) => {
                 ) : (
                   step.id
                 )}
-              </div>
+              </button>
               <div className="mt-2 text-center">
                 <p
                   className={cn(

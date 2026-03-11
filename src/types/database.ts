@@ -70,7 +70,7 @@ export type SupportTicketStatus = 'enviado' | 'em_analise' | 'respondido'
 
 export interface Profile {
   id: string
-  role: UserRole
+  role: UserRole | null  // nullable para cadastro Google (role definido no onboarding)
   full_name: string | null
   phone: string | null
   created_at: string
@@ -89,6 +89,7 @@ export interface CaregiverProfile {
   cep: string | null
   street: string | null
   number: string | null
+  complement: string | null
   neighborhood: string | null
   city: string | null
   state: string | null
@@ -106,9 +107,16 @@ export interface CaregiverProfile {
   has_insurance: boolean
   // Disponibilidade emergencial (C7)
   emergency_available: boolean
+  // Disponibilidade
+  is_available_for_new: boolean
+  journey_types: string[]
+  area_type: string | null
+  area_radius: string | null
+  availability_notes: string | null
   // Preços
   price_per_hour: number | null
   price_per_day: number | null
+  pricing_note: string | null
   // Registro profissional
   professional_reg_type: ProfessionalRegType | null
   professional_reg_number: string | null

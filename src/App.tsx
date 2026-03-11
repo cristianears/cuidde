@@ -17,7 +17,6 @@ import CaregiverDocuments from './pages/caregiver/CaregiverDocuments'
 import CaregiverReviews from './pages/caregiver/CaregiverReviews'
 import CaregiverAvailability from './pages/caregiver/CaregiverAvailability'
 import CaregiverPricing from './pages/caregiver/CaregiverPricing'
-import CaregiverVisibility from './pages/caregiver/CaregiverVisibility'
 import CaregiverSupport from './pages/caregiver/CaregiverSupport'
 import CaregiverAppointments from './pages/caregiver/CaregiverAppointments'
 import AppointmentDetails from './pages/caregiver/AppointmentDetails'
@@ -63,7 +62,6 @@ const App = () => (
             <Route path="/caregiver/reviews" element={<ProtectedRoute role="caregiver"><CaregiverReviews /></ProtectedRoute>} />
             <Route path="/caregiver/availability" element={<ProtectedRoute role="caregiver"><CaregiverAvailability /></ProtectedRoute>} />
             <Route path="/caregiver/pricing" element={<ProtectedRoute role="caregiver"><CaregiverPricing /></ProtectedRoute>} />
-            <Route path="/caregiver/visibility" element={<ProtectedRoute role="caregiver"><CaregiverVisibility /></ProtectedRoute>} />
             <Route path="/caregiver/support" element={<ProtectedRoute role="caregiver"><CaregiverSupport /></ProtectedRoute>} />
             <Route path="/caregiver/appointments" element={<ProtectedRoute role="caregiver"><CaregiverAppointments /></ProtectedRoute>} />
             <Route path="/caregiver/appointments/:id" element={<ProtectedRoute role="caregiver"><AppointmentDetails /></ProtectedRoute>} />
