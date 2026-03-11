@@ -304,13 +304,13 @@ const Onboarding = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12 max-w-xl">
+      <main className="container mx-auto px-6 py-6 max-w-xl">
         <Card className="shadow-card border-border/50 overflow-hidden">
-          <CardContent className="p-6 sm:p-8">
+          <CardContent className="p-5 sm:p-7">
 
             {/* ── STEP 1: MÉTODO DE CADASTRO ── */}
             {currentStepId === 1 && (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Cadastre-se grátis</h2>
                   <p className="text-muted-foreground mt-2">Escolha como quer criar sua conta</p>
@@ -354,7 +354,7 @@ const Onboarding = () => {
 
             {/* ── STEP 2: PERFIL (role selection) ── */}
             {currentStepId === 2 && (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a cuidde?</h2>
                   <p className="text-muted-foreground mt-2">Escolha o perfil que melhor representa você</p>
@@ -449,7 +449,7 @@ const Onboarding = () => {
 
             {/* ── STEP 3: DADOS PESSOAIS (email flow only) ── */}
             {currentStepId === 3 && (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Crie sua conta</h2>
                   <p className="text-muted-foreground mt-2">Preencha seus dados para começar</p>
@@ -567,7 +567,7 @@ const Onboarding = () => {
 
             {/* ── STEP 4: TELEFONE ── */}
             {currentStepId === 4 && (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-primary" />
@@ -601,7 +601,7 @@ const Onboarding = () => {
 
             {/* ── STEP 5: ENDEREÇO ── */}
             {currentStepId === 5 && (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Qual é o seu endereço?</h2>
                   <p className="text-muted-foreground mt-2">
@@ -742,7 +742,7 @@ const Onboarding = () => {
 
             {/* ── STEP 7: CONFIRMAÇÃO ── */}
             {currentStepId === 7 && (
-              <div className="space-y-8 animate-fade-in">
+              <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
                   <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
                     <CheckCircle2 className="w-10 h-10 text-accent" />
@@ -790,7 +790,7 @@ const Onboarding = () => {
 
             {/* ── NAVEGAÇÃO (hidden on step 1 — it has its own buttons) ── */}
             {currentStepId !== 1 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
                 {currentStepIndex > 0 ? (
                   <Button
                     variant="ghost"
