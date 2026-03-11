@@ -1,10 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-
-const PENDING_ROLE_KEY = 'cuidde_pending_role'
 
 const roleHomeMap: Record<string, string> = {
   caregiver: '/caregiver',
@@ -14,52 +12,50 @@ const roleHomeMap: Record<string, string> = {
 
 export default function AuthCallback() {
   const navigate = useNavigate()
-  const { user, profile, isLoading } = useAuth()
+  const { user, isLoading } = useAuth()
+  const [checking, setChecking] = useState(false)
 
   useEffect(() => {
     if (isLoading) return
+    if (checking) return
 
-    async function resolveCallback() {
-      // Sem usuário após a troca do código → voltar para login
-      if (!user) {
+    if (!user) {
+      // Ainda sem user — pode ser que o AuthContext não processou o token ainda.
+      // Aguarda um ciclo. Se depois de 3s não tiver user, vai pro login.
+      const timeout = setTimeout(() => {
         navigate('/login', { replace: true })
-        return
-      }
+      }, 3000)
+      return () => clearTimeout(timeout)
+    }
 
-      // Perfil já tem role (login Google de usuário existente)
-      if (profile?.role) {
-        navigate(roleHomeMap[profile.role] ?? '/', { replace: true })
-        return
-      }
+    // User existe — busca o profile DIRETAMENTE do banco para evitar
+    // race condition com o AuthContext (que pode ainda não ter atualizado)
+    setChecking(true)
 
-      // Novo usuário Google — verificar role salvo antes do redirect
-      const pendingRole = localStorage.getItem(PENDING_ROLE_KEY)
-
-      if (pendingRole === 'family' || pendingRole === 'caregiver') {
-        localStorage.removeItem(PENDING_ROLE_KEY)
-
-        // Atualiza o perfil com o role escolhido no onboarding
-        await supabase
+    async function checkProfileAndRedirect() {
+      try {
+        const { data: profile } = await supabase
           .from('profiles')
-          .update({ role: pendingRole })
-          .eq('id', user.id)
+          .select('role')
+          .eq('id', user!.id)
+          .single()
 
-        // Cria sub-perfil específico
-        if (pendingRole === 'caregiver') {
-          await supabase.from('caregiver_profiles').upsert({ id: user.id })
+        if (profile?.role) {
+          // Usuário existente fazendo login com Google → dashboard
+          localStorage.removeItem('cuidde_pending_signup')
+          navigate(roleHomeMap[profile.role] ?? '/', { replace: true })
         } else {
-          await supabase.from('family_profiles').upsert({ id: user.id })
+          // Novo usuário Google — precisa completar o cadastro
+          navigate('/onboarding?from=google', { replace: true })
         }
-
-        navigate(roleHomeMap[pendingRole], { replace: true })
-      } else {
-        // Google sem role — ir para onboarding pulando step de email/senha
+      } catch {
+        // Se não encontrou profile (404) → usuário novo, vai pro onboarding
         navigate('/onboarding?from=google', { replace: true })
       }
     }
 
-    resolveCallback()
-  }, [user, profile, isLoading, navigate])
+    checkProfileAndRedirect()
+  }, [user, isLoading, checking, navigate])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/30 to-background gap-6">
@@ -68,7 +64,7 @@ export default function AuthCallback() {
       </div>
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-muted-foreground text-sm">Autenticando com Google…</p>
+        <p className="text-muted-foreground text-sm">Autenticando…</p>
       </div>
     </div>
   )

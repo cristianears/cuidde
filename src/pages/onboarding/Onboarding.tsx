@@ -22,7 +22,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { signUpWithEmail, signInWithGoogleForSignup } from '@/lib/auth'
+import { signUpWithEmail, signInWithGoogle } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -39,19 +39,21 @@ interface FormData {
   cep: string
   street: string
   number: string
+  complement: string
   neighborhood: string
   city: string
   state: string
   description: string
 }
 
+// Step IDs: 1=Início, 2=Perfil, 3=Dados (email only), 4=Telefone, 5=Endereço, 6=Informações, 7=Confirmação
 const ALL_STEPS = [
-  { id: 1, label: 'Perfil' },
-  { id: 2, label: 'Dados' },
-  { id: 3, label: 'Telefone' },
-  { id: 4, label: 'Endereço' },
-  { id: 5, label: 'Informações' },
-  { id: 6, label: 'Confirmação' },
+  { id: 1, label: 'Início' },
+  { id: 2, label: 'Perfil' },
+  { id: 3, label: 'Dados' },
+  { id: 4, label: 'Telefone' },
+  { id: 5, label: 'Endereço' },
+  { id: 7, label: 'Confirmação' },
 ]
 
 const GoogleIcon = () => (
@@ -70,10 +72,11 @@ const Onboarding = () => {
 
   const isGoogleFlow = searchParams.get('from') === 'google'
 
-  // Passos ativos: Google flow pula o step 2 (email/senha)
-  const steps = isGoogleFlow ? ALL_STEPS.filter((s) => s.id !== 2) : ALL_STEPS
+  // Google flow: skip step 3 (email/password) — shows steps [1,2,4,5,6,7]
+  const steps = isGoogleFlow ? ALL_STEPS.filter((s) => s.id !== 3) : ALL_STEPS
 
-  const [currentStepId, setCurrentStepId] = useState(1)
+  // Google flow starts at step 2 (step 1 already completed by choosing Google)
+  const [currentStepId, setCurrentStepId] = useState(isGoogleFlow ? 2 : 1)
   const currentStepIndex = steps.findIndex((s) => s.id === currentStepId)
 
   const [formData, setFormData] = useState<FormData>({
@@ -86,6 +89,7 @@ const Onboarding = () => {
     cep: '',
     street: '',
     number: '',
+    complement: '',
     neighborhood: '',
     city: '',
     state: '',
@@ -98,7 +102,7 @@ const Onboarding = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-  // Pré-preencher dados a partir de query params (?type, ?cep, ?email)
+  // Pre-fill from query params (?type, ?cep, ?email)
   useEffect(() => {
     const type = searchParams.get('type') as ProfileType
     const cepParam = searchParams.get('cep')
@@ -130,7 +134,7 @@ const Onboarding = () => {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Pré-preencher nome/email do Google OAuth
+  // Pre-fill name/email from Google OAuth metadata
   useEffect(() => {
     if (isGoogleFlow && user) {
       const name =
@@ -167,14 +171,15 @@ const Onboarding = () => {
   const isPhoneValid = phoneDigitsCount === 11
 
   const handleGoogleSignup = async () => {
-    if (!formData.profileType) return
     setIsGoogleLoading(true)
     try {
-      const { error } = await signInWithGoogleForSignup(formData.profileType)
+      localStorage.setItem('cuidde_pending_signup', 'true')
+      const { error } = await signInWithGoogle()
       if (error) {
         toast.error(error.message)
         setIsGoogleLoading(false)
       }
+      // No error: Google OAuth redirect happens automatically
     } catch {
       setIsGoogleLoading(false)
     }
@@ -221,21 +226,30 @@ const Onboarding = () => {
     setIsSubmitting(true)
     try {
       if (isGoogleFlow && user) {
-        // Usuário já autenticado via Google — apenas atualizar o perfil
         await supabase
           .from('profiles')
           .update({ role: formData.profileType, phone: formData.phone })
           .eq('id', user.id)
 
+        const addressData = {
+          id: user.id,
+          cep: formData.cep,
+          street: formData.street,
+          number: formData.number,
+          complement: formData.complement || null,
+          neighborhood: formData.neighborhood,
+          city: formData.city,
+          state: formData.state,
+        }
+
         if (formData.profileType === 'caregiver') {
-          await supabase.from('caregiver_profiles').upsert({ id: user.id })
+          await supabase.from('caregiver_profiles').upsert(addressData)
         } else {
-          await supabase.from('family_profiles').upsert({ id: user.id })
+          await supabase.from('family_profiles').upsert(addressData)
         }
 
         navigate(formData.profileType === 'caregiver' ? '/caregiver' : '/family', { replace: true })
       } else {
-        // Fluxo de email/senha
         const { error } = await signUpWithEmail(formData.email, formData.password, {
           role: formData.profileType,
           full_name: formData.name,
@@ -255,8 +269,10 @@ const Onboarding = () => {
   const canProceed = () => {
     switch (currentStepId) {
       case 1:
-        return formData.profileType !== null
+        return true // Step 1 handled by its own buttons
       case 2:
+        return formData.profileType !== null
+      case 3:
         return !!(
           formData.name &&
           formData.email &&
@@ -265,12 +281,11 @@ const Onboarding = () => {
           isPasswordStrong &&
           passwordsMatch
         )
-      case 3:
-        return isPhoneValid
       case 4:
-        return !!(formData.cep && formData.street && formData.number && formData.city && formData.state)
+        return isPhoneValid
       case 5:
-        return formData.description.length >= 20
+        return !!(formData.cep && formData.street && formData.number && formData.city && formData.state)
+
       default:
         return true
     }
@@ -328,10 +343,54 @@ const Onboarding = () => {
         </div>
 
         <Card className="shadow-card border-border/50 overflow-hidden">
-          <CardContent className="p-8 sm:p-10">
+          <CardContent className="p-6 sm:p-8">
 
-            {/* ── STEP 1: PERFIL ── */}
+            {/* ── STEP 1: MÉTODO DE CADASTRO ── */}
             {currentStepId === 1 && (
+              <div className="space-y-8 animate-fade-in">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Cadastre-se grátis</h2>
+                  <p className="text-muted-foreground mt-2">Escolha como quer criar sua conta</p>
+                </div>
+                <div className="space-y-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-14 rounded-xl border-border/80 font-medium gap-3 text-base"
+                    onClick={handleGoogleSignup}
+                    disabled={isGoogleLoading}
+                  >
+                    {isGoogleLoading ? (
+                      <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <GoogleIcon />
+                    )}
+                    Continuar com o Google
+                  </Button>
+
+                  <div className="relative py-1">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border/60" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-card px-3 text-muted-foreground">ou</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-14 rounded-xl border-border/80 font-medium text-base"
+                    onClick={nextStep}
+                  >
+                    Continuar com e-mail
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 2: PERFIL (role selection) ── */}
+            {currentStepId === 2 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a cuidde?</h2>
@@ -425,42 +484,14 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* ── STEP 2: DADOS (email flow only) ── */}
-            {currentStepId === 2 && (
+            {/* ── STEP 3: DADOS PESSOAIS (email flow only) ── */}
+            {currentStepId === 3 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Crie sua conta</h2>
                   <p className="text-muted-foreground mt-2">Preencha seus dados para começar</p>
                 </div>
                 <div className="space-y-5">
-                  {/* Google OAuth (só no flow email) */}
-                  {!isGoogleFlow && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full h-12 rounded-xl border-border/80 font-medium gap-3"
-                        onClick={handleGoogleSignup}
-                        disabled={isGoogleLoading}
-                      >
-                        {isGoogleLoading ? (
-                          <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <GoogleIcon />
-                        )}
-                        Cadastrar com Google
-                      </Button>
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-border/60" />
-                        </div>
-                        <div className="relative flex justify-center text-xs">
-                          <span className="bg-card px-3 text-muted-foreground">ou cadastre com email</span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
                   <div>
                     <Label htmlFor="name" className="text-foreground font-medium">
                       Nome completo
@@ -571,8 +602,8 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* ── STEP 3: TELEFONE ── */}
-            {currentStepId === 3 && (
+            {/* ── STEP 4: TELEFONE ── */}
+            {currentStepId === 4 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -605,8 +636,8 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* ── STEP 4: ENDEREÇO ── */}
-            {currentStepId === 4 && (
+            {/* ── STEP 5: ENDEREÇO ── */}
+            {currentStepId === 5 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-foreground tracking-tight">Qual é o seu endereço?</h2>
@@ -617,6 +648,7 @@ const Onboarding = () => {
                   </p>
                 </div>
                 <div className="space-y-5">
+                  {/* CEP + Rua */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="cep" className="text-foreground font-medium">
@@ -653,7 +685,9 @@ const Onboarding = () => {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  {/* Número + Complemento (same row) */}
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="number" className="text-foreground font-medium">
                         Número
@@ -667,21 +701,38 @@ const Onboarding = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="neighborhood" className="text-foreground font-medium">
-                        Bairro
+                      <Label htmlFor="complement" className="text-foreground font-medium">
+                        Complemento{' '}
+                        <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
                       </Label>
                       <Input
-                        id="neighborhood"
-                        placeholder="Bairro"
-                        value={formData.neighborhood}
-                        onChange={(e) => updateFormData('neighborhood', e.target.value)}
-                        className={cn(
-                          'mt-2 h-12 rounded-xl border-border/80 focus:border-primary transition-colors',
-                          cepFilled && formData.neighborhood && 'bg-accent/5 border-accent/30',
-                        )}
+                        id="complement"
+                        placeholder="Apto 42, Bloco B..."
+                        value={formData.complement}
+                        onChange={(e) => updateFormData('complement', e.target.value)}
+                        className="mt-2 h-12 rounded-xl border-border/80 focus:border-primary"
                       />
                     </div>
                   </div>
+
+                  {/* Bairro */}
+                  <div>
+                    <Label htmlFor="neighborhood" className="text-foreground font-medium">
+                      Bairro
+                    </Label>
+                    <Input
+                      id="neighborhood"
+                      placeholder="Bairro"
+                      value={formData.neighborhood}
+                      onChange={(e) => updateFormData('neighborhood', e.target.value)}
+                      className={cn(
+                        'mt-2 h-12 rounded-xl border-border/80 focus:border-primary transition-colors',
+                        cepFilled && formData.neighborhood && 'bg-accent/5 border-accent/30',
+                      )}
+                    />
+                  </div>
+
+                  {/* Cidade + Estado */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="city" className="text-foreground font-medium">
@@ -714,6 +765,7 @@ const Onboarding = () => {
                       />
                     </div>
                   </div>
+
                   {cepFilled && (
                     <div className="flex items-center gap-2 text-sm text-accent animate-fade-in">
                       <CheckCircle2 className="w-4 h-4" />
@@ -724,47 +776,9 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* ── STEP 5: INFORMAÇÕES ── */}
-            {currentStepId === 5 && (
-              <div className="space-y-8 animate-fade-in">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold text-foreground tracking-tight">
-                    {formData.profileType === 'family'
-                      ? 'Conte sobre a necessidade de cuidado'
-                      : 'Conte sobre sua experiência profissional'}
-                  </h2>
-                  <p className="text-muted-foreground mt-2">
-                    {formData.profileType === 'family'
-                      ? 'Isso ajuda a encontrar o profissional mais adequado para você'
-                      : 'Essas informações aparecem no seu perfil e ajudam famílias a conhecerem você'}
-                  </p>
-                </div>
-                <div>
-                  <Label htmlFor="description" className="text-foreground font-medium">
-                    {formData.profileType === 'family'
-                      ? 'Descreva brevemente a situação'
-                      : 'Sua experiência e especialidades'}
-                  </Label>
-                  <Textarea
-                    id="description"
-                    placeholder={
-                      formData.profileType === 'family'
-                        ? 'Ex: Minha mãe tem 78 anos e precisa de acompanhamento diário para alimentação e medicação...'
-                        : 'Ex: Sou cuidador de idosos há 5 anos, tenho experiência com Alzheimer, curso de primeiros socorros e NR32...'
-                    }
-                    value={formData.description}
-                    onChange={(e) => updateFormData('description', e.target.value)}
-                    className="mt-2 min-h-[160px] rounded-xl border-border/80 focus:border-primary resize-none"
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Mínimo 20 caracteres • {formData.description.length}/500
-                  </p>
-                </div>
-              </div>
-            )}
 
-            {/* ── STEP 6: CONFIRMAÇÃO ── */}
-            {currentStepId === 6 && (
+            {/* ── STEP 7: CONFIRMAÇÃO ── */}
+            {currentStepId === 7 && (
               <div className="space-y-8 animate-fade-in">
                 <div className="text-center">
                   <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
@@ -787,7 +801,7 @@ const Onboarding = () => {
                         label: 'Tipo de perfil',
                         value: formData.profileType === 'family' ? 'Família' : 'Profissional de Saúde',
                       },
-                      { label: 'Nome', value: formData.name || user?.user_metadata?.full_name || '—' },
+                      { label: 'Nome', value: formData.name || (user?.user_metadata?.full_name as string) || '—' },
                       { label: 'E-mail', value: formData.email || user?.email || '—' },
                       { label: 'Telefone', value: formData.phone || '—' },
                       {
@@ -811,47 +825,49 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* ── NAVEGAÇÃO ── */}
-            <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/50">
-              {currentStepIndex > 0 ? (
-                <Button
-                  variant="ghost"
-                  onClick={prevStep}
-                  className="text-muted-foreground hover:text-foreground gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Voltar
-                </Button>
-              ) : (
-                <div />
-              )}
+            {/* ── NAVEGAÇÃO (hidden on step 1 — it has its own buttons) ── */}
+            {currentStepId !== 1 && (
+              <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
+                {currentStepIndex > 0 ? (
+                  <Button
+                    variant="ghost"
+                    onClick={prevStep}
+                    className="text-muted-foreground hover:text-foreground gap-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Voltar
+                  </Button>
+                ) : (
+                  <div />
+                )}
 
-              {currentStepIndex < steps.length - 1 ? (
-                <Button
-                  onClick={nextStep}
-                  disabled={!canProceed()}
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Continuar
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={isSubmitting}
-                  className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      {isGoogleFlow ? 'Finalizar cadastro' : 'Criar conta'}
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+                {currentStepIndex < steps.length - 1 ? (
+                  <Button
+                    onClick={nextStep}
+                    disabled={!canProceed()}
+                    className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Continuar
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        {isGoogleFlow ? 'Finalizar cadastro' : 'Criar conta'}
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>

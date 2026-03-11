@@ -93,7 +93,7 @@ const Header = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/login")}
               className={cn(
                 "transition-colors",
                 isScrolled

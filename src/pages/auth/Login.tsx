@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { Heart, Mail, Lock, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react'
+import { Heart, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,10 +9,10 @@ import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 
-type View = 'initial' | 'email' | 'password'
+type View = 'email' | 'password'
 
-const GoogleIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" aria-hidden="true">
+const GoogleLogo = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -23,28 +23,53 @@ const GoogleIcon = () => (
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { role } = useAuth()
+  const { user, role, isLoading } = useAuth()
 
-  const [view, setView] = useState<View>('initial')
+  const [view, setView] = useState<View>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-  function getRedirectPath() {
-    const redirect = searchParams.get('redirect')
-    const cep = searchParams.get('cep')
-    if (redirect) return cep ? `${redirect}?cep=${cep}` : redirect
-    if (role === 'caregiver') return '/caregiver'
-    if (role === 'family') return '/family'
-    if (role === 'admin') return '/admin'
-    return '/'
+  // Flag: o usuário acabou de fazer login com email com sucesso
+  const [loginSuccess, setLoginSuccess] = useState(false)
+
+  // Ref para preservar redirect/cep dos searchParams
+  const redirectRef = useRef(searchParams.get('redirect'))
+  const cepRef = useRef(searchParams.get('cep'))
+
+  // ─── REDIRECT AUTOMÁTICO ───
+  // Se o usuário JÁ está logado ao abrir /login, ou acabou de logar com
+  // sucesso (loginSuccess), redireciona assim que o AuthContext tiver o role.
+  useEffect(() => {
+    if (isLoading) return
+
+    // Só redireciona se: já estava logado OU acabou de logar com sucesso
+    if (user && (loginSuccess || role)) {
+      const redirect = redirectRef.current
+      const cep = cepRef.current
+
+      if (redirect) {
+        navigate(cep ? `${redirect}?cep=${cep}` : redirect, { replace: true })
+        return
+      }
+
+      if (role === 'caregiver') navigate('/caregiver', { replace: true })
+      else if (role === 'family') navigate('/family', { replace: true })
+      else if (role === 'admin') navigate('/admin', { replace: true })
+      // Se user existe mas role ainda é null, espera o próximo render
+      // (o AuthContext ainda está carregando o profile)
+    }
+  }, [user, role, isLoading, loginSuccess, navigate])
+
+  function goToRegister() {
+    navigate('/onboarding' + (email ? `?email=${encodeURIComponent(email)}` : ''))
   }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    setIsLoading(true)
+    setIsSubmitting(true)
     try {
       const { error } = await signInWithEmail(email, password)
       if (error) {
@@ -55,9 +80,11 @@ export default function Login() {
         )
         return
       }
-      navigate(getRedirectPath(), { replace: true })
+      // NÃO navega aqui — marca sucesso e deixa o useEffect acima
+      // redirecionar quando o AuthContext atualizar com o role
+      setLoginSuccess(true)
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -69,19 +96,28 @@ export default function Login() {
         toast.error(error.message)
         setIsGoogleLoading(false)
       }
-      // Se sucesso, o redirect para Google acontece automaticamente
+      // Google OAuth faz redirect automático, não precisa de navigate
     } catch {
       setIsGoogleLoading(false)
     }
   }
 
-  function goToRegister() {
-    navigate('/onboarding' + (email ? `?email=${encodeURIComponent(email)}` : ''))
+  // Enquanto verifica sessão existente OU aguardando redirect pós-login
+  if (isLoading || loginSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-muted/30 to-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">
+            {loginSuccess ? 'Entrando…' : 'Carregando…'}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background flex flex-col">
-      {/* Header */}
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <Link to="/" className="flex items-center gap-3 w-fit">
@@ -96,78 +132,17 @@ export default function Login() {
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
 
-          {/* ── VIEW: INITIAL ── */}
-          {view === 'initial' && (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na cuidde</h1>
-                <p className="text-muted-foreground mt-2 text-sm">Acesse ou crie sua conta</p>
-              </div>
-
-              <Card className="shadow-card border-border/50">
-                <CardContent className="p-8 space-y-3">
-                  {/* Google */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 rounded-xl border-border/80 font-medium gap-3 justify-start px-5"
-                    onClick={handleGoogleLogin}
-                    disabled={isGoogleLoading}
-                  >
-                    {isGoogleLoading ? (
-                      <div className="w-5 h-5 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <GoogleIcon />
-                    )}
-                    <span className="flex-1 text-center">Continuar com Google</span>
-                  </Button>
-
-                  {/* Separator */}
-                  <div className="relative py-1">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border/60" />
-                    </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-card px-3 text-muted-foreground">ou</span>
-                    </div>
-                  </div>
-
-                  {/* E-mail button */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-12 rounded-xl border-border/80 font-medium gap-3 justify-start px-5"
-                    onClick={() => setView('email')}
-                  >
-                    <Mail className="w-5 h-5 text-muted-foreground" />
-                    <span className="flex-1 text-center">Continuar com e-mail</span>
-                  </Button>
-
-                  <p className="text-center text-sm text-muted-foreground pt-2">
-                    Não tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={goToRegister}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      Criar conta grátis
-                    </button>
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* ── VIEW: EMAIL ── */}
           {view === 'email' && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in">
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na cuidde</h1>
-                <p className="text-muted-foreground mt-2 text-sm">Digite seu e-mail para continuar</p>
+                <p className="text-muted-foreground mt-2 text-sm">Acesse sua conta</p>
               </div>
 
               <Card className="shadow-card border-border/50">
                 <CardContent className="p-8 space-y-4">
+                  {/* Campo de e-mail */}
                   <div>
                     <Label htmlFor="email" className="text-foreground font-medium">E-mail</Label>
                     <div className="relative mt-2">
@@ -185,15 +160,14 @@ export default function Login() {
                     </div>
                   </div>
 
-                  {/* Avançar (login) */}
+                  {/* Avançar */}
                   <Button
                     type="button"
                     disabled={!email.includes('@')}
                     onClick={() => setView('password')}
-                    className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20 gap-2 disabled:opacity-50"
+                    className="w-full h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg shadow-accent/20 disabled:opacity-50"
                   >
                     Avançar
-                    <ArrowRight className="w-4 h-4" />
                   </Button>
 
                   {/* Cadastrar-se */}
@@ -206,14 +180,32 @@ export default function Login() {
                     Cadastrar-se
                   </Button>
 
-                  <button
-                    type="button"
-                    onClick={() => setView('initial')}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mx-auto transition-colors"
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Voltar
-                  </button>
+                  {/* Separator */}
+                  <div className="relative py-1">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border/60" />
+                    </div>
+                    <div className="relative flex justify-center text-xs">
+                      <span className="bg-card px-3 text-muted-foreground">ou continuar com</span>
+                    </div>
+                  </div>
+
+                  {/* Google icon button */}
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      disabled={isGoogleLoading}
+                      aria-label="Entrar com Google"
+                      className="w-12 h-12 rounded-xl border border-border/80 flex items-center justify-center hover:bg-muted/50 transition-colors disabled:opacity-50"
+                    >
+                      {isGoogleLoading ? (
+                        <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <GoogleLogo />
+                      )}
+                    </button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -221,26 +213,17 @@ export default function Login() {
 
           {/* ── VIEW: PASSWORD ── */}
           {view === 'password' && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in">
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na cuidde</h1>
-                <p className="mt-2 text-sm font-medium text-muted-foreground truncate">{email}</p>
+                <p className="mt-2 text-sm text-muted-foreground truncate max-w-xs mx-auto">{email}</p>
               </div>
 
               <Card className="shadow-card border-border/50">
                 <CardContent className="p-8">
-                  <form onSubmit={handleLogin} className="space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="password" className="text-foreground font-medium">Senha</Label>
-                        <button
-                          type="button"
-                          className="text-xs text-primary hover:underline"
-                          onClick={() => toast.info('Funcionalidade de recuperação de senha em breve.')}
-                        >
-                          Esqueceu sua senha?
-                        </button>
-                      </div>
+                      <Label htmlFor="password" className="text-foreground font-medium">Senha</Label>
                       <div className="relative mt-2">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -262,13 +245,20 @@ export default function Login() {
                           {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                         </button>
                       </div>
+                      <button
+                        type="button"
+                        className="text-xs text-primary hover:underline mt-2 block"
+                        onClick={() => toast.info('Funcionalidade de recuperação de senha em breve.')}
+                      >
+                        Esqueceu sua senha?
+                      </button>
                     </div>
 
-                    <div className="flex gap-3 pt-1">
+                    <div className="flex gap-3">
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setView('email')}
+                        onClick={() => { setView('email'); setPassword('') }}
                         className="flex-1 h-12 rounded-xl border-border/80 gap-2"
                       >
                         <ArrowLeft className="w-4 h-4" />
@@ -276,27 +266,14 @@ export default function Login() {
                       </Button>
                       <Button
                         type="submit"
-                        disabled={isLoading || !password}
-                        className="flex-1 h-12 rounded-xl bg-primary hover:bg-primary/90 font-semibold shadow-lg shadow-primary/20"
+                        disabled={isSubmitting || !password}
+                        className="flex-1 h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg shadow-accent/20"
                       >
-                        {isLoading ? (
-                          <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          'Entrar'
-                        )}
+                        {isSubmitting ? (
+                          <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                        ) : 'Entrar'}
                       </Button>
                     </div>
-
-                    <p className="text-center text-sm text-muted-foreground pt-1">
-                      Não tem conta?{' '}
-                      <button
-                        type="button"
-                        onClick={goToRegister}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        Criar conta grátis
-                      </button>
-                    </p>
                   </form>
                 </CardContent>
               </Card>
