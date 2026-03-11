@@ -190,22 +190,21 @@ export default function Login() {
                     </div>
                   </div>
 
-                  {/* Google icon button */}
-                  <div className="flex justify-center">
-                    <button
-                      type="button"
-                      onClick={handleGoogleLogin}
-                      disabled={isGoogleLoading}
-                      aria-label="Entrar com Google"
-                      className="w-12 h-12 rounded-xl border border-border/80 flex items-center justify-center hover:bg-muted/50 transition-colors disabled:opacity-50"
-                    >
-                      {isGoogleLoading ? (
-                        <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <GoogleLogo />
-                      )}
-                    </button>
-                  </div>
+                  {/* Google button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGoogleLogin}
+                    disabled={isGoogleLoading}
+                    className="w-full h-12 rounded-xl border-border/80 font-medium gap-3"
+                  >
+                    {isGoogleLoading ? (
+                      <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <GoogleLogo />
+                    )}
+                    Google
+                  </Button>
                 </CardContent>
               </Card>
             </div>
