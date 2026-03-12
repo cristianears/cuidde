@@ -143,9 +143,12 @@ export const specialtiesList = [
   'Mobilidade reduzida',
   'Pós-operatório',
   'Cuidados paliativos',
+  'Cuidados noturnos',
   'Fisioterapia',
   'Acompanhamento hospitalar',
-  'Cuidados noturnos',
+  'Acompanhamento de pacientes em consultas e exames',
+  'Realização de curativos',
+  'Aplicação de injeções',
 ];
 
 export const modalitiesList = [
