@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, DollarSign, Star, Clock, MapPin } from "lucide-react";
+import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import CaregiverCard from "@/components/shared/CaregiverCard";
@@ -9,11 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { specialtiesList } from "@/data/mockData";
+import { modalitiesList, idiomasList } from "@/data/mockData";
 import { useSearchCaregivers, type SearchFilters } from "@/hooks/useSearchCaregivers";
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+
+// Idiomas exibíveis no filtro (sem "Outro")
+const idiomasFilter = idiomasList.filter((i) => i !== "Outro");
 
 const SearchCaregivers = () => {
   const { user } = useAuth();
@@ -21,7 +24,9 @@ const SearchCaregivers = () => {
   const [showFilters, setShowFilters] = useState(true);
   const [priceRange, setPriceRange] = useState([0, 200]);
   const [minRating, setMinRating] = useState(0);
-  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
+  const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
+  const [selectedIdiomas, setSelectedIdiomas] = useState<string[]>([]);
+  const [withReferences, setWithReferences] = useState(false);
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [cityFilter, setCityFilter] = useState("");
   const [neighborhoodFilter, setNeighborhoodFilter] = useState("");
@@ -30,40 +35,43 @@ const SearchCaregivers = () => {
     query: searchQuery || undefined,
     city: cityFilter || undefined,
     neighborhood: neighborhoodFilter || undefined,
-    specialties: selectedSpecialties.length > 0 ? selectedSpecialties : undefined,
+    modalities: selectedModalities.length > 0 ? selectedModalities : undefined,
+    idiomas: selectedIdiomas.length > 0 ? selectedIdiomas : undefined,
+    withReferences: withReferences || undefined,
     minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
     maxPrice: priceRange[1] < 200 ? priceRange[1] : undefined,
     minRating: minRating > 0 ? minRating : undefined,
     emergencyOnly: emergencyOnly || undefined,
-  }), [searchQuery, cityFilter, neighborhoodFilter, selectedSpecialties, priceRange, minRating, emergencyOnly]);
+  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
 
   const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
   const { data: favoriteIds = new Set<string>() } = useFavoriteIds();
   const { mutate: addFavorite } = useAddFavorite();
   const { mutate: removeFavorite } = useRemoveFavorite();
 
-  const toggleSpecialty = (specialty: string) => {
-    setSelectedSpecialties((prev) =>
-      prev.includes(specialty)
-        ? prev.filter((s) => s !== specialty)
-        : [...prev, specialty]
-    );
-  };
+  const toggle = <T extends string>(
+    list: T[],
+    setList: React.Dispatch<React.SetStateAction<T[]>>,
+    value: T
+  ) => setList((prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]);
 
   const clearFilters = () => {
     setPriceRange([0, 200]);
     setMinRating(0);
-    setSelectedSpecialties([]);
+    setSelectedModalities([]);
+    setSelectedIdiomas([]);
+    setWithReferences(false);
     setEmergencyOnly(false);
     setCityFilter("");
     setNeighborhoodFilter("");
   };
 
   const hasActiveFilters =
-    priceRange[0] > 0 ||
-    priceRange[1] < 200 ||
+    priceRange[0] > 0 || priceRange[1] < 200 ||
     minRating > 0 ||
-    selectedSpecialties.length > 0 ||
+    selectedModalities.length > 0 ||
+    selectedIdiomas.length > 0 ||
+    withReferences ||
     emergencyOnly ||
     cityFilter.trim() !== "" ||
     neighborhoodFilter.trim() !== "";
@@ -71,7 +79,9 @@ const SearchCaregivers = () => {
   const activeFilterCount =
     (priceRange[0] > 0 || priceRange[1] < 200 ? 1 : 0) +
     (minRating > 0 ? 1 : 0) +
-    (selectedSpecialties.length > 0 ? 1 : 0) +
+    (selectedModalities.length > 0 ? 1 : 0) +
+    (selectedIdiomas.length > 0 ? 1 : 0) +
+    (withReferences ? 1 : 0) +
     (emergencyOnly ? 1 : 0) +
     (cityFilter.trim() ? 1 : 0) +
     (neighborhoodFilter.trim() ? 1 : 0);
@@ -128,40 +138,64 @@ const SearchCaregivers = () => {
               <CardHeader className="flex flex-row items-center justify-between py-4">
                 <CardTitle className="text-base">Filtros</CardTitle>
                 {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="text-muted-foreground"
-                  >
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
                     Limpar
                   </Button>
                 )}
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Especialidades */}
+
+                {/* Formato de atendimento */}
                 <div>
-                  <Label className="mb-3 block">Especialidades</Label>
+                  <Label className="flex items-center gap-2 mb-3">
+                    <CalendarClock className="w-4 h-4 text-muted-foreground" />
+                    Formato de atendimento
+                  </Label>
                   <div className="flex flex-wrap gap-2">
-                    {specialtiesList.map((specialty) => (
+                    {modalitiesList.map((modality) => (
                       <Badge
-                        key={specialty}
-                        variant={selectedSpecialties.includes(specialty) ? "default" : "outline"}
+                        key={modality}
+                        variant={selectedModalities.includes(modality) ? "default" : "outline"}
                         className={cn(
                           "cursor-pointer transition-all text-xs",
-                          selectedSpecialties.includes(specialty)
+                          selectedModalities.includes(modality)
                             ? "bg-primary hover:bg-primary/90"
                             : "hover:bg-muted"
                         )}
-                        onClick={() => toggleSpecialty(specialty)}
+                        onClick={() => toggle(selectedModalities, setSelectedModalities, modality)}
                       >
-                        {specialty}
+                        {modality}
                       </Badge>
                     ))}
                   </div>
                 </div>
 
-                {/* Localização — Cidade e Bairro */}
+                {/* Idiomas */}
+                <div>
+                  <Label className="flex items-center gap-2 mb-3">
+                    <Globe className="w-4 h-4 text-muted-foreground" />
+                    Idiomas
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {idiomasFilter.map((idioma) => (
+                      <Badge
+                        key={idioma}
+                        variant={selectedIdiomas.includes(idioma) ? "default" : "outline"}
+                        className={cn(
+                          "cursor-pointer transition-all text-xs",
+                          selectedIdiomas.includes(idioma)
+                            ? "bg-primary hover:bg-primary/90"
+                            : "hover:bg-muted"
+                        )}
+                        onClick={() => toggle(selectedIdiomas, setSelectedIdiomas, idioma)}
+                      >
+                        {idioma}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Localização */}
                 <div>
                   <Label className="flex items-center gap-2 mb-3">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -223,21 +257,40 @@ const SearchCaregivers = () => {
                   </div>
                 </div>
 
-                {/* Disponibilidade */}
+                {/* Disponibilidade e confiança */}
                 <div>
                   <Label className="flex items-center gap-2 mb-3">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     Disponibilidade
                   </Label>
+                  <div className="space-y-2">
+                    <Button
+                      variant={emergencyOnly ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setEmergencyOnly(!emergencyOnly)}
+                      className={cn("w-full justify-start", emergencyOnly && "bg-primary")}
+                    >
+                      Disponível para emergências
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Referências */}
+                <div>
+                  <Label className="flex items-center gap-2 mb-3">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    Referências
+                  </Label>
                   <Button
-                    variant={emergencyOnly ? "default" : "outline"}
+                    variant={withReferences ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setEmergencyOnly(!emergencyOnly)}
-                    className={cn("w-full", emergencyOnly && "bg-primary")}
+                    onClick={() => setWithReferences(!withReferences)}
+                    className={cn("w-full justify-start", withReferences && "bg-primary")}
                   >
-                    Disponível para emergências
+                    Com referências profissionais
                   </Button>
                 </div>
+
               </CardContent>
             </Card>
           )}
@@ -249,9 +302,7 @@ const SearchCaregivers = () => {
                 <p className="text-sm text-muted-foreground">Buscando cuidadores...</p>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {caregivers.length} cuidador
-                  {caregivers.length !== 1 ? "es" : ""} encontrado
-                  {caregivers.length !== 1 ? "s" : ""}
+                  {caregivers.length} cuidador{caregivers.length !== 1 ? "es" : ""} encontrado{caregivers.length !== 1 ? "s" : ""}
                 </p>
               )}
             </div>

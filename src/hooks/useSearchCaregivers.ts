@@ -8,7 +8,9 @@ export interface SearchFilters {
   query?: string           // busca por nome, bairro ou cidade
   city?: string            // filtro de cidade
   neighborhood?: string    // filtro de bairro
-  specialties?: string[]   // must match at least one
+  modalities?: string[]    // formatos de atendimento — must match at least one
+  idiomas?: string[]       // idiomas — must match at least one
+  withReferences?: boolean // apenas cuidadores com referências
   minPrice?: number
   maxPrice?: number
   minRating?: number
@@ -120,10 +122,19 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
       if (filters.neighborhood && filters.neighborhood.trim()) {
         q = q.ilike('neighborhood', `%${filters.neighborhood.trim()}%`)
       }
+      if (filters.modalities && filters.modalities.length > 0) {
+        q = q.overlaps('modalities', filters.modalities)
+      }
+      if (filters.idiomas && filters.idiomas.length > 0) {
+        q = q.overlaps('idiomas', filters.idiomas)
+      }
+      if (filters.withReferences) {
+        q = q.eq('has_references', true)
+      }
       if (filters.minPrice !== undefined && filters.minPrice > 0) {
         q = q.gte('price_per_hour', filters.minPrice)
       }
-      if (filters.maxPrice !== undefined && filters.maxPrice < 9999) {
+      if (filters.maxPrice !== undefined && filters.maxPrice < 200) {
         q = q.lte('price_per_hour', filters.maxPrice)
       }
       if (filters.minRating && filters.minRating > 0) {
@@ -131,9 +142,6 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
       }
       if (filters.emergencyOnly) {
         q = q.eq('emergency_available', true)
-      }
-      if (filters.specialties && filters.specialties.length > 0) {
-        q = q.overlaps('specialties', filters.specialties)
       }
 
       q = q.order('average_rating', { ascending: false })
