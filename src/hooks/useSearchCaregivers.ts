@@ -123,10 +123,10 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         q = q.ilike('neighborhood', `%${filters.neighborhood.trim()}%`)
       }
       if (filters.modalities && filters.modalities.length > 0) {
-        q = q.overlaps('modalities', filters.modalities)
+        q = q.contains('modalities', filters.modalities)
       }
       if (filters.idiomas && filters.idiomas.length > 0) {
-        q = q.overlaps('idiomas', filters.idiomas)
+        q = q.contains('idiomas', filters.idiomas)
       }
       if (filters.withReferences) {
         q = q.eq('has_references', true)
