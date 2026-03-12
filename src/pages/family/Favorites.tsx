@@ -1,29 +1,25 @@
-import { useState } from "react";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import CaregiverCard from "@/components/shared/CaregiverCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { mockFamilies, mockCaregivers } from "@/data/mockData";
+import { useFavorites, useRemoveFavorite } from "@/hooks/useFavorites";
+import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 
 const Favorites = () => {
-  const currentUser = mockFamilies[0];
-  const [favorites, setFavorites] = useState(
-    mockCaregivers.filter(c => c.status === 'verified').slice(0, 3)
-  );
+  const { user } = useAuth();
+  const { data: favorites = [], isLoading } = useFavorites();
+  const { mutate: removeFavorite } = useRemoveFavorite();
 
-  const handleRemoveFavorite = (id: string) => {
-    setFavorites(favorites.filter(f => f.id !== id));
+  const handleRemoveFavorite = (caregiverId: string) => {
+    removeFavorite(caregiverId);
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar
-        role="family"
-        userName={currentUser.name}
-      />
+      <AppSidebar role="family" userName="" />
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader
@@ -31,11 +27,17 @@ const Favorites = () => {
           description="Cuidadores que você salvou"
         />
 
-        {favorites.length > 0 ? (
+        {isLoading ? (
           <div className="space-y-4">
-            {favorites.map((caregiver) => (
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="h-48 animate-pulse bg-muted" />
+            ))}
+          </div>
+        ) : favorites.length > 0 ? (
+          <div className="space-y-4">
+            {favorites.map(({ favorite_id, caregiver }) => (
               <CaregiverCard
-                key={caregiver.id}
+                key={favorite_id}
                 caregiver={caregiver}
                 isFavorite={true}
                 onFavorite={handleRemoveFavorite}

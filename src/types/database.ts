@@ -333,6 +333,32 @@ export interface SystemLog {
   created_at: string
 }
 
+// ─── CaregiverPublic — tipo flat para exibição pública (JOIN caregiver_profiles + profiles) ───
+
+export interface CaregiverPublic {
+  id: string
+  // De profiles
+  full_name: string | null
+  // De caregiver_profiles
+  photo_url: string | null
+  bio: string | null
+  experience_years: number
+  profissao_formacao: ProfissaoFormacao | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  price_per_hour: number | null
+  price_per_day: number | null
+  average_rating: number
+  review_count: number
+  specialties: string[]
+  possui_cnh: boolean
+  has_insurance: boolean
+  professional_reg_number: string | null
+  emergency_available: boolean
+  whatsapp: string | null
+}
+
 // ─── Tipo Database (usado para tipar o cliente Supabase) ─────────────────────
 
 export interface Database {

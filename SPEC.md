@@ -806,41 +806,49 @@ TanStack Query v5 para mutations.
 
 ### FASE 3 — Busca e Marketplace (Semana 2-3)
 
-#### Sprint 3.1 — Busca de Cuidadores
-```
-Preciso implementar a busca real de cuidadores.
+#### Sprint 3.1 — Busca de Cuidadores ✅ CONCLUÍDO
 
-Arquivos afetados:
-- src/pages/family/SearchCaregivers.tsx
-- src/pages/family/FamilyMatches.tsx
-- src/pages/family/Favorites.tsx
-- src/pages/family/FamilyDashboard.tsx
+**Arquivos entregues:**
+- `src/hooks/useSearchCaregivers.ts` — query com filtros (nome, bairro, cidade, especialidades, preço, avaliação, emergência)
+- `src/hooks/useFamilyMatches.ts` — cuidadores cuja `specialties` tem interseção com `elderly_conditions` da família
+- `src/hooks/useFavorites.ts` — `useFavorites`, `useAddFavorite`, `useRemoveFavorite`
+- `src/hooks/useFamilyProfile.ts` — leitura do perfil da família logada
+- `src/components/shared/CaregiverCard.tsx` — atualizado para `CaregiverPublic` (tipo DB)
+- `src/types/database.ts` — `CaregiverPublic` adicionado
+- `src/pages/family/SearchCaregivers.tsx` — conectado ao Supabase
+- `src/pages/family/Favorites.tsx` — conectado ao Supabase
+- `src/pages/family/FamilyDashboard.tsx` — conectado ao Supabase
+- `supabase_sprint31.sql` — RLS policies para profiles, family_profiles, favorites
 
-Tarefas:
-1. Criar src/hooks/useSearchCaregivers.ts:
-   - Query paginada: apenas status='verified' AND is_visible=TRUE
-   - Filtros: especialidades (array contains), cidade/bairro/nome (ilike),
-     price_per_hour range, average_rating mínimo
-   - Proximidade por km: calcular distância entre CEPs
-     (usar fórmula de Haversine com lat/lng do CEP via ViaCEP ou API similar)
-
-2. Criar src/hooks/useFamilyMatches.ts:
-   - Buscar cuidadores cujas specialties têm interseção com 
-     family_profiles.elderly_conditions da família logada
-   
-3. Criar src/hooks/useFavorites.ts:
-   - query: listar favoritos da família (favorites JOIN caregiver_profiles)
-   - mutation: adicionar favorito
-   - mutation: remover favorito
-
-4. FamilyDashboard: substituir mockDistances e mockCaregivers por dados reais
-   (o TODO já está comentado no código)
-```
+**Decisões tomadas:**
+- Filtro de proximidade por km removido do MVP (ViaCEP não fornece lat/lng)
+  → Substituído por filtros de **cidade** e **bairro** (ilike no banco)
+  → Geocodificação registrada como sprint futuro
+- `CaregiverPublic` é um tipo flat (JOIN de `caregiver_profiles` + `profiles.full_name`)
+- `FamilyMatches.tsx` permanece mock — escopo real é Sprint 4.1 (agendamentos)
+- `useFamilyMatches` alimenta o card "Cuidadores recomendados" no FamilyDashboard
 
 ✅ **Sprint 3.1 concluído quando:**
 - Busca retorna apenas cuidadores com `status='verified'` e `is_visible=true`
-- Filtros de especialidade e cidade funcionam e reduzem resultados
+- Filtros de especialidade, cidade e bairro funcionam e reduzem resultados
 - Favoritar/desfavoritar persiste no banco após refresh
+
+---
+
+#### Sprint 3.x (futuro) — Geocodificação e Filtro por Proximidade (km)
+```
+Registrado como sprint futuro. ViaCEP não retorna coordenadas geográficas.
+
+Opções para implementar no futuro:
+1. Google Maps Geocoding API — converte CEP → lat/lng (pago)
+2. OpenCage / Nominatim (OpenStreetMap) — gratuito com limites de taxa
+3. Tabela local de CEPs com coordenadas (grandes cidades brasileiras)
+
+Ao implementar:
+- Armazenar lat/lng em caregiver_profiles e family_profiles (colunas: lat DECIMAL(9,6), lng DECIMAL(9,6))
+- Usar fórmula de Haversine para calcular distância no Supabase (função SQL)
+- Substituir filtros de cidade/bairro pelo filtro de raio (km) no SearchCaregivers.tsx
+```
 
 ---
 
