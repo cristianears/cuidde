@@ -31,6 +31,8 @@ const CAREGIVER_SELECT = `
   average_rating,
   review_count,
   specialties,
+  modalities,
+  idiomas,
   possui_cnh,
   has_insurance,
   professional_reg_number,
@@ -57,6 +59,8 @@ type RawRow = {
   average_rating: number
   review_count: number
   specialties: string[]
+  modalities: string[]
+  idiomas: string[]
   possui_cnh: boolean
   has_insurance: boolean
   professional_reg_number: string | null
@@ -85,6 +89,8 @@ function mapRow(row: RawRow): CaregiverPublic {
     average_rating: row.average_rating,
     review_count: row.review_count,
     specialties: row.specialties ?? [],
+    modalities: row.modalities ?? [],
+    idiomas: row.idiomas ?? [],
     possui_cnh: row.possui_cnh,
     has_insurance: row.has_insurance,
     professional_reg_number: row.professional_reg_number,
@@ -103,57 +109,40 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
   return useQuery({
     queryKey: ['caregivers', 'search', filters],
     queryFn: async (): Promise<CaregiverPublic[]> => {
-      // Aparece na busca apenas quem completou o perfil mínimo (calculado por trigger no banco)
       let q = supabase
         .from('caregiver_profiles')
         .select(CAREGIVER_SELECT)
         .eq('profile_complete', true)
 
-      // Filtro por cidade (ilike = case-insensitive)
       if (filters.city && filters.city.trim()) {
         q = q.ilike('city', `%${filters.city.trim()}%`)
       }
-
-      // Filtro por bairro
       if (filters.neighborhood && filters.neighborhood.trim()) {
         q = q.ilike('neighborhood', `%${filters.neighborhood.trim()}%`)
       }
-
-      // Preço mínimo
       if (filters.minPrice !== undefined && filters.minPrice > 0) {
         q = q.gte('price_per_hour', filters.minPrice)
       }
-
-      // Preço máximo
       if (filters.maxPrice !== undefined && filters.maxPrice < 9999) {
         q = q.lte('price_per_hour', filters.maxPrice)
       }
-
-      // Avaliação mínima
       if (filters.minRating && filters.minRating > 0) {
         q = q.gte('average_rating', filters.minRating)
       }
-
-      // Disponibilidade emergencial
       if (filters.emergencyOnly) {
         q = q.eq('emergency_available', true)
       }
-
-      // Especialidades (array contains any)
       if (filters.specialties && filters.specialties.length > 0) {
         q = q.overlaps('specialties', filters.specialties)
       }
 
-      // Ordenação: melhor avaliação primeiro
       q = q.order('average_rating', { ascending: false })
 
       const { data, error } = await q
-
       if (error) throw error
 
       let rows = (data ?? []).map(mapRow)
 
-      // Filtro por nome/bairro/cidade via query text (client-side, para busca geral)
       if (filters.query && filters.query.trim()) {
         const term = filters.query.trim().toLowerCase()
         rows = rows.filter(

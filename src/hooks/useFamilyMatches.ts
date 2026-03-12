@@ -17,6 +17,8 @@ const CAREGIVER_SELECT = `
   average_rating,
   review_count,
   specialties,
+  modalities,
+  idiomas,
   possui_cnh,
   has_insurance,
   professional_reg_number,
@@ -43,6 +45,8 @@ type RawRow = {
   average_rating: number
   review_count: number
   specialties: string[]
+  modalities: string[]
+  idiomas: string[]
   possui_cnh: boolean
   has_insurance: boolean
   professional_reg_number: string | null
@@ -71,6 +75,8 @@ function mapRow(row: RawRow): CaregiverPublic {
     average_rating: row.average_rating,
     review_count: row.review_count,
     specialties: row.specialties ?? [],
+    modalities: row.modalities ?? [],
+    idiomas: row.idiomas ?? [],
     possui_cnh: row.possui_cnh,
     has_insurance: row.has_insurance,
     professional_reg_number: row.professional_reg_number,
@@ -83,11 +89,6 @@ function mapRow(row: RawRow): CaregiverPublic {
   }
 }
 
-/**
- * Busca cuidadores cujas especialidades têm interseção com as condições
- * de saúde do idoso da família logada (family_profiles.elderly_conditions).
- * Usado no "Cuidadores recomendados" do FamilyDashboard.
- */
 export function useFamilyMatches(limit = 3) {
   const { user } = useAuth()
 
@@ -96,7 +97,6 @@ export function useFamilyMatches(limit = 3) {
     queryFn: async (): Promise<CaregiverPublic[]> => {
       if (!user) return []
 
-      // 1. Buscar condições de saúde do idoso
       const { data: familyData, error: familyError } = await supabase
         .from('family_profiles')
         .select('elderly_conditions')
@@ -107,7 +107,6 @@ export function useFamilyMatches(limit = 3) {
 
       const conditions: string[] = familyData?.elderly_conditions ?? []
 
-      // 2. Montar query de cuidadores com perfil completo
       let q = supabase
         .from('caregiver_profiles')
         .select(CAREGIVER_SELECT)
@@ -115,13 +114,11 @@ export function useFamilyMatches(limit = 3) {
         .order('average_rating', { ascending: false })
         .limit(limit)
 
-      // Se há condições registradas, filtrar por sobreposição de especialidades
       if (conditions.length > 0) {
         q = q.overlaps('specialties', conditions)
       }
 
       const { data, error } = await q
-
       if (error) throw error
 
       return (data ?? []).map(mapRow)

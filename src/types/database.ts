@@ -364,6 +364,9 @@ export interface CaregiverPublic {
   professional_reg_number: string | null
   emergency_available: boolean
   whatsapp: string | null
+  // Perfil complementar
+  modalities: string[]
+  idiomas: string[]
   // Flags de documentos (calculadas por trigger em caregiver_profiles)
   has_rg_cnh: boolean
   has_antecedentes: boolean
