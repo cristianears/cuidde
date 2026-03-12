@@ -143,7 +143,7 @@ const SearchCaregivers = () => {
                 <div>
                   <Label className="mb-3 block">Especialidades</Label>
                   <div className="flex flex-wrap gap-2">
-                    {specialtiesList.slice(0, 6).map((specialty) => (
+                    {specialtiesList.map((specialty) => (
                       <Badge
                         key={specialty}
                         variant={selectedSpecialties.includes(specialty) ? "default" : "outline"}
