@@ -40,6 +40,7 @@ export interface UpdateSpecialtiesPayload {
   specialties: string[]
   modalities: string[]
   experience_years: number
+  emergency_available: boolean
 }
 
 export interface UpdateReferencesPayload {
@@ -204,6 +205,7 @@ export function useUpdateCaregiverSpecialties() {
           specialties: payload.specialties,
           modalities: payload.modalities,
           experience_years: payload.experience_years,
+          emergency_available: payload.emergency_available,
         })
         .eq('id', user!.id)
         .select('id')

@@ -89,6 +89,7 @@ const CaregiverProfile = () => {
     specialties: [] as string[],
     modalities: [] as string[],
     yearsExperience: "",
+    emergencyAvailable: false,
     possuiCNH: false,
     categoriaCNH: "" as "" | "A" | "B" | "AB" | "C" | "D" | "E",
     showReferencesToSubscribers: true,
@@ -145,6 +146,7 @@ const CaregiverProfile = () => {
         specialties: profileData.specialties ?? [],
         modalities: profileData.modalities ?? [],
         yearsExperience: profileData.experience_years ? String(profileData.experience_years) : "",
+        emergencyAvailable: profileData.emergency_available,
         possuiCNH: profileData.possui_cnh,
         categoriaCNH: (profileData.categoria_cnh ?? "") as typeof formData.categoriaCNH,
         showReferencesToSubscribers: profileData.show_refs_to_subscribers,
@@ -224,6 +226,7 @@ const CaregiverProfile = () => {
         specialties: formData.specialties,
         modalities: formData.modalities,
         experience_years: formData.yearsExperience ? Number(formData.yearsExperience) : 0,
+        emergency_available: formData.emergencyAvailable,
       })
     } else if (currentStep === 4) {
       updateReferences.mutate({
@@ -711,6 +714,28 @@ const CaregiverProfile = () => {
                         {modality}
                       </Badge>
                     ))}
+                  </div>
+                </div>
+
+                {/* Disponibilidade para emergências */}
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-start gap-3">
+                    <Switch
+                      id="emergency-available"
+                      checked={formData.emergencyAvailable}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, emergencyAvailable: checked }))
+                      }
+                    />
+                    <div>
+                      <Label htmlFor="emergency-available" className="text-xs md:text-sm cursor-pointer">
+                        Disponível para atendimento emergencial
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Ative se puder aceitar chamados com pouca antecedência ou em situações urgentes.
+                        Aparecerá como badge no seu perfil e no filtro de busca das famílias.
+                      </p>
+                    </div>
                   </div>
                 </div>
 
