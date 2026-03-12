@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import type { CaregiverPublic } from '@/types/database'
 
-// Reutiliza o mesmo select e mapRow do useSearchCaregivers
 const CAREGIVER_SELECT = `
   id,
   photo_url,
@@ -96,12 +95,11 @@ export function useFamilyMatches(limit = 3) {
 
       const conditions: string[] = familyData?.elderly_conditions ?? []
 
-      // 2. Montar query de cuidadores
+      // 2. Montar query de cuidadores com perfil completo
       let q = supabase
         .from('caregiver_profiles')
         .select(CAREGIVER_SELECT)
-        .eq('status', 'verified')
-        .eq('is_visible', true)
+        .eq('profile_complete', true)
         .order('average_rating', { ascending: false })
         .limit(limit)
 

@@ -819,6 +819,7 @@ TanStack Query v5 para mutations.
 - `src/pages/family/Favorites.tsx` — conectado ao Supabase
 - `src/pages/family/FamilyDashboard.tsx` — conectado ao Supabase
 - `supabase_sprint31.sql` — RLS policies para profiles, family_profiles, favorites
+- `supabase_sprint31b.sql` — coluna `profile_complete`, função + triggers, RLS atualizado
 
 **Decisões tomadas:**
 - Filtro de proximidade por km removido do MVP (ViaCEP não fornece lat/lng)
@@ -827,9 +828,13 @@ TanStack Query v5 para mutations.
 - `CaregiverPublic` é um tipo flat (JOIN de `caregiver_profiles` + `profiles.full_name`)
 - `FamilyMatches.tsx` permanece mock — escopo real é Sprint 4.1 (agendamentos)
 - `useFamilyMatches` alimenta o card "Cuidadores recomendados" no FamilyDashboard
+- **Admin não aprova cuidadores para busca** — visibilidade automática via `profile_complete`
+  → Critérios: cidade+bairro + bio (≥10 chars) + especialidades + referência + rg_cnh (sent/approved)
+  → Trigger recalcula `profile_complete` ao alterar perfil, referências ou documentos
+- Campo `caregiver_profiles.status` mantido no banco (uso futuro em admin), mas não controla busca
 
 ✅ **Sprint 3.1 concluído quando:**
-- Busca retorna apenas cuidadores com `status='verified'` e `is_visible=true`
+- Busca retorna apenas cuidadores com `profile_complete=true`
 - Filtros de especialidade, cidade e bairro funcionam e reduzem resultados
 - Favoritar/desfavoritar persiste no banco após refresh
 

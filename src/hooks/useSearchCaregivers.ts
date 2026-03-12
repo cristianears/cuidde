@@ -91,22 +91,18 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
   return useQuery({
     queryKey: ['caregivers', 'search', filters],
     queryFn: async (): Promise<CaregiverPublic[]> => {
+      // Aparece na busca apenas quem completou o perfil mínimo (calculado por trigger no banco)
       let q = supabase
         .from('caregiver_profiles')
         .select(CAREGIVER_SELECT)
-        .eq('status', 'verified')
-        .eq('is_visible', true)
+        .eq('profile_complete', true)
 
-      // Filtro por nome (profiles.full_name via ilike não é suportado diretamente
-      // em Supabase nested select, então filtramos por bairro/cidade no banco
-      // e por nome no cliente após o fetch)
-
-      // Cidade exata (ilike = case-insensitive)
+      // Filtro por cidade (ilike = case-insensitive)
       if (filters.city && filters.city.trim()) {
         q = q.ilike('city', `%${filters.city.trim()}%`)
       }
 
-      // Bairro (ilike)
+      // Filtro por bairro
       if (filters.neighborhood && filters.neighborhood.trim()) {
         q = q.ilike('neighborhood', `%${filters.neighborhood.trim()}%`)
       }
@@ -145,8 +141,7 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
 
       let rows = (data ?? []).map(mapRow)
 
-      // Filtro por nome / bairro / cidade via query text (client-side)
-      // Aplicado como fallback para busca textual geral
+      // Filtro por nome/bairro/cidade via query text (client-side, para busca geral)
       if (filters.query && filters.query.trim()) {
         const term = filters.query.trim().toLowerCase()
         rows = rows.filter(
