@@ -22,7 +22,6 @@ export type ProfessionalRegType = 'coren' | 'crefito' | 'outros'
 
 export type DocumentType =
   | 'rg_cnh'
-  | 'cnpj'
   | 'curriculo'
   | 'certificacao'
   | 'antecedentes'
@@ -165,6 +164,7 @@ export interface CaregiverDocument {
   status: DocumentStatus
   is_visible: boolean
   required: boolean
+  rejection_reason: string | null
   reviewed_at: string | null
   uploaded_at: string | null
   created_at: string

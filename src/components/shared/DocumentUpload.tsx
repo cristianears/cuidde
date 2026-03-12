@@ -1,17 +1,18 @@
-import { Upload, FileText, Check, X, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, Check, X, AlertCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Document } from "@/data/mockData";
+import type { CaregiverDocument } from "@/types/database";
 
 interface DocumentUploadProps {
-  document: Document;
-  onUpload?: (documentId: string, file: File) => void;
-  onRemove?: (documentId: string) => void;
+  document: CaregiverDocument;
+  label: string;
+  hint?: string;
+  onUpload?: (docType: CaregiverDocument["type"], file: File) => void;
+  onRemove?: (doc: CaregiverDocument) => void;
   className?: string;
-  required?: boolean;
 }
 
-const DocumentUpload = ({ document, onUpload, onRemove, className, required = false }: DocumentUploadProps) => {
+const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }: DocumentUploadProps) => {
   const statusConfig = {
     pending: {
       icon: <Upload className="w-5 h-5" />,
@@ -20,7 +21,7 @@ const DocumentUpload = ({ document, onUpload, onRemove, className, required = fa
       textColor: 'text-muted-foreground',
     },
     sent: {
-      icon: <Loader2 className="w-5 h-5 animate-spin" />,
+      icon: <Clock className="w-5 h-5" />,
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       textColor: 'text-blue-700',
@@ -44,7 +45,9 @@ const DocumentUpload = ({ document, onUpload, onRemove, className, required = fa
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      onUpload?.(document.id, file);
+      onUpload?.(document.type, file);
+      // Reset input so same file can be re-selected
+      e.target.value = "";
     }
   };
 
@@ -57,16 +60,16 @@ const DocumentUpload = ({ document, onUpload, onRemove, className, required = fa
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center flex-wrap gap-2">
-            <h4 className="font-medium text-foreground">{document.name}</h4>
+            <h4 className="font-medium text-foreground">{label}</h4>
             <span
               className={cn(
                 "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium",
-                required
+                document.required
                   ? "bg-orange-50 text-orange-700 border border-orange-200"
                   : "bg-muted text-muted-foreground"
               )}
             >
-              {required ? "Obrigatório" : "Opcional"}
+              {document.required ? "Obrigatório" : "Opcional"}
             </span>
             <span
               className={cn(
@@ -77,22 +80,30 @@ const DocumentUpload = ({ document, onUpload, onRemove, className, required = fa
             >
               {config.icon}
               {document.status === 'pending' && 'Pendente'}
-              {document.status === 'sent' && 'Em análise'}
+              {document.status === 'sent' && 'Enviado'}
               {document.status === 'approved' && 'Aprovado'}
               {document.status === 'rejected' && 'Rejeitado'}
             </span>
           </div>
 
-          {document.uploadedAt && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Enviado em {new Date(document.uploadedAt).toLocaleDateString('pt-BR')}
+          {hint && document.status === 'pending' && (
+            <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+          )}
+
+          {document.file_name && document.status !== 'pending' && (
+            <p className="text-sm text-muted-foreground mt-1">{document.file_name}</p>
+          )}
+
+          {document.uploaded_at && (
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Enviado em {new Date(document.uploaded_at).toLocaleDateString('pt-BR')}
             </p>
           )}
 
-          {document.status === 'rejected' && document.rejectionReason && (
+          {document.status === 'rejected' && document.rejection_reason && (
             <div className="flex items-start gap-2 mt-2 p-2 bg-red-100 rounded-lg">
               <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-red-700">{document.rejectionReason}</p>
+              <p className="text-sm text-red-700">{document.rejection_reason}</p>
             </div>
           )}
         </div>
@@ -136,7 +147,7 @@ const DocumentUpload = ({ document, onUpload, onRemove, className, required = fa
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onRemove?.(document.id)}
+              onClick={() => onRemove?.(document)}
               className="text-muted-foreground hover:text-destructive"
             >
               <X className="w-4 h-4" />

@@ -154,7 +154,7 @@ CREATE TABLE professional_references (
 CREATE TABLE caregiver_documents (
   id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   caregiver_id    UUID REFERENCES caregiver_profiles(id) ON DELETE CASCADE,
-  type            TEXT NOT NULL CHECK (type IN ('rg_cnh','cnpj','curriculo','certificacao','antecedentes')),
+  type            TEXT NOT NULL CHECK (type IN ('rg_cnh','curriculo','certificacao','antecedentes')),
   file_url        TEXT,
   file_name       TEXT,
   status          TEXT DEFAULT 'pending' CHECK (status IN ('pending','sent','approved','rejected')),
@@ -638,7 +638,7 @@ O `mockData.ts` e `DocumentChecklist.tsx` (admin) referenciam `'comprovante_ende
 **Correção:** ao conectar documentos (Sprint 2.2 e Sprint 7.1):
 - Remover `'comprovante_endereco'` de `mockDocuments` no `mockData.ts`
 - Remover a entrada `{ type: "comprovante_endereco", label: "Comprovante de Endereço" }` de `DocumentChecklist.tsx`
-- Tipos válidos: `'rg_cnh' | 'cnpj' | 'curriculo' | 'certificacao' | 'antecedentes'`
+- Tipos válidos: `'rg_cnh' | 'curriculo' | 'certificacao' | 'antecedentes'` (cnpj removido — MEI fora do escopo)
 
 ### C7 — Campo `emergency_available` adicionado ao banco
 
@@ -781,31 +781,23 @@ TanStack Query v5 para mutations.
 - Foto de perfil carregada do Storage bucket `avatars`
 - Colunas novas (`complement`, `journey_types`, `area_type`, `area_radius`, `availability_notes`, `is_available_for_new`, `pricing_note`) confirmadas no banco
 
-#### Sprint 2.2 — Documentos
-> 📖 **Referência obrigatória antes de implementar:** [Supabase Storage — Access Control & RLS](https://supabase.com/docs/guides/storage/security/access-control)
-```
-Preciso conectar o módulo de documentos ao Supabase.
+#### Sprint 2.2 — Documentos ✅ CONCLUÍDO
 
-Arquivo afetado: src/pages/caregiver/CaregiverDocuments.tsx
+**Arquivos entregues:**
+- `src/hooks/useCaregiverDocuments.ts` — `useDocuments`, `useUploadDocument`, `useRemoveDocument`, `useToggleDocumentVisibility`, `useUpdateProfessionalReg`
+- `src/pages/caregiver/CaregiverDocuments.tsx` — reescrito (dados reais)
+- `src/components/shared/DocumentUpload.tsx` — atualizado para `CaregiverDocument` + prop `label`
+- `src/types/database.ts` — `rejection_reason` adicionado a `CaregiverDocument`; `cnpj` removido de `DocumentType`
+- `supabase_sprint22_pre.sql` — constraint, RLS, Storage policies (deve ser rodado antes de testar)
 
-Tarefas:
-1. Criar src/hooks/useCaregiverDocuments.ts com:
-   - query: listar documentos do cuidador (caregiver_documents)
-   - mutation: upload de arquivo → Supabase Storage bucket 'documents'
-     - Salvar file_url e file_name na tabela caregiver_documents
-     - Mudar status para 'sent'
-   - mutation: remover documento (deletar do Storage + resetar status)
-   - mutation: atualizar visibilidade de documento (is_visible)
-   - mutation: salvar registro profissional (professional_reg_type, number, uf)
+**Decisões tomadas:**
+- `file_url` armazena o path do Storage (ex: `{uid}/rg_cnh.pdf`), não URL pública — signed URL gerada no Sprint da família
+- 4 slots de documentos fixos derivados de `DOC_DEFINITIONS`; slots sem registro exibem `status: 'pending'`
+- Upsert usa `UNIQUE(caregiver_id, type)` — reenvio sobrescreve o arquivo no Storage e o registro no banco
+- Visibilidade desabilitada para slots ainda não enviados (sem `id` real no banco)
+- Viewer de documentos para família (signed URL + iframe) → escopo do Sprint 3.x
 
-2. Substituir estado local por dados reais
-3. Barra de progresso deve refletir documentos reais enviados/aprovados
-
-Tipos de documentos reais: rg_cnh (obrigatório), cnpj (só MEI), 
-curriculo, certificacao, antecedentes.
-```
-
-✅ **Sprint 2.2 concluído quando:**
+✅ **Sprint 2.2 concluído — verificado em produção:**
 - Upload de documento aparece no Supabase Storage bucket `documents`
 - Status do documento muda para `sent` após upload
 - Barra de progresso reflete documentos reais (não mock)

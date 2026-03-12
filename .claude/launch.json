@@ -5,7 +5,7 @@
       "name": "Cuidde Dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 8080,
+      "port": 5173,
       "autoPort": false
     }
   ]

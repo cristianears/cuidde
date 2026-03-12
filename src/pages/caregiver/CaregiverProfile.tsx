@@ -118,8 +118,8 @@ const CaregiverProfile = () => {
       setFormData({
         name: profileData.profiles.full_name ?? "",
         email: user?.email ?? "",
-        phone: profileData.profiles.phone ?? "",
-        whatsapp: profileData.whatsapp ?? "",
+        phone: "",
+        whatsapp: profileData.whatsapp ?? profileData.profiles.phone ?? "",
         photo: profileData.photo_url ?? "",
         cep: profileData.cep ?? "",
         street: profileData.street ?? "",
