@@ -92,6 +92,7 @@ export interface CaregiverProfile {
   neighborhood: string | null
   city: string | null
   state: string | null
+  zona: 'zona_norte' | 'zona_sul' | 'zona_leste' | 'zona_oeste' | 'centro' | null
   // Profissional
   specialties: string[]
   modalities: string[]
@@ -354,6 +355,7 @@ export interface CaregiverPublic {
   neighborhood: string | null
   city: string | null
   state: string | null
+  zona: 'zona_norte' | 'zona_sul' | 'zona_leste' | 'zona_oeste' | 'centro' | null
   price_per_hour: number | null
   price_per_day: number | null
   average_rating: number

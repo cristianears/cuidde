@@ -10,6 +10,7 @@ export interface SearchFilters {
   neighborhood?: string    // filtro de bairro
   modalities?: string[]    // formatos de atendimento — must match at least one
   idiomas?: string[]       // idiomas — must match at least one
+  zona?: string            // zona/região de atuação
   withReferences?: boolean // apenas cuidadores com referências
   minPrice?: number
   maxPrice?: number
@@ -44,6 +45,7 @@ const CAREGIVER_SELECT = `
   has_antecedentes,
   has_certificado,
   has_references,
+  zona,
   profiles!inner ( full_name )
 ` as const
 
@@ -72,6 +74,7 @@ type RawRow = {
   has_antecedentes: boolean
   has_certificado: boolean
   has_references: boolean
+  zona: string | null
   profiles: { full_name: string | null } | null
 }
 
@@ -102,6 +105,7 @@ function mapRow(row: RawRow): CaregiverPublic {
     has_antecedentes: row.has_antecedentes,
     has_certificado: row.has_certificado,
     has_references: row.has_references,
+    zona: row.zona as CaregiverPublic["zona"],
   }
 }
 
@@ -127,6 +131,9 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
       }
       if (filters.idiomas && filters.idiomas.length > 0) {
         q = q.contains('idiomas', filters.idiomas)
+      }
+      if (filters.zona) {
+        q = q.eq('zona', filters.zona)
       }
       if (filters.withReferences) {
         q = q.eq('has_references', true)

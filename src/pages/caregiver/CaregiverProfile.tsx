@@ -79,6 +79,7 @@ const CaregiverProfile = () => {
     neighborhood: "",
     city: "",
     state: "",
+    zona: "" as "" | "zona_norte" | "zona_sul" | "zona_leste" | "zona_oeste" | "centro",
     bio: "",
     hasInsurance: false,
     profissaoFormacao: "" as "" | "cuidador" | "tecnico_enfermagem" | "auxiliar_enfermagem" | "enfermeiro" | "fisioterapeuta" | "terapeuta_ocupacional" | "outro",
@@ -129,6 +130,7 @@ const CaregiverProfile = () => {
         neighborhood: profileData.neighborhood ?? "",
         city: profileData.city ?? "",
         state: profileData.state ?? "",
+        zona: (profileData.zona ?? "") as typeof formData.zona,
         bio: profileData.bio ?? "",
         hasInsurance: profileData.has_insurance,
         profissaoFormacao: (profileData.profissao_formacao ?? "") as typeof formData.profissaoFormacao,
@@ -200,6 +202,7 @@ const CaregiverProfile = () => {
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
+        zona: formData.zona || null,
         possui_cnh: formData.possuiCNH,
         categoria_cnh: formData.possuiCNH ? formData.categoriaCNH || null : null,
       })
@@ -473,6 +476,34 @@ const CaregiverProfile = () => {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Zona / Região */}
+                <div className="pt-4 border-t border-border">
+                  <Label htmlFor="zona" className="text-xs md:text-sm">Região de atuação</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5 mb-2">
+                    Selecione a zona da cidade onde você atende. Aparece no filtro de busca das famílias.
+                  </p>
+                  <Select
+                    value={formData.zona}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        zona: value as typeof formData.zona,
+                      }))
+                    }
+                  >
+                    <SelectTrigger id="zona" className="mt-1.5 text-sm">
+                      <SelectValue placeholder="Selecione a região" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zona_norte">Zona Norte</SelectItem>
+                      <SelectItem value="zona_sul">Zona Sul</SelectItem>
+                      <SelectItem value="zona_leste">Zona Leste</SelectItem>
+                      <SelectItem value="zona_oeste">Zona Oeste</SelectItem>
+                      <SelectItem value="centro">Centro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* CNH */}

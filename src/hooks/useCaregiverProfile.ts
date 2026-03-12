@@ -24,6 +24,7 @@ export interface UpdateBasicPayload {
   neighborhood: string
   city: string
   state: string
+  zona: 'zona_norte' | 'zona_sul' | 'zona_leste' | 'zona_oeste' | 'centro' | null
   possui_cnh: boolean
   categoria_cnh: string | null
 }
@@ -137,6 +138,7 @@ export function useUpdateCaregiverBasic() {
           neighborhood: payload.neighborhood,
           city: payload.city,
           state: payload.state,
+          zona: payload.zona,
           possui_cnh: payload.possui_cnh,
           categoria_cnh: payload.possui_cnh ? payload.categoria_cnh : null,
         })

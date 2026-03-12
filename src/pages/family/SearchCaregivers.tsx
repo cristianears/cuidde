@@ -37,12 +37,13 @@ const SearchCaregivers = () => {
     neighborhood: neighborhoodFilter || undefined,
     modalities: selectedModalities.length > 0 ? selectedModalities : undefined,
     idiomas: selectedIdiomas.length > 0 ? selectedIdiomas : undefined,
+    zona: zonaFilter || undefined,
     withReferences: withReferences || undefined,
     minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
     maxPrice: priceRange[1] < 200 ? priceRange[1] : undefined,
     minRating: minRating > 0 ? minRating : undefined,
     emergencyOnly: emergencyOnly || undefined,
-  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
+  }), [searchQuery, cityFilter, neighborhoodFilter, zonaFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
 
   const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
   const { data: favoriteIds = new Set<string>() } = useFavoriteIds();
@@ -83,6 +84,7 @@ const SearchCaregivers = () => {
     (selectedIdiomas.length > 0 ? 1 : 0) +
     (withReferences ? 1 : 0) +
     (emergencyOnly ? 1 : 0) +
+    (zonaFilter ? 1 : 0) +
     (cityFilter.trim() ? 1 : 0) +
     (neighborhoodFilter.trim() ? 1 : 0);
 
@@ -144,6 +146,26 @@ const SearchCaregivers = () => {
                 )}
               </CardHeader>
               <CardContent className="space-y-6">
+
+                {/* Região / Zona */}
+                <div>
+                  <Label className="flex items-center gap-2 mb-3">
+                    <MapPin className="w-4 h-4 text-muted-foreground" />
+                    Região
+                  </Label>
+                  <Select value={zonaFilter} onValueChange={setZonaFilter}>
+                    <SelectTrigger className="text-sm h-9">
+                      <SelectValue placeholder="Todas as regiões" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zona_norte">Zona Norte</SelectItem>
+                      <SelectItem value="zona_sul">Zona Sul</SelectItem>
+                      <SelectItem value="zona_leste">Zona Leste</SelectItem>
+                      <SelectItem value="zona_oeste">Zona Oeste</SelectItem>
+                      <SelectItem value="centro">Centro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {/* Formato de atendimento */}
                 <div>
