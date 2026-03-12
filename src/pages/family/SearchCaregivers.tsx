@@ -270,6 +270,10 @@ const SearchCaregivers = () => {
                     caregiver={caregiver}
                     isFavorite={favoriteIds.has(caregiver.id)}
                     onFavorite={handleFavorite}
+                    hasDocsSent={caregiver.has_rg_cnh}
+                    hasAntecedentes={caregiver.has_antecedentes}
+                    hasCertificados={caregiver.has_certificado}
+                    hasReferencias={caregiver.has_references}
                   />
                 ))}
               </div>

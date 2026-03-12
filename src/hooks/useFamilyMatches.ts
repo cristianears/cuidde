@@ -22,6 +22,10 @@ const CAREGIVER_SELECT = `
   professional_reg_number,
   emergency_available,
   whatsapp,
+  has_rg_cnh,
+  has_antecedentes,
+  has_certificado,
+  has_references,
   profiles!inner ( full_name )
 ` as const
 
@@ -44,6 +48,10 @@ type RawRow = {
   professional_reg_number: string | null
   emergency_available: boolean
   whatsapp: string | null
+  has_rg_cnh: boolean
+  has_antecedentes: boolean
+  has_certificado: boolean
+  has_references: boolean
   profiles: { full_name: string | null } | null
 }
 
@@ -68,6 +76,10 @@ function mapRow(row: RawRow): CaregiverPublic {
     professional_reg_number: row.professional_reg_number,
     emergency_available: row.emergency_available,
     whatsapp: row.whatsapp,
+    has_rg_cnh: row.has_rg_cnh,
+    has_antecedentes: row.has_antecedentes,
+    has_certificado: row.has_certificado,
+    has_references: row.has_references,
   }
 }
 

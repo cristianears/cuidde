@@ -127,6 +127,11 @@ export interface CaregiverProfile {
   is_visible: boolean
   // Completude automática (calculada por trigger — sem aprovação de admin)
   profile_complete: boolean
+  // Flags de documentos enviados (calculadas por trigger — visíveis publicamente)
+  has_rg_cnh: boolean
+  has_antecedentes: boolean
+  has_certificado: boolean
+  has_references: boolean
   // Privacidade das referências
   show_refs_to_subscribers: boolean
   mask_reference_phones: boolean
@@ -359,6 +364,11 @@ export interface CaregiverPublic {
   professional_reg_number: string | null
   emergency_available: boolean
   whatsapp: string | null
+  // Flags de documentos (calculadas por trigger em caregiver_profiles)
+  has_rg_cnh: boolean
+  has_antecedentes: boolean
+  has_certificado: boolean
+  has_references: boolean
 }
 
 // ─── Tipo Database (usado para tipar o cliente Supabase) ─────────────────────

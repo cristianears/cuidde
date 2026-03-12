@@ -41,6 +41,10 @@ const Favorites = () => {
                 caregiver={caregiver}
                 isFavorite={true}
                 onFavorite={handleRemoveFavorite}
+                hasDocsSent={caregiver.has_rg_cnh}
+                hasAntecedentes={caregiver.has_antecedentes}
+                hasCertificados={caregiver.has_certificado}
+                hasReferencias={caregiver.has_references}
               />
             ))}
           </div>
