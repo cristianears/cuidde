@@ -37,13 +37,12 @@ const SearchCaregivers = () => {
     neighborhood: neighborhoodFilter || undefined,
     modalities: selectedModalities.length > 0 ? selectedModalities : undefined,
     idiomas: selectedIdiomas.length > 0 ? selectedIdiomas : undefined,
-    zona: zonaFilter || undefined,
     withReferences: withReferences || undefined,
     minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
     maxPrice: priceRange[1] < 200 ? priceRange[1] : undefined,
     minRating: minRating > 0 ? minRating : undefined,
     emergencyOnly: emergencyOnly || undefined,
-  }), [searchQuery, cityFilter, neighborhoodFilter, zonaFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
+  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
 
   const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
   const { data: favoriteIds = new Set<string>() } = useFavoriteIds();
@@ -84,7 +83,6 @@ const SearchCaregivers = () => {
     (selectedIdiomas.length > 0 ? 1 : 0) +
     (withReferences ? 1 : 0) +
     (emergencyOnly ? 1 : 0) +
-    (zonaFilter ? 1 : 0) +
     (cityFilter.trim() ? 1 : 0) +
     (neighborhoodFilter.trim() ? 1 : 0);
 
@@ -101,27 +99,26 @@ const SearchCaregivers = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar role="family" userName="" />
 
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 min-w-0 overflow-hidden p-4 lg:p-5">
         <PageHeader
           title="Buscar Cuidadores"
           description="Encontre profissionais qualificados na sua região"
         />
-
-        {/* Barra de busca */}
-        <div className="flex gap-3 mb-6">
+        {/* Busca + toggle filtros */}
+        <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome, bairro ou cidade..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-9 h-10"
             />
           </div>
           <Button
             variant={showFilters ? "default" : "outline"}
             onClick={() => setShowFilters(!showFilters)}
-            className="gap-2 h-12"
+            className="gap-2 h-10 shrink-0"
           >
             <Filter className="w-4 h-4" />
             Filtros
@@ -133,43 +130,23 @@ const SearchCaregivers = () => {
           </Button>
         </div>
 
-        <div className="flex gap-6">
-          {/* Painel de filtros */}
+        <div className="flex gap-4 min-w-0 items-start">
+          {/* Painel de filtros — metade da tela */}
           {showFilters && (
-            <Card className="w-80 flex-shrink-0 h-fit sticky top-6">
-              <CardHeader className="flex flex-row items-center justify-between py-4">
-                <CardTitle className="text-base">Filtros</CardTitle>
+            <Card className="w-[317px] flex-shrink-0 h-fit sticky top-4">
+              <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
+                <CardTitle className="text-sm font-semibold">Filtros</CardTitle>
                 {hasActiveFilters && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground h-7 text-xs">
                     Limpar
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="space-y-6">
-
-                {/* Região / Zona */}
-                <div>
-                  <Label className="flex items-center gap-2 mb-3">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    Região
-                  </Label>
-                  <Select value={zonaFilter} onValueChange={setZonaFilter}>
-                    <SelectTrigger className="text-sm h-9">
-                      <SelectValue placeholder="Todas as regiões" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="zona_norte">Zona Norte</SelectItem>
-                      <SelectItem value="zona_sul">Zona Sul</SelectItem>
-                      <SelectItem value="zona_leste">Zona Leste</SelectItem>
-                      <SelectItem value="zona_oeste">Zona Oeste</SelectItem>
-                      <SelectItem value="centro">Centro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <CardContent className="space-y-6 px-4 pb-4">
 
                 {/* Formato de atendimento */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <CalendarClock className="w-4 h-4 text-muted-foreground" />
                     Formato de atendimento
                   </Label>
@@ -194,7 +171,7 @@ const SearchCaregivers = () => {
 
                 {/* Idiomas */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <Globe className="w-4 h-4 text-muted-foreground" />
                     Idiomas
                   </Label>
@@ -219,7 +196,7 @@ const SearchCaregivers = () => {
 
                 {/* Localização */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     Localização
                   </Label>
@@ -228,20 +205,20 @@ const SearchCaregivers = () => {
                       placeholder="Cidade"
                       value={cityFilter}
                       onChange={(e) => setCityFilter(e.target.value)}
-                      className="h-9 text-sm"
+                      className="h-8 text-xs"
                     />
                     <Input
                       placeholder="Bairro"
                       value={neighborhoodFilter}
                       onChange={(e) => setNeighborhoodFilter(e.target.value)}
-                      className="h-9 text-sm"
+                      className="h-8 text-xs"
                     />
                   </div>
                 </div>
 
                 {/* Valor por hora */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <DollarSign className="w-4 h-4 text-muted-foreground" />
                     Valor por hora
                   </Label>
@@ -252,7 +229,7 @@ const SearchCaregivers = () => {
                     step={5}
                     className="mb-2"
                   />
-                  <div className="flex justify-between text-sm text-muted-foreground">
+                  <div className="flex justify-between text-xs text-muted-foreground">
                     <span>R$ {priceRange[0]}</span>
                     <span>R$ {priceRange[1]}</span>
                   </div>
@@ -260,18 +237,18 @@ const SearchCaregivers = () => {
 
                 {/* Avaliação mínima */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <Star className="w-4 h-4 text-muted-foreground" />
                     Avaliação mínima
                   </Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-1">
                     {[0, 3, 4, 4.5].map((rating) => (
                       <Button
                         key={rating}
                         variant={minRating === rating ? "default" : "outline"}
                         size="sm"
                         onClick={() => setMinRating(rating)}
-                        className={cn("flex-1", minRating === rating && "bg-primary")}
+                        className={cn("h-7 text-xs px-2", minRating === rating && "bg-primary")}
                       >
                         {rating === 0 ? "Todas" : `${rating}+`}
                       </Button>
@@ -279,27 +256,25 @@ const SearchCaregivers = () => {
                   </div>
                 </div>
 
-                {/* Disponibilidade e confiança */}
+                {/* Disponibilidade */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <Clock className="w-4 h-4 text-muted-foreground" />
                     Disponibilidade
                   </Label>
-                  <div className="space-y-2">
-                    <Button
-                      variant={emergencyOnly ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setEmergencyOnly(!emergencyOnly)}
-                      className={cn("w-full justify-start", emergencyOnly && "bg-primary")}
-                    >
-                      Disponível para emergências
-                    </Button>
-                  </div>
+                  <Button
+                    variant={emergencyOnly ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setEmergencyOnly(!emergencyOnly)}
+                    className={cn("h-7 text-xs justify-start w-full", emergencyOnly && "bg-primary")}
+                  >
+                    Disponível p/ emergências
+                  </Button>
                 </div>
 
                 {/* Referências */}
                 <div>
-                  <Label className="flex items-center gap-2 mb-3">
+                  <Label className="flex items-center gap-2 mb-2 text-xs">
                     <User className="w-4 h-4 text-muted-foreground" />
                     Referências
                   </Label>
@@ -307,9 +282,9 @@ const SearchCaregivers = () => {
                     variant={withReferences ? "default" : "outline"}
                     size="sm"
                     onClick={() => setWithReferences(!withReferences)}
-                    className={cn("w-full justify-start", withReferences && "bg-primary")}
+                    className={cn("h-7 text-xs justify-start w-full", withReferences && "bg-primary")}
                   >
-                    Com referências profissionais
+                    Com referências
                   </Button>
                 </div>
 
@@ -318,8 +293,8 @@ const SearchCaregivers = () => {
           )}
 
           {/* Resultados */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-3">
               {isLoading ? (
                 <p className="text-sm text-muted-foreground">Buscando cuidadores...</p>
               ) : (
@@ -330,13 +305,13 @@ const SearchCaregivers = () => {
             </div>
 
             {isLoading ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <Card key={i} className="h-48 animate-pulse bg-muted" />
+                  <Card key={i} className="h-36 animate-pulse bg-muted" />
                 ))}
               </div>
             ) : caregivers.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {caregivers.map((caregiver) => (
                   <CaregiverCard
                     key={caregiver.id}

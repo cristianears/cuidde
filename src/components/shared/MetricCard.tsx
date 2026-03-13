@@ -9,6 +9,7 @@ interface MetricCardProps {
   changeLabel?: string;
   icon?: React.ReactNode;
   className?: string;
+  compact?: boolean;
 }
 
 const MetricCard = ({
@@ -18,17 +19,18 @@ const MetricCard = ({
   changeLabel,
   icon,
   className,
+  compact = false,
 }: MetricCardProps) => {
   const isPositive = change && change > 0;
   const isNegative = change && change < 0;
 
   return (
     <Card className={cn("", className)}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
+      <CardContent className={cn(compact ? "p-3" : "p-6")}>
+        <div className="flex items-center justify-between">
           <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
+            <p className={cn("font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>{title}</p>
+            <p className={cn("font-bold text-foreground", compact ? "text-xl mt-0.5" : "text-2xl mt-1")}>{value}</p>
             {change !== undefined && (
               <div className="flex items-center gap-1 mt-2">
                 {isPositive && <TrendingUp className="w-4 h-4 text-emerald-600" />}
@@ -51,7 +53,7 @@ const MetricCard = ({
             )}
           </div>
           {icon && (
-            <div className="p-3 rounded-xl bg-primary/10 text-primary">
+            <div className={cn("rounded-xl bg-primary/10 text-primary", compact ? "p-2" : "p-3")}>
               {icon}
             </div>
           )}

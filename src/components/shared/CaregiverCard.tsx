@@ -9,8 +9,6 @@ import type { CaregiverPublic } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
-// ─── Labels ──────────────────────────────────────────────────────────────────
-
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
   tecnico_enfermagem: "Técnico(a) de Enfermagem",
@@ -20,8 +18,6 @@ const PROFISSAO_LABELS: Record<string, string> = {
   terapeuta_ocupacional: "Terapeuta Ocupacional",
   outro: "Outro",
 };
-
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface CaregiverCardProps {
   caregiver: CaregiverPublic;
@@ -36,13 +32,11 @@ interface CaregiverCardProps {
   distanceKm?: number;
 }
 
-// ─── Chip helper ─────────────────────────────────────────────────────────────
-
 function Chip({ label, color = "gray" }: { label: string; color?: "gray" | "blue" | "emerald" }) {
   return (
     <span
       className={cn(
-        "inline-block px-2 py-0.5 rounded-full text-xs font-medium leading-tight",
+        "inline-block px-2 py-0.5 rounded-full text-xs font-medium leading-tight whitespace-nowrap",
         color === "blue"    && "bg-blue-50 text-blue-700",
         color === "emerald" && "bg-emerald-50 text-emerald-700",
         color === "gray"    && "bg-muted text-muted-foreground",
@@ -53,7 +47,16 @@ function Chip({ label, color = "gray" }: { label: string; color?: "gray" | "blue
   );
 }
 
-// ─── Componente principal ─────────────────────────────────────────────────────
+function ChipList({ items, color, max = 3 }: { items: string[]; color: "blue" | "emerald"; max?: number }) {
+  const visible = items.slice(0, max);
+  const extra = items.length - max;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {visible.map((s) => <Chip key={s} label={s} color={color} />)}
+      {extra > 0 && <Chip label={`+${extra}`} color="gray" />}
+    </div>
+  );
+}
 
 const CaregiverCard = ({
   caregiver,
@@ -83,29 +86,37 @@ const CaregiverCard = ({
     ? (PROFISSAO_LABELS[caregiver.profissao_formacao] ?? caregiver.profissao_formacao)
     : null;
 
-  // Idiomas: remover "Outro" se aparecer (substituído pelo valor digitado)
-  const idiomasDisplay = (caregiver.idiomas ?? []).filter(
-    (i) => i.toLowerCase() !== "outro"
-  );
+  const idiomasDisplay = (caregiver.idiomas ?? []).filter((i) => i.toLowerCase() !== "outro");
+
+  const trustBadges = [
+    hasDocsSent       && { icon: FileText,   label: "Documentos enviados",      cls: "bg-emerald-50 text-emerald-700" },
+    hasAntecedentes   && { icon: Shield,     label: "Certidão de antecedentes", cls: "bg-violet-50 text-violet-700"  },
+    hasReferencias    && { icon: User,       label: "Referências profissionais", cls: "bg-amber-50 text-amber-700"   },
+    hasCertificados   && { icon: BadgeCheck, label: "Certificados informados",  cls: "bg-blue-50 text-blue-700"     },
+    caregiver.possui_cnh      && { icon: Car,      label: "Possui CNH",               cls: "bg-indigo-50 text-indigo-700" },
+    caregiver.has_insurance   && { icon: Award,    label: "Seguro informado",         cls: "bg-teal-50 text-teal-700"   },
+    caregiver.professional_reg_number && { icon: FileCheck, label: "Registro profissional", cls: "bg-accent/10 text-accent" },
+    caregiver.emergency_available     && { icon: Zap,       label: "Disponível p/ emergências", cls: "bg-rose-50 text-rose-700" },
+  ].filter(Boolean) as { icon: React.ElementType; label: string; cls: string }[];
 
   return (
-    <Card className={cn("overflow-hidden hover:shadow-lg transition-shadow duration-300", className)}>
+    <Card className={cn("overflow-hidden hover:shadow-md transition-shadow duration-200", className)}>
       <CardContent className="p-0">
-        <div className="flex flex-col sm:flex-row">
+        <div className="flex min-w-0">
 
-          {/* ── Foto ─────────────────────────────────────────────────────── */}
-          <div className="relative w-full sm:w-40 h-48 sm:h-auto flex-shrink-0 bg-muted">
+          {/* ── Foto ── */}
+          <div className="relative w-28 sm:w-40 flex-shrink-0 bg-muted self-stretch">
             {caregiver.photo_url ? (
               <img
                 src={caregiver.photo_url}
                 alt={caregiver.full_name ?? "Cuidador"}
-                className="w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover object-top"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={caregiver.photo_url ?? undefined} />
-                  <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Avatar className="w-16 h-16">
+                  <AvatarImage src={undefined} />
+                  <AvatarFallback className="text-xl bg-primary/10 text-primary">
                     {getInitials(caregiver.full_name)}
                   </AvatarFallback>
                 </Avatar>
@@ -114,200 +125,134 @@ const CaregiverCard = ({
             <button
               onClick={handleFavorite}
               className={cn(
-                "absolute top-3 right-3 p-2 rounded-full transition-all",
+                "absolute top-2 right-2 p-1.5 rounded-full transition-all z-10",
                 favorite
                   ? "bg-destructive text-destructive-foreground"
                   : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:bg-background"
               )}
             >
-              <Heart className={cn("w-4 h-4", favorite && "fill-current")} />
+              <Heart className={cn("w-3.5 h-3.5", favorite && "fill-current")} />
             </button>
           </div>
 
-          {/* ── Conteúdo ─────────────────────────────────────────────────── */}
-          <div className="flex-1 p-4 sm:p-5">
+          {/* ── Conteúdo ── */}
+          <div className="flex-1 min-w-0 p-3 sm:p-4 flex flex-col gap-1.5">
 
-            {/* Nome */}
-            <h3 className="font-semibold text-lg text-foreground mb-0.5">
+            {/* Linha 1: Nome */}
+            <h3 className="font-semibold text-base text-foreground truncate leading-tight">
               {caregiver.full_name ?? "Nome não informado"}
             </h3>
 
-            {/* Formação + experiência */}
-            <div className="flex items-center gap-2 flex-wrap mb-2">
+            {/* Linha 2: Profissão + exp + localização */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
               {profissaoLabel && (
-                <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                  <span>{profissaoLabel}</span>
-                </div>
+                <span className="flex items-center gap-1 shrink-0">
+                  <Briefcase className="w-3 h-3" />
+                  {profissaoLabel}
+                  {caregiver.experience_years > 0 && (
+                    <span className="text-muted-foreground/70">
+                      · {caregiver.experience_years}{caregiver.experience_years === 1 ? " ano" : " anos"} exp.
+                    </span>
+                  )}
+                </span>
               )}
-              {caregiver.experience_years > 0 && (
-                <span className="text-xs text-muted-foreground">
-                  · {caregiver.experience_years}{" "}
-                  {caregiver.experience_years === 1 ? "ano de exp." : "anos de exp."}
+              {(caregiver.neighborhood || caregiver.city) && (
+                <span className="flex items-center gap-1 truncate">
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="truncate">
+                    {[caregiver.neighborhood, caregiver.city].filter(Boolean).join(", ")}
+                  </span>
+                  {distanceKm !== undefined && (
+                    <span className="text-primary font-medium shrink-0">
+                      {distanceKm < 1 ? "< 1 km" : `${distanceKm} km`}
+                    </span>
+                  )}
                 </span>
               )}
             </div>
 
-            {/* Localização */}
-            {(caregiver.neighborhood || caregiver.city) && (
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-2">
-                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                <span>
-                  {[caregiver.neighborhood, caregiver.city].filter(Boolean).join(", ")}
+            {/* Linha 3: Preços + Avaliação */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs">
+              {caregiver.price_per_hour && (
+                <span className="flex items-center gap-1 font-semibold text-foreground">
+                  <Clock className="w-3 h-3 text-muted-foreground" />
+                  R$ {caregiver.price_per_hour}/h
                 </span>
-                {distanceKm !== undefined && (
-                  <span className="ml-auto text-xs font-medium text-primary whitespace-nowrap">
-                    {distanceKm < 1 ? "< 1 km" : `${distanceKm} km`}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Preços */}
-            {(caregiver.price_per_hour || caregiver.price_per_day) && (
-              <div className="flex items-center gap-4 mb-2">
-                {caregiver.price_per_hour && (
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <Clock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    <span className="font-semibold text-foreground">
-                      R$ {caregiver.price_per_hour}/h
-                    </span>
-                  </div>
-                )}
-                {caregiver.price_per_day && (
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <CalendarClock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    <span className="font-semibold text-foreground">
-                      R$ {caregiver.price_per_day}/plantão
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Avaliações */}
-            <div className="flex items-center gap-2 mb-3">
+              )}
+              {caregiver.price_per_day && (
+                <span className="flex items-center gap-1 font-semibold text-foreground">
+                  <CalendarClock className="w-3 h-3 text-muted-foreground" />
+                  R$ {caregiver.price_per_day}/plantão
+                </span>
+              )}
               {caregiver.review_count > 0 ? (
-                <>
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
-                  <span className="font-semibold text-foreground text-sm">
-                    {Number(caregiver.average_rating).toFixed(1)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    ({caregiver.review_count}{" "}
-                    {caregiver.review_count === 1 ? "avaliação" : "avaliações"})
-                  </span>
-                </>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  <span className="font-semibold text-foreground">{Number(caregiver.average_rating).toFixed(1)}</span>
+                  <span>({caregiver.review_count})</span>
+                </span>
               ) : (
-                <>
-                  <Star className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-                  <span className="text-xs text-muted-foreground">Sem avaliações ainda</span>
-                </>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <Star className="w-3 h-3 text-muted-foreground/40" />
+                  Sem avaliações
+                </span>
               )}
             </div>
 
-            {/* Biografia */}
+            {/* Linha 4: Bio */}
             {caregiver.bio && (
-              <div className="bg-muted/50 rounded-lg px-3 py-2.5 mb-3 border border-border/50">
-                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                  {caregiver.bio}
-                </p>
-              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed overflow-hidden">
+                {caregiver.bio}
+              </p>
             )}
 
-            {/* Especialidades */}
-            {caregiver.specialties?.length > 0 && (
-              <div className="mb-2">
-                <p className="text-xs font-medium text-foreground mb-1.5">Especialidades</p>
-                <div className="flex flex-wrap gap-1">
-                  {caregiver.specialties.map((s) => (
-                    <Chip key={s} label={s} color="blue" />
-                  ))}
+            {/* Linha 5: Especialidades + Formatos lado a lado */}
+            <div className="flex flex-col gap-1">
+              {caregiver.specialties?.length > 0 && (
+                <div>
+                  <span className="text-xs font-medium text-foreground mr-1.5">Especialidades</span>
+                  <ChipList items={caregiver.specialties} color="blue" max={3} />
                 </div>
-              </div>
-            )}
-
-            {/* Formatos de atendimento */}
-            {caregiver.modalities?.length > 0 && (
-              <div className="mb-2">
-                <p className="text-xs font-medium text-foreground mb-1.5">Formatos de atendimento</p>
-                <div className="flex flex-wrap gap-1">
-                  {caregiver.modalities.map((m) => (
-                    <Chip key={m} label={m} color="emerald" />
-                  ))}
+              )}
+              {caregiver.modalities?.length > 0 && (
+                <div>
+                  <span className="text-xs font-medium text-foreground mr-1.5">Formatos</span>
+                  <ChipList items={caregiver.modalities} color="emerald" max={3} />
                 </div>
-              </div>
-            )}
-
-            {/* Idiomas */}
-            {idiomasDisplay.length > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-                <Globe className="w-3.5 h-3.5 shrink-0" />
-                <span className="text-xs">{idiomasDisplay.join(" · ")}</span>
-              </div>
-            )}
-
-            {/* Badges de documentos e confiança */}
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {hasDocsSent && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
-                  <FileText className="w-3 h-3" />
-                  Documentos enviados
-                </span>
-              )}
-              {hasCertificados && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                  <BadgeCheck className="w-3 h-3" />
-                  Certificados informados
-                </span>
-              )}
-              {hasAntecedentes && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700">
-                  <Shield className="w-3 h-3" />
-                  Certidão de antecedentes
-                </span>
-              )}
-              {hasReferencias && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
-                  <User className="w-3 h-3" />
-                  Referências profissionais
-                </span>
-              )}
-              {caregiver.possui_cnh && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
-                  <Car className="w-3 h-3" />
-                  Possui CNH
-                </span>
-              )}
-              {caregiver.has_insurance && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700">
-                  <Award className="w-3 h-3" />
-                  Seguro informado
-                </span>
-              )}
-              {caregiver.professional_reg_number && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
-                  <FileCheck className="w-3 h-3" />
-                  Registro profissional
-                </span>
-              )}
-              {caregiver.emergency_available && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700">
-                  <Zap className="w-3 h-3" />
-                  Disponível para emergências
-                </span>
               )}
             </div>
+
+            {/* Linha 6: Idiomas */}
+            {idiomasDisplay.length > 0 && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Globe className="w-3 h-3 shrink-0" />
+                <span className="truncate">{idiomasDisplay.join(" · ")}</span>
+              </div>
+            )}
+
+            {/* Linha 7: Trust badges */}
+            {trustBadges.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {trustBadges.map(({ icon: Icon, label, cls }) => (
+                  <span key={label} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium", cls)}>
+                    <Icon className="w-3 h-3" />
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* CTA */}
-            <div className="pt-3 border-t border-border/50">
+            <div className="pt-1.5 mt-auto border-t border-border/50">
               <Button
                 onClick={() => onContact?.(caregiver.id)}
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                size="sm"
+                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground h-8 text-xs"
               >
                 Ver perfil
               </Button>
             </div>
+
           </div>
         </div>
       </CardContent>

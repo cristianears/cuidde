@@ -21,20 +21,20 @@ const Favorites = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar role="family" userName="" />
 
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-4 lg:p-6 min-w-0">
+        <div className="max-w-3xl">
         <PageHeader
           title="Favoritos"
           description="Cuidadores que você salvou"
         />
-
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="h-48 animate-pulse bg-muted" />
+              <Card key={i} className="h-36 animate-pulse bg-muted" />
             ))}
           </div>
         ) : favorites.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {favorites.map(({ favorite_id, caregiver }) => (
               <CaregiverCard
                 key={favorite_id}
@@ -62,6 +62,7 @@ const Favorites = () => {
             </Button>
           </Card>
         )}
+        </div>
       </main>
     </div>
   );

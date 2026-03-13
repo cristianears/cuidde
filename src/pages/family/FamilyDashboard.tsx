@@ -40,48 +40,53 @@ const FamilyDashboard = () => {
         userName={displayName}
       />
 
-      <main className="flex-1 p-6 lg:p-8">
-        <PageHeader
-          title={`Olá, ${firstName}!`}
-          description="Encontre o cuidador ideal para sua família"
-        >
-          <Button asChild className="gap-2 bg-accent hover:bg-accent/90">
+      <main className="flex-1 p-4 lg:p-6">
+        {/* Header compacto + métricas em linha */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Olá, {firstName}!</h1>
+            <p className="text-sm text-muted-foreground">Encontre o cuidador ideal para sua família</p>
+          </div>
+          <Button asChild className="gap-2 bg-accent hover:bg-accent/90 shrink-0">
             <Link to="/family/search">
               <Search className="w-4 h-4" />
               Buscar cuidadores
             </Link>
           </Button>
-        </PageHeader>
+        </div>
 
-        {/* Métricas rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {/* Métricas rápidas compactas */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
           <MetricCard
-            title="Cuidadores favoritos"
+            title="Favoritos"
             value={favoriteIds.size}
-            icon={<Heart className="w-5 h-5" />}
+            icon={<Heart className="w-4 h-4" />}
+            compact
           />
           <MetricCard
             title="Solicitações ativas"
             value={2}
-            icon={<Clock className="w-5 h-5" />}
+            icon={<Clock className="w-4 h-4" />}
+            compact
           />
           <MetricCard
-            title="Cuidadores recomendados"
+            title="Recomendados"
             value={matchedCaregivers.length}
-            icon={<Users className="w-5 h-5" />}
+            icon={<Users className="w-4 h-4" />}
+            compact
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Cuidadores recomendados */}
           <Card className="lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Cuidadores recomendados</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
+              <CardTitle className="text-base">Cuidadores recomendados</CardTitle>
               <Link to="/family/search" className="text-sm text-primary hover:underline">
                 Ver todos
               </Link>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 px-4 pb-4">
               {loadingMatches ? (
                 <>
                   {[1, 2, 3].map((i) => (

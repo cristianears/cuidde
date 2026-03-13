@@ -27,11 +27,17 @@ const CAREGIVER_SELECT = `
   average_rating,
   review_count,
   specialties,
+  modalities,
+  idiomas,
   possui_cnh,
   has_insurance,
   professional_reg_number,
   emergency_available,
   whatsapp,
+  has_rg_cnh,
+  has_antecedentes,
+  has_certificado,
+  has_references,
   profiles!inner ( full_name )
 ` as const
 
@@ -49,11 +55,17 @@ type RawCaregiver = {
   average_rating: number
   review_count: number
   specialties: string[]
+  modalities: string[]
+  idiomas: string[]
   possui_cnh: boolean
   has_insurance: boolean
   professional_reg_number: string | null
   emergency_available: boolean
   whatsapp: string | null
+  has_rg_cnh: boolean
+  has_antecedentes: boolean
+  has_certificado: boolean
+  has_references: boolean
   profiles: { full_name: string | null } | null
 }
 
@@ -73,11 +85,17 @@ function mapCaregiver(row: RawCaregiver): CaregiverPublic {
     average_rating: row.average_rating,
     review_count: row.review_count,
     specialties: row.specialties ?? [],
+    modalities: row.modalities ?? [],
+    idiomas: row.idiomas ?? [],
     possui_cnh: row.possui_cnh,
     has_insurance: row.has_insurance,
     professional_reg_number: row.professional_reg_number,
     emergency_available: row.emergency_available,
     whatsapp: row.whatsapp,
+    has_rg_cnh: row.has_rg_cnh,
+    has_antecedentes: row.has_antecedentes,
+    has_certificado: row.has_certificado,
+    has_references: row.has_references,
   }
 }
 
