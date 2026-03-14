@@ -26,12 +26,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   async function loadProfile(userId: string) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data ?? null)
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.error('[AuthContext] Erro ao carregar perfil:', error.message)
+        setProfile(null)
+        return
+      }
+      setProfile(data ?? null)
+    } catch (err) {
+      console.error('[AuthContext] Erro inesperado ao carregar perfil:', err)
+      setProfile(null)
+    }
   }
 
   useEffect(() => {

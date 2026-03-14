@@ -40,6 +40,8 @@ export function useUploadDocument() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
+  const docQueryKey = ['caregiver-documents', user?.id]
+
   return useMutation({
     mutationFn: async ({ docType, file }: { docType: DocumentType; file: File }) => {
       const ext = file.name.split('.').pop() ?? 'pdf'
@@ -72,7 +74,7 @@ export function useUploadDocument() {
       if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS.')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiver-documents'] })
+      queryClient.invalidateQueries({ queryKey: docQueryKey })
       toast.success('Documento enviado com sucesso!')
     },
     onError: (error: Error) => {
@@ -85,6 +87,7 @@ export function useUploadDocument() {
 // ─── Mutation: remover documento ──────────────────────────────────────────────
 
 export function useRemoveDocument() {
+  const { user } = useAuth()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -107,7 +110,7 @@ export function useRemoveDocument() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiver-documents'] })
+      queryClient.invalidateQueries({ queryKey: ['caregiver-documents', user?.id] })
       toast.success('Documento removido.')
     },
     onError: (error: Error) => {
@@ -120,6 +123,7 @@ export function useRemoveDocument() {
 // ─── Mutation: toggle de visibilidade ────────────────────────────────────────
 
 export function useToggleDocumentVisibility() {
+  const { user } = useAuth()
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -132,7 +136,7 @@ export function useToggleDocumentVisibility() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiver-documents'] })
+      queryClient.invalidateQueries({ queryKey: ['caregiver-documents', user?.id] })
     },
     onError: (error: Error) => {
       toast.error(`Erro ao atualizar visibilidade: ${error.message}`)
@@ -164,7 +168,7 @@ export function useUpdateProfessionalReg() {
       if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS.')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiver-profile'] })
+      queryClient.invalidateQueries({ queryKey: ['caregiverProfile', user?.id] })
       toast.success('Registro profissional salvo!')
     },
     onError: (error: Error) => {

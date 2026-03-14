@@ -45,7 +45,8 @@ const SearchCaregivers = () => {
   }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
 
   const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
-  const { data: favoriteIds = new Set<string>() } = useFavoriteIds();
+  const { data: favoriteIdsList = [] } = useFavoriteIds();
+  const favoriteIds = new Set(favoriteIdsList);
   const { mutate: addFavorite } = useAddFavorite();
   const { mutate: removeFavorite } = useRemoveFavorite();
 

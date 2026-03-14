@@ -15,7 +15,8 @@ const FamilyDashboard = () => {
   const { user } = useAuth();
   const { data: familyProfile } = useFamilyProfile();
   const { data: matchedCaregivers = [], isLoading: loadingMatches } = useFamilyMatches(3);
-  const { data: favoriteIds = new Set<string>() } = useFavoriteIds();
+  const { data: favoriteIdsList = [] } = useFavoriteIds();
+  const favoriteIds = new Set(favoriteIdsList);
   const { mutate: addFavorite } = useAddFavorite();
   const { mutate: removeFavorite } = useRemoveFavorite();
 
