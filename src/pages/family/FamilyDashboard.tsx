@@ -29,9 +29,7 @@ const FamilyDashboard = () => {
     }
   };
 
-  const displayName = familyProfile
-    ? (familyProfile as any).profiles?.full_name ?? ""
-    : "";
+  const displayName = familyProfile?.profiles?.full_name ?? "";
   const firstName = displayName ? displayName.split(" ")[0] : "Família";
 
   return (

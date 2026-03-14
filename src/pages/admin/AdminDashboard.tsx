@@ -65,7 +65,7 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 {pendingApprovals.slice(0, 4).map((caregiver) => (
                   <div key={caregiver.id} className="flex items-center gap-4 p-4 rounded-xl bg-muted/50">
-                    <img src={caregiver.photo} alt={caregiver.name} className="w-12 h-12 rounded-full object-cover" />
+                    <img src={caregiver.photo} alt={caregiver.name} className="w-12 h-12 rounded-full object-cover" loading="lazy" />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{caregiver.name}</p>
                       <p className="text-sm text-muted-foreground">

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { signInWithEmail, signInWithGoogle } from '@/lib/auth'
+import { signInWithEmail, signInWithGoogle, resetPasswordForEmail } from '@/lib/auth'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 
@@ -34,6 +34,10 @@ export default function Login() {
 
   // Flag: o usuário acabou de fazer login com email com sucesso
   const [loginSuccess, setLoginSuccess] = useState(false)
+
+  // Rate limiting: bloqueia após 5 tentativas por 60s
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null)
 
   // Ref para preservar redirect/cep dos searchParams
   const redirectRef = useRef(searchParams.get('redirect'))
@@ -67,12 +71,27 @@ export default function Login() {
     navigate('/onboarding' + (email ? `?email=${encodeURIComponent(email)}` : ''))
   }
 
+  const isLocked = lockedUntil !== null && Date.now() < lockedUntil
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
+    if (isLocked) {
+      const secsLeft = Math.ceil((lockedUntil! - Date.now()) / 1000)
+      toast.error(`Muitas tentativas. Aguarde ${secsLeft}s.`)
+      return
+    }
     setIsSubmitting(true)
     try {
       const { error } = await signInWithEmail(email, password)
       if (error) {
+        const newAttempts = failedAttempts + 1
+        setFailedAttempts(newAttempts)
+        if (newAttempts >= 5) {
+          setLockedUntil(Date.now() + 60_000)
+          setFailedAttempts(0)
+          toast.error('Muitas tentativas falhadas. Conta bloqueada por 60 segundos.')
+          return
+        }
         toast.error(
           error.message === 'Invalid login credentials'
             ? 'E-mail ou senha incorretos.'
@@ -80,8 +99,8 @@ export default function Login() {
         )
         return
       }
-      // NÃO navega aqui — marca sucesso e deixa o useEffect acima
-      // redirecionar quando o AuthContext atualizar com o role
+      setFailedAttempts(0)
+      setLockedUntil(null)
       setLoginSuccess(true)
     } finally {
       setIsSubmitting(false)
@@ -155,7 +174,7 @@ export default function Login() {
                         onChange={(e) => setEmail(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && email.includes('@') && setView('password')}
                         autoFocus
-                        className="h-12 pl-11 rounded-xl border-border/80 focus:border-primary"
+                        className="h-12 pl-11 rounded-xl border-border/80 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/50"
                       />
                     </div>
                   </div>
@@ -233,12 +252,13 @@ export default function Login() {
                           onChange={(e) => setPassword(e.target.value)}
                           autoFocus
                           required
-                          className="h-12 pl-11 pr-11 rounded-xl border-border/80 focus:border-primary"
+                          className="h-12 pl-11 pr-11 rounded-xl border-border/80 focus:border-primary focus-visible:ring-2 focus-visible:ring-primary/50"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                           tabIndex={-1}
                         >
                           {showPassword ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -247,7 +267,18 @@ export default function Login() {
                       <button
                         type="button"
                         className="text-xs text-primary hover:underline mt-2 block"
-                        onClick={() => toast.info('Funcionalidade de recuperação de senha em breve.')}
+                        onClick={async () => {
+                          if (!email.includes('@')) {
+                            toast.error('Volte e digite seu e-mail primeiro.')
+                            return
+                          }
+                          const { error } = await resetPasswordForEmail(email)
+                          if (error) {
+                            toast.error(error.message)
+                          } else {
+                            toast.success('E-mail de recuperação enviado! Verifique sua caixa de entrada.')
+                          }
+                        }}
                       >
                         Esqueceu sua senha?
                       </button>
@@ -265,7 +296,7 @@ export default function Login() {
                       </Button>
                       <Button
                         type="submit"
-                        disabled={isSubmitting || !password}
+                        disabled={isSubmitting || !password || isLocked}
                         className="flex-1 h-12 rounded-xl bg-accent hover:bg-accent/90 text-accent-foreground font-semibold shadow-lg shadow-accent/20"
                       >
                         {isSubmitting ? (

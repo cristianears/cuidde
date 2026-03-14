@@ -22,6 +22,7 @@ import {
   Search,
   MessageCircle,
   TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import StarRating from "@/components/shared/StarRating";
@@ -32,6 +33,8 @@ import { Badge } from "@/components/ui/badge";
 import { mockCaregivers, mockDocuments, mockReviews, mockAppointments, mockReferences } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 
 // ---------------------------------------------------------------------------
 // Insights mock data
@@ -110,6 +113,8 @@ function getWeeklyTip() {
 // ---------------------------------------------------------------------------
 
 const CaregiverDashboard = () => {
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
   // Using first caregiver as current user for demo
   const currentUser = mockCaregivers[0];
   const userDocuments = mockDocuments.filter((d) => d.caregiverId === currentUser.id);
@@ -191,9 +196,8 @@ const CaregiverDashboard = () => {
     <div className="flex min-h-screen bg-muted/30">
       <AppSidebar
         role="caregiver"
-        userName={currentUser.name}
-        userPhoto={currentUser.photo}
-        verificationStatus={currentUser.status}
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
       />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
@@ -332,7 +336,7 @@ const CaregiverDashboard = () => {
                           : "bg-red-100 text-red-700",
                       )}
                     >
-                      {mockInsights.visualizacoes_delta_pct > 0 ? "▲" : "▼"}{" "}
+                      {mockInsights.visualizacoes_delta_pct > 0 ? <TrendingUp className="w-3 h-3 inline" /> : <TrendingDown className="w-3 h-3 inline" />}{" "}
                       {Math.abs(mockInsights.visualizacoes_delta_pct)}% vs mês anterior
                     </span>
                   )}

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, User, Clock, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { mockCaregivers } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 
 interface Appointment {
   id: string;
@@ -57,6 +59,8 @@ const mockAppointments: Appointment[] = [
 
 const CaregiverAppointments = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
   const [activeTab, setActiveTab] = useState<"ativos" | "finalizados" | "pendentes">("ativos");
 
   const currentUser = mockCaregivers[0];
@@ -222,7 +226,7 @@ const CaregiverAppointments = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar role="caregiver" userName={profileData?.profiles.full_name ?? user?.email ?? ""} userPhoto={profileData?.photo_url ?? undefined} />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader

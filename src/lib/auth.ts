@@ -21,6 +21,7 @@ export async function signUpWithEmail(
         full_name: metadata.full_name,
         phone: metadata.phone,
       },
+      emailRedirectTo: `${window.location.origin}/login`,
     },
   })
 }
@@ -49,4 +50,10 @@ export async function getSession() {
 
 export async function resendConfirmationEmail(email: string) {
   return supabase.auth.resend({ type: 'signup', email })
+}
+
+export async function resetPasswordForEmail(email: string) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`,
+  })
 }

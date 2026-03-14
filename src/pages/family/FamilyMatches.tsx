@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { mockFamilies } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
 type MatchStatus = "pending" | "accepted" | "rejected";
 
@@ -67,6 +69,8 @@ const mockMatchRequests: MatchRequest[] = [
 ];
 
 const FamilyMatches = () => {
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const currentUser = mockFamilies[0];
   const hasAnyMatches = mockMatchRequests.length > 0;
 
@@ -191,7 +195,7 @@ const FamilyMatches = () => {
   if (!hasAnyMatches) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="family" userName={currentUser.name} />
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
         <main className="flex-1 p-6 lg:p-8">
           <PageHeader
@@ -209,7 +213,7 @@ const FamilyMatches = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={currentUser.name} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader

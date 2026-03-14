@@ -1,12 +1,18 @@
-import { Heart, Menu, X } from "lucide-react";
+import { Heart, Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+
 const Header = () => {
   const navigate = useNavigate();
+  const { user, profile, role } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  const displayName = profile?.full_name ?? user?.user_metadata?.full_name ?? null;
+  const dashboardPath = role === 'admin' ? '/admin' : role === 'family' ? '/family' : role === 'caregiver' ? '/caregiver' : '/login';
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
@@ -90,30 +96,43 @@ const Header = () => {
             </button>
           </nav>
           <div className="hidden md:flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/login")}
-              className={cn(
-                "transition-colors",
-                isScrolled
-                  ? "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  : "text-white/80 hover:text-white hover:bg-white/10",
-              )}
-            >
-              Entrar
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => navigate("/onboarding")}
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              Criar conta grátis
-            </Button>
+            {user ? (
+              <Button
+                size="sm"
+                onClick={() => navigate(dashboardPath)}
+                className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2"
+              >
+                <User className="w-4 h-4" />
+                {displayName ?? 'Meu painel'}
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/login")}
+                  className={cn(
+                    "transition-colors",
+                    isScrolled
+                      ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      : "text-white/80 hover:text-white hover:bg-white/10",
+                  )}
+                >
+                  Entrar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/onboarding")}
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+                >
+                  Criar conta grátis
+                </Button>
+              </>
+            )}
           </div>
           {/* Mobile Menu Button */}
           <button
-            className={cn("md:hidden p-2 transition-colors", isScrolled ? "text-foreground" : "text-white")}
+            className={cn("md:hidden p-2 transition-colors cursor-pointer", isScrolled ? "text-foreground" : "text-white")}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             type="button"
           >
@@ -169,32 +188,48 @@ const Header = () => {
               Dúvidas
             </button>
             <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  navigate("/onboarding");
-                }}
-                className={cn(
-                  "flex-1",
-                  isScrolled
-                    ? "border-border text-foreground hover:bg-muted"
-                    : "border-white/30 text-white hover:bg-white/10",
-                )}
-              >
-                Entrar
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  navigate("/onboarding");
-                }}
-                className="flex-1 bg-accent hover:bg-accent/90 font-semibold"
-              >
-                Criar conta grátis
-              </Button>
+              {user ? (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate(dashboardPath);
+                  }}
+                  className="flex-1 bg-accent hover:bg-accent/90 font-semibold gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  {displayName ?? 'Meu painel'}
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/login");
+                    }}
+                    className={cn(
+                      "flex-1",
+                      isScrolled
+                        ? "border-border text-foreground hover:bg-muted"
+                        : "border-white/30 text-white hover:bg-white/10",
+                    )}
+                  >
+                    Entrar
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      navigate("/onboarding");
+                    }}
+                    className="flex-1 bg-accent hover:bg-accent/90 font-semibold"
+                  >
+                    Criar conta grátis
+                  </Button>
+                </>
+              )}
             </div>
           </nav>
         )}

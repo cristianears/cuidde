@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/shared/AppSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,8 @@ const careTypes = [
 const CareRoutine = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
   
   const [date, setDate] = useState<Date>(new Date());
   const [selectedShift, setSelectedShift] = useState<string>("");
@@ -91,7 +95,7 @@ const CareRoutine = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar role="caregiver" />
+        <AppSidebar role="caregiver" userName={profileData?.profiles.full_name ?? user?.email ?? ""} userPhoto={profileData?.photo_url ?? undefined} />
         <main className="flex-1 p-6 md:p-8 overflow-auto">
           {/* Back button */}
           <Button

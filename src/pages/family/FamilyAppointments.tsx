@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { mockFamilies } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
 // Mock data for family appointments
 const mockFamilyAppointments = [
@@ -47,6 +49,8 @@ const mockFamilyAppointments = [
 ];
 
 const FamilyAppointments = () => {
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const currentUser = mockFamilies[0];
   
   const activeAppointments = mockFamilyAppointments.filter(a => a.status === "active");
@@ -116,7 +120,7 @@ const FamilyAppointments = () => {
   if (!hasAnyAppointments) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="family" userName={currentUser.name} />
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
         <main className="flex-1 p-6 lg:p-8">
           <PageHeader
@@ -134,7 +138,7 @@ const FamilyAppointments = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={currentUser.name} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader

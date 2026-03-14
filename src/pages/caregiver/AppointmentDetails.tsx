@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/shared/AppSidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,13 +86,15 @@ const getShiftIcon = (shift: string) => {
 const AppointmentDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
   const appointment = mockAppointment;
   const statusInfo = getStatusBadge(appointment.status);
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar role="caregiver" />
+        <AppSidebar role="caregiver" userName={profileData?.profiles.full_name ?? user?.email ?? ""} userPhoto={profileData?.photo_url ?? undefined} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {/* Back Button */}
           <Button

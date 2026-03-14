@@ -1,9 +1,20 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Save, X, Search, Camera, Trash2 } from "lucide-react";
+import {
+  Save,
+  X,
+  Camera,
+  Trash2,
+  User,
+  MapPin,
+  Heart,
+  Stethoscope,
+  SlidersHorizontal,
+  Search,
+} from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,9 +22,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { mockFamilies } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { fetchAddressByCep } from "@/lib/viacep";
 
 const healthConditionOptions = [
   "Alzheimer",
@@ -37,44 +51,45 @@ const serviceFormatOptions = [
 
 const FamilyProfile = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const currentUser = mockFamilies[0];
-
-  // Responsible data
-  const [responsibleName, setResponsibleName] = useState(currentUser.name);
-  const [responsibleEmail, setResponsibleEmail] = useState(currentUser.email);
-  const [responsiblePhone, setResponsiblePhone] = useState(currentUser.phone);
-  const [relationship, setRelationship] = useState("filho");
-  const [responsiblePhoto, setResponsiblePhoto] = useState<string | null>(currentUser.photo || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Helper to get initials from name
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const realName = familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? "";
+  const realEmail = user?.email ?? "";
+  const realPhone = familyProfileData?.profiles?.phone ?? user?.user_metadata?.phone ?? "";
+
+  // Responsible data
+  const [responsibleName, setResponsibleName] = useState(realName || currentUser.name);
+  const [responsibleEmail, setResponsibleEmail] = useState(realEmail || currentUser.email);
+  const [responsiblePhone, setResponsiblePhone] = useState(realPhone || currentUser.phone);
+  const [relationship, setRelationship] = useState("filho");
+  const [responsiblePhoto, setResponsiblePhoto] = useState<string | null>(currentUser.photo || null);
+
+  // Sincronizar dados reais quando carregarem
+  useEffect(() => {
+    if (familyProfileData) {
+      const name = familyProfileData.profiles?.full_name ?? "";
+      const phone = familyProfileData.profiles?.phone ?? "";
+      if (name) setResponsibleName(name);
+      if (phone) setResponsiblePhone(phone);
+    }
+    if (user?.email) setResponsibleEmail(user.email);
+  }, [familyProfileData, user?.email]);
 
   // Photo upload handler (mock)
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Arquivo muito grande. Máximo permitido: 5MB.");
       return;
     }
-
-    // Validate type
     if (!['image/jpeg', 'image/png'].includes(file.type)) {
       toast.error("Formato inválido. Use JPG ou PNG.");
       return;
     }
-
-    // Simulate upload with FileReader (mock)
     const reader = new FileReader();
     reader.onload = (event) => {
       setResponsiblePhoto(event.target?.result as string);
@@ -83,12 +98,9 @@ const FamilyProfile = () => {
     reader.readAsDataURL(file);
   };
 
-  // Remove photo handler
   const handleRemovePhoto = () => {
     setResponsiblePhoto(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
     toast.success("Foto removida.");
   };
 
@@ -99,6 +111,7 @@ const FamilyProfile = () => {
   const [neighborhood, setNeighborhood] = useState(currentUser.address?.neighborhood || "Bela Vista");
   const [city, setCity] = useState(currentUser.address?.city || "São Paulo");
   const [state, setState] = useState(currentUser.address?.state || "SP");
+  const [isFetchingCep, setIsFetchingCep] = useState(false);
 
   // Elderly profile
   const [elderlyName, setElderlyName] = useState(currentUser.elderlyInfo.name);
@@ -120,27 +133,36 @@ const FamilyProfile = () => {
 
   const toggleCondition = (condition: string) => {
     setSelectedConditions(prev =>
-      prev.includes(condition)
-        ? prev.filter(c => c !== condition)
-        : [...prev, condition]
+      prev.includes(condition) ? prev.filter(c => c !== condition) : [...prev, condition]
     );
   };
 
   const toggleServiceFormat = (format: string) => {
     setSelectedServiceFormats(prev =>
-      prev.includes(format)
-        ? prev.filter(f => f !== format)
-        : [...prev, format]
+      prev.includes(format) ? prev.filter(f => f !== format) : [...prev, format]
     );
   };
 
-  const handleSearchCep = () => {
-    // Mock - no real integration yet
-    toast.info("Busca de CEP será implementada em breve.");
+  const handleCepChange = async (value: string) => {
+    setCep(value);
+    const clean = value.replace(/\D/g, '');
+    if (clean.length === 8) {
+      setIsFetchingCep(true);
+      try {
+        const address = await fetchAddressByCep(clean);
+        if (address) {
+          setStreet(address.street);
+          setNeighborhood(address.neighborhood);
+          setCity(address.city);
+          setState(address.state);
+        }
+      } finally {
+        setIsFetchingCep(false);
+      }
+    }
   };
 
   const handleSave = () => {
-    // Mock save
     toast.success("Perfil atualizado com sucesso!");
   };
 
@@ -152,136 +174,109 @@ const FamilyProfile = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         role="family"
-        userName={currentUser.name}
+        userName={familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? ""}
       />
 
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader
           title="Perfil da Família"
           description="Atualize as informações do responsável e do idoso para facilitar o match com cuidadores."
-        >
-          <Button onClick={handleSave} className="gap-2">
-            <Save className="w-4 h-4" />
-            Salvar alterações
-          </Button>
-        </PageHeader>
+        />
 
-        <div className="space-y-6 max-w-4xl">
+        {/* Hidden file input for photo upload */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png"
+          className="hidden"
+          onChange={handlePhotoUpload}
+        />
+
+        <div className="space-y-5 md:space-y-6 max-w-4xl">
           {/* Seção A — Dados do Responsável */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do Responsável</CardTitle>
-              <CardDescription>Informações de contato do responsável pelo idoso</CardDescription>
+          <Card className="animate-fade-in">
+            <CardHeader className="pb-4 md:pb-6">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <User className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                Dados do Responsável
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Photo upload section */}
-              <div className="flex items-start gap-6 pb-4 border-b">
-                <Avatar className="w-24 h-24">
+            <CardContent className="space-y-5 md:space-y-6">
+              {/* Photo */}
+              <div className="flex items-center gap-4 md:gap-6">
+                <div className="relative shrink-0">
                   {responsiblePhoto ? (
-                    <AvatarImage src={responsiblePhoto} alt={responsibleName} />
-                  ) : null}
-                  <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                    {getInitials(responsibleName)}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="flex-1 space-y-2">
-                  <div>
-                    <h4 className="font-medium text-foreground">Foto do responsável</h4>
-                    <p className="text-sm text-muted-foreground">
-                      JPG, PNG. Máximo 5MB. (Opcional)
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                      id="photo-upload"
+                    <img
+                      src={responsiblePhoto}
+                      alt={responsibleName}
+                      className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover"
                     />
-                    {responsiblePhoto ? (
-                      <>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="gap-2"
-                        >
-                          <Camera className="w-4 h-4" />
-                          Trocar foto
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleRemovePhoto}
-                          className="gap-2 text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Remover foto
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="gap-2"
-                      >
-                        <Camera className="w-4 h-4" />
-                        Adicionar foto
-                      </Button>
-                    )}
-                  </div>
-
-                  <p className="text-xs text-muted-foreground italic">
-                    Adicionar uma foto ajuda o cuidador a reconhecer você.
-                  </p>
+                  ) : (
+                    <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-muted flex items-center justify-center">
+                      <Camera className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute -bottom-2 -right-2 p-1.5 md:p-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+                  >
+                    <Camera className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  </button>
+                </div>
+                <div>
+                  <p className="text-sm md:text-base font-medium text-foreground">Foto do responsável</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-2">JPG, PNG. Máximo 5MB.</p>
+                  {responsiblePhoto && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 text-destructive hover:text-destructive text-xs md:text-sm"
+                      onClick={handleRemovePhoto}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      Remover foto
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              {/* Existing form fields */}
-              <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="responsibleName">Nome completo</Label>
+              {/* Form fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                <div>
+                  <Label htmlFor="responsibleName" className="text-xs md:text-sm">Nome completo</Label>
                   <Input
                     id="responsibleName"
                     value={responsibleName}
                     onChange={(e) => setResponsibleName(e.target.value)}
                     placeholder="Nome do responsável"
+                    className="mt-1.5 text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="responsibleEmail">E-mail</Label>
+                <div>
+                  <Label htmlFor="responsibleEmail" className="text-xs md:text-sm">E-mail</Label>
                   <Input
                     id="responsibleEmail"
                     type="email"
                     value={responsibleEmail}
-                    onChange={(e) => setResponsibleEmail(e.target.value)}
-                    placeholder="email@exemplo.com"
+                    readOnly
+                    className="mt-1.5 text-sm bg-muted/40 cursor-not-allowed"
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="responsiblePhone">WhatsApp / Telefone</Label>
+                <div>
+                  <Label htmlFor="responsiblePhone" className="text-xs md:text-sm">WhatsApp / Telefone</Label>
                   <Input
                     id="responsiblePhone"
                     value={responsiblePhone}
                     onChange={(e) => setResponsiblePhone(e.target.value)}
                     placeholder="(11) 99999-9999"
+                    className="mt-1.5 text-sm"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="relationship">Parentesco com o idoso</Label>
+                <div>
+                  <Label htmlFor="relationship" className="text-xs md:text-sm">Parentesco com o idoso</Label>
                   <Select value={relationship} onValueChange={setRelationship}>
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1.5 text-sm">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
@@ -294,127 +289,98 @@ const FamilyProfile = () => {
                   </Select>
                 </div>
               </div>
-              </div>
             </CardContent>
           </Card>
 
           {/* Seção B — Endereço */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Endereço</CardTitle>
-              <CardDescription>Usado para busca por proximidade com cuidadores</CardDescription>
+          <Card className="animate-fade-in">
+            <CardHeader className="pb-4 md:pb-6">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                Endereço
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cep">CEP</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="cep"
-                      value={cep}
-                      onChange={(e) => setCep(e.target.value)}
-                      placeholder="00000-000"
-                      className="flex-1"
-                    />
-                    <Button variant="outline" size="icon" onClick={handleSearchCep}>
-                      <Search className="w-4 h-4" />
-                    </Button>
+            <CardContent className="space-y-5 md:space-y-6">
+              <p className="text-xs md:text-sm text-muted-foreground -mt-2">
+                Usado para busca por proximidade com cuidadores
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <div>
+                  <Label htmlFor="cep" className="text-xs md:text-sm">CEP</Label>
+                  <Input
+                    id="cep"
+                    value={cep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    placeholder="00000-000"
+                    className={cn("mt-1.5 text-sm", isFetchingCep && "opacity-70")}
+                  />
+                  {isFetchingCep && <p className="text-xs text-muted-foreground mt-1">Buscando endereço...</p>}
+                </div>
+                <div className="md:col-span-2">
+                  <Label htmlFor="street" className="text-xs md:text-sm">Rua</Label>
+                  <Input id="street" value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Nome da rua" className="mt-1.5 text-sm" />
+                </div>
+                <div>
+                  <Label htmlFor="number" className="text-xs md:text-sm">Número</Label>
+                  <Input id="number" value={number} onChange={(e) => setNumber(e.target.value)} placeholder="123" className="mt-1.5 text-sm" />
+                </div>
+                <div>
+                  <Label htmlFor="neighborhood" className="text-xs md:text-sm">Bairro</Label>
+                  <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" className="mt-1.5 text-sm" />
+                </div>
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                  <div>
+                    <Label htmlFor="city" className="text-xs md:text-sm">Cidade</Label>
+                    <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1.5 text-sm" />
                   </div>
-                  {cep.length < 9 && (
-                    <p className="text-xs text-muted-foreground">
-                      Preencha o CEP para autopreencher o endereço.
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="street">Rua</Label>
-                  <Input
-                    id="street"
-                    value={street}
-                    onChange={(e) => setStreet(e.target.value)}
-                    placeholder="Nome da rua"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="number">Número</Label>
-                  <Input
-                    id="number"
-                    value={number}
-                    onChange={(e) => setNumber(e.target.value)}
-                    placeholder="123"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input
-                    id="neighborhood"
-                    value={neighborhood}
-                    onChange={(e) => setNeighborhood(e.target.value)}
-                    placeholder="Bairro"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="city">Cidade</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Cidade"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">UF</Label>
-                  <Input
-                    id="state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    placeholder="SP"
-                    maxLength={2}
-                  />
+                  <div>
+                    <Label htmlFor="state" className="text-xs md:text-sm">UF</Label>
+                    <Input id="state" value={state} onChange={(e) => setState(e.target.value)} maxLength={2} className="mt-1.5 text-sm" />
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Seção C — Perfil do Idoso */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Perfil do Idoso</CardTitle>
-              <CardDescription>Informações sobre a pessoa que receberá os cuidados</CardDescription>
+          <Card className="animate-fade-in">
+            <CardHeader className="pb-4 md:pb-6">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <Heart className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                Perfil do Idoso
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="elderlyName">Nome do idoso</Label>
-                  <Input
-                    id="elderlyName"
-                    value={elderlyName}
-                    onChange={(e) => setElderlyName(e.target.value)}
-                    placeholder="Nome do idoso"
-                  />
+            <CardContent className="space-y-5 md:space-y-6">
+              <p className="text-xs md:text-sm text-muted-foreground -mt-2">
+                Informações sobre a pessoa que receberá os cuidados
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                <div>
+                  <Label htmlFor="elderlyName" className="text-xs md:text-sm">Nome do idoso</Label>
+                  <Input id="elderlyName" value={elderlyName} onChange={(e) => setElderlyName(e.target.value)} placeholder="Nome do idoso" className="mt-1.5 text-sm" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="elderlyAge">Idade</Label>
-                  <Input
-                    id="elderlyAge"
-                    type="number"
-                    value={elderlyAge}
-                    onChange={(e) => setElderlyAge(e.target.value)}
-                    placeholder="Ex: 78"
-                  />
+                <div>
+                  <Label htmlFor="elderlyAge" className="text-xs md:text-sm">Idade</Label>
+                  <Input id="elderlyAge" type="number" value={elderlyAge} onChange={(e) => setElderlyAge(e.target.value)} placeholder="Ex: 78" className="mt-1.5 text-sm" />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Condições de saúde</Label>
+              <div>
+                <Label className="text-xs md:text-sm">Condições de saúde</Label>
+                <p className="text-xs md:text-sm text-muted-foreground mb-3">
+                  Selecione as condições relevantes para o cuidado
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {healthConditionOptions.map((condition) => (
                     <Badge
                       key={condition}
                       variant={selectedConditions.includes(condition) ? "default" : "outline"}
-                      className="cursor-pointer transition-colors"
+                      className={cn(
+                        "cursor-pointer transition-all text-xs",
+                        selectedConditions.includes(condition)
+                          ? "bg-primary hover:bg-primary/90"
+                          : "hover:bg-muted",
+                      )}
                       onClick={() => toggleCondition(condition)}
                     >
                       {condition}
@@ -423,25 +389,28 @@ const FamilyProfile = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="careNeeds">Necessidades de cuidado</Label>
+              <div>
+                <Label htmlFor="careNeeds" className="text-xs md:text-sm">Necessidades de cuidado</Label>
                 <Textarea
                   id="careNeeds"
                   value={careNeeds}
                   onChange={(e) => setCareNeeds(e.target.value)}
                   placeholder="Descreva rotina, limitações, medicações, preferências e o que é essencial no cuidado…"
-                  rows={4}
+                  className="mt-1.5 min-h-[100px] md:min-h-[120px] text-sm"
                 />
               </div>
 
               {/* Saúde Geral */}
-              <div className="pt-4 border-t">
-                <h4 className="font-medium text-foreground mb-4">Saúde Geral</h4>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bloodType">Tipo sanguíneo</Label>
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-sm md:text-base font-medium text-foreground mb-3 md:mb-4 flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4" />
+                  Saúde Geral
+                </h4>
+                <div className="space-y-3 md:space-y-4">
+                  <div className="max-w-xs">
+                    <Label htmlFor="bloodType" className="text-xs md:text-sm">Tipo sanguíneo</Label>
                     <Select value={bloodType} onValueChange={setBloodType}>
-                      <SelectTrigger className="w-full md:w-[200px]">
+                      <SelectTrigger className="mt-1.5 text-sm">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
@@ -457,61 +426,66 @@ const FamilyProfile = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="preExistingConditions">Doenças pré-existentes</Label>
+                  <div>
+                    <Label htmlFor="preExistingConditions" className="text-xs md:text-sm">Doenças pré-existentes</Label>
                     <Textarea
                       id="preExistingConditions"
                       value={preExistingConditions}
                       onChange={(e) => setPreExistingConditions(e.target.value)}
                       placeholder="Ex: diabetes, hipertensão, cardiopatias, AVC, etc."
-                      rows={3}
+                      className="mt-1.5 min-h-[80px] text-sm"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="allergies">Alergias</Label>
+                  <div>
+                    <Label htmlFor="allergies" className="text-xs md:text-sm">Alergias</Label>
                     <Textarea
                       id="allergies"
                       value={allergies}
                       onChange={(e) => setAllergies(e.target.value)}
                       placeholder="Ex: alergia a alimentos, medicamentos, látex, etc."
-                      rows={3}
+                      className="mt-1.5 min-h-[80px] text-sm"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="continuousMedications">Medicações de uso contínuo</Label>
+                  <div>
+                    <Label htmlFor="continuousMedications" className="text-xs md:text-sm">Medicações de uso contínuo</Label>
                     <Textarea
                       id="continuousMedications"
                       value={continuousMedications}
                       onChange={(e) => setContinuousMedications(e.target.value)}
                       placeholder="Informe medicações, dosagem e horários, se aplicável."
-                      rows={3}
+                      className="mt-1.5 min-h-[80px] text-sm"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Acompanhamento Médico */}
-              <div className="pt-4 border-t">
-                <h4 className="font-medium text-foreground mb-4">Acompanhamento Médico</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="responsibleDoctor">Médico responsável / Clínica</Label>
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-sm md:text-base font-medium text-foreground mb-3 md:mb-4 flex items-center gap-2">
+                  <Stethoscope className="w-4 h-4" />
+                  Acompanhamento Médico
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <div>
+                    <Label htmlFor="responsibleDoctor" className="text-xs md:text-sm">Médico responsável / Clínica</Label>
                     <Input
                       id="responsibleDoctor"
                       value={responsibleDoctor}
                       onChange={(e) => setResponsibleDoctor(e.target.value)}
                       placeholder="Nome do médico ou clínica responsável"
+                      className="mt-1.5 text-sm"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="healthInsurance">Plano de saúde</Label>
+                  <div>
+                    <Label htmlFor="healthInsurance" className="text-xs md:text-sm">Plano de saúde</Label>
                     <Input
                       id="healthInsurance"
                       value={healthInsurance}
                       onChange={(e) => setHealthInsurance(e.target.value)}
                       placeholder="Nome do plano de saúde (se houver)"
+                      className="mt-1.5 text-sm"
                     />
                   </div>
                 </div>
@@ -520,20 +494,34 @@ const FamilyProfile = () => {
           </Card>
 
           {/* Seção D — Preferências de busca */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferências de Busca</CardTitle>
-              <CardDescription>Essas preferências ajudam a filtrar cuidadores e acelerar o match. Você pode alterar quando quiser.</CardDescription>
+          <Card className="animate-fade-in">
+            <CardHeader className="pb-4 md:pb-6">
+              <CardTitle className="text-base md:text-lg flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                Preferências de Busca
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <Label>Preferência de formato de atendimento</Label>
+            <CardContent className="space-y-5 md:space-y-6">
+              <p className="text-xs md:text-sm text-muted-foreground -mt-2">
+                Essas preferências ajudam a filtrar cuidadores e acelerar o match. Você pode alterar quando quiser.
+              </p>
+
+              <div>
+                <Label className="text-xs md:text-sm">Formato de atendimento</Label>
+                <p className="text-xs md:text-sm text-muted-foreground mb-3">
+                  Selecione os formatos que melhor atendem suas necessidades
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {serviceFormatOptions.map((option) => (
                     <Badge
                       key={option.value}
                       variant={selectedServiceFormats.includes(option.value) ? "default" : "outline"}
-                      className="cursor-pointer transition-colors"
+                      className={cn(
+                        "cursor-pointer transition-all text-xs",
+                        selectedServiceFormats.includes(option.value)
+                          ? "bg-accent hover:bg-accent/90 text-accent-foreground"
+                          : "hover:bg-muted",
+                      )}
                       onClick={() => toggleServiceFormat(option.value)}
                     >
                       {option.label}
@@ -542,9 +530,9 @@ const FamilyProfile = () => {
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="pt-4 border-t border-border space-y-4 md:space-y-5">
                 <div className="space-y-3">
-                  <Label>Faixa de valor por hora: R$ {hourlyRange[0]} - R$ {hourlyRange[1]}</Label>
+                  <Label className="text-xs md:text-sm">Faixa de valor por hora: R$ {hourlyRange[0]} - R$ {hourlyRange[1]}</Label>
                   <Slider
                     value={hourlyRange}
                     onValueChange={setHourlyRange}
@@ -556,7 +544,7 @@ const FamilyProfile = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Label>Faixa de valor por diária: R$ {dailyRange[0]} - R$ {dailyRange[1]}</Label>
+                  <Label className="text-xs md:text-sm">Faixa de valor por diária: R$ {dailyRange[0]} - R$ {dailyRange[1]}</Label>
                   <Slider
                     value={dailyRange}
                     onValueChange={setDailyRange}
@@ -568,25 +556,27 @@ const FamilyProfile = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="distance">Preferência de distância</Label>
-                <Select value={distancePreference} onValueChange={setDistancePreference}>
-                  <SelectTrigger className="w-full md:w-[200px]">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3km">Até 3 km</SelectItem>
-                    <SelectItem value="5km">Até 5 km</SelectItem>
-                    <SelectItem value="10km">Até 10 km</SelectItem>
-                    <SelectItem value="20km">Até 20 km</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="pt-4 border-t border-border">
+                <div className="max-w-xs">
+                  <Label htmlFor="distance" className="text-xs md:text-sm">Preferência de distância</Label>
+                  <Select value={distancePreference} onValueChange={setDistancePreference}>
+                    <SelectTrigger className="mt-1.5 text-sm">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="3km">Até 3 km</SelectItem>
+                      <SelectItem value="5km">Até 5 km</SelectItem>
+                      <SelectItem value="10km">Até 10 km</SelectItem>
+                      <SelectItem value="20km">Até 20 km</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Rodapé de ações */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-6">
             <Button onClick={handleSave} className="gap-2">
               <Save className="w-4 h-4" />
               Salvar alterações

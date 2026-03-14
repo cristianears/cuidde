@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { mockFamilies } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
 export interface Invoice {
   id: string;
@@ -89,6 +91,8 @@ const formatDate = (dateString: string) => {
 };
 
 const FamilyInvoices = () => {
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const currentUser = mockFamilies[0];
   const hasInvoices = mockInvoices.length > 0;
 
@@ -100,7 +104,7 @@ const FamilyInvoices = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         role="family"
-        userName={currentUser.name}
+        userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""}
       />
 
       <main className="flex-1 p-6 lg:p-8">

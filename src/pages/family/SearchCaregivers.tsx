@@ -13,6 +13,7 @@ import { modalitiesList, idiomasList } from "@/data/mockData";
 import { useSearchCaregivers, type SearchFilters } from "@/hooks/useSearchCaregivers";
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { cn } from "@/lib/utils";
 
 // Idiomas exibíveis no filtro (sem "Outro")
@@ -20,6 +21,7 @@ const idiomasFilter = idiomasList.filter((i) => i !== "Outro");
 
 const SearchCaregivers = () => {
   const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(true);
   const [priceRange, setPriceRange] = useState([0, 200]);
@@ -98,7 +100,7 @@ const SearchCaregivers = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName="" />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
       <main className="flex-1 min-w-0 overflow-hidden p-4 lg:p-5">
         <PageHeader
@@ -249,7 +251,7 @@ const SearchCaregivers = () => {
                         variant={minRating === rating ? "default" : "outline"}
                         size="sm"
                         onClick={() => setMinRating(rating)}
-                        className={cn("h-7 text-xs px-2", minRating === rating && "bg-primary")}
+                        className={cn("h-8 text-xs px-2", minRating === rating && "bg-primary")}
                       >
                         {rating === 0 ? "Todas" : `${rating}+`}
                       </Button>
@@ -267,7 +269,7 @@ const SearchCaregivers = () => {
                     variant={emergencyOnly ? "default" : "outline"}
                     size="sm"
                     onClick={() => setEmergencyOnly(!emergencyOnly)}
-                    className={cn("h-7 text-xs justify-start w-full", emergencyOnly && "bg-primary")}
+                    className={cn("h-8 text-xs justify-start w-full", emergencyOnly && "bg-primary")}
                   >
                     Disponível p/ emergências
                   </Button>
@@ -283,7 +285,7 @@ const SearchCaregivers = () => {
                     variant={withReferences ? "default" : "outline"}
                     size="sm"
                     onClick={() => setWithReferences(!withReferences)}
-                    className={cn("h-7 text-xs justify-start w-full", withReferences && "bg-primary")}
+                    className={cn("h-8 text-xs justify-start w-full", withReferences && "bg-primary")}
                   >
                     Com referências
                   </Button>

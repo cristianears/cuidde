@@ -3,8 +3,12 @@ import PageHeader from "@/components/shared/PageHeader";
 import StarRating from "@/components/shared/StarRating";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { mockCaregivers, mockReviews } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 
 const CaregiverReviews = () => {
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
   const currentUser = mockCaregivers[0];
   const userReviews = mockReviews.filter((r) => r.caregiverId === currentUser.id);
   const total = userReviews.length;
@@ -19,7 +23,7 @@ const CaregiverReviews = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar role="caregiver" userName={profileData?.profiles.full_name ?? user?.email ?? ""} userPhoto={profileData?.photo_url ?? undefined} />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader

@@ -6,10 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useFavorites, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { Link } from "react-router-dom";
 
 const Favorites = () => {
   const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const { data: favorites = [], isLoading } = useFavorites();
   const { mutate: removeFavorite } = useRemoveFavorite();
 
@@ -19,7 +21,7 @@ const Favorites = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName="" />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
       <main className="flex-1 p-4 lg:p-6 min-w-0">
         <div className="max-w-3xl">

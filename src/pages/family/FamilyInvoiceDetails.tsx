@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { mockFamilies } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import type { Invoice } from "./FamilyInvoices";
 
 // Mock invoices data (same as FamilyInvoices)
@@ -75,6 +77,8 @@ const formatDate = (dateString: string) => {
 const FamilyInvoiceDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const currentUser = mockFamilies[0];
 
   const invoice = mockInvoices.find(inv => inv.id === id);
@@ -86,7 +90,7 @@ const FamilyInvoiceDetails = () => {
   if (!invoice) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="family" userName={currentUser.name} />
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
         <main className="flex-1 p-6 lg:p-8">
           <div className="flex flex-col items-center justify-center h-full text-center">
             <FileText className="w-16 h-16 text-muted-foreground mb-4" />
@@ -107,7 +111,7 @@ const FamilyInvoiceDetails = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar
         role="family"
-        userName={currentUser.name}
+        userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""}
       />
 
       <main className="flex-1 p-6 lg:p-8">

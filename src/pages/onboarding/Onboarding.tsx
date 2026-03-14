@@ -250,7 +250,7 @@ const Onboarding = () => {
 
         navigate(formData.profileType === 'caregiver' ? '/caregiver' : '/family', { replace: true })
       } else {
-        const { error } = await signUpWithEmail(formData.email, formData.password, {
+        const { data, error } = await signUpWithEmail(formData.email, formData.password, {
           role: formData.profileType,
           full_name: formData.name,
           phone: formData.phone,
@@ -259,6 +259,30 @@ const Onboarding = () => {
           toast.error(error.message)
           return
         }
+        if (data.user && data.user.identities?.length === 0) {
+          toast.error('Este e-mail já está cadastrado. Tente fazer login.')
+          return
+        }
+
+        if (data.user) {
+          const addressData = {
+            id: data.user.id,
+            cep: formData.cep,
+            street: formData.street,
+            number: formData.number,
+            complement: formData.complement || null,
+            neighborhood: formData.neighborhood,
+            city: formData.city,
+            state: formData.state,
+          }
+
+          if (formData.profileType === 'caregiver') {
+            await supabase.from('caregiver_profiles').upsert(addressData)
+          } else {
+            await supabase.from('family_profiles').upsert(addressData)
+          }
+        }
+
         navigate('/verify-email', { replace: true })
       }
     } finally {

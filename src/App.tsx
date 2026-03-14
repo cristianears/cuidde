@@ -10,6 +10,7 @@ import NotFound from './pages/NotFound'
 import Login from './pages/auth/Login'
 import VerifyEmail from './pages/auth/VerifyEmail'
 import AuthCallback from './pages/auth/AuthCallback'
+import ResetPassword from './pages/auth/ResetPassword'
 import Onboarding from './pages/onboarding/Onboarding'
 import CaregiverDashboard from './pages/caregiver/CaregiverDashboard'
 import CaregiverProfile from './pages/caregiver/CaregiverProfile'
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
 
             {/* Rotas de cuidador */}

@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { HelpCircle, MessageSquare, Send, ExternalLink, Mail, CreditCard, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
 const faqItems = [
   {
@@ -44,6 +46,8 @@ const faqItems = [
 
 const FamilySupport = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,7 +78,7 @@ const FamilySupport = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar role="family" />
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           <PageHeader

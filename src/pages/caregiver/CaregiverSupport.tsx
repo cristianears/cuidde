@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { HelpCircle, MessageSquare, Send, FileText, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { mockCaregivers } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 
 const MSG_MAX = 600;
 
@@ -73,6 +75,8 @@ const mockRequests = [
 
 const CaregiverSupport = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
   const currentUser = mockCaregivers[0];
 
   const [subject, setSubject] = useState("");
@@ -124,8 +128,8 @@ const CaregiverSupport = () => {
     <div className="min-h-screen flex w-full bg-background">
       <AppSidebar
         role="caregiver"
-        userName={currentUser.name}
-        userPhoto={currentUser.photo}
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
       />
       <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
         <PageHeader

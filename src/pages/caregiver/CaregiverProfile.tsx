@@ -327,7 +327,7 @@ const CaregiverProfile = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="caregiver" userName="" />
+        <AppSidebar role="caregiver" userName={user?.user_metadata?.full_name ?? user?.email ?? ""} />
         <main className="flex-1 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         </main>

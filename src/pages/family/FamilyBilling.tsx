@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { mockFamilies } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
 type PlanType = "monthly" | "quarterly" | "annual";
 
@@ -83,6 +85,8 @@ const planStatusLabels: Record<string, { label: string; className: string }> = {
 };
 
 const FamilyBilling = () => {
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
   const currentUser = mockFamilies[0];
 
   // Mock current plan state (começa no Mensal)
@@ -123,7 +127,7 @@ const FamilyBilling = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={currentUser.name} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader

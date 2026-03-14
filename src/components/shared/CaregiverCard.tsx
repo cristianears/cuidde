@@ -124,14 +124,15 @@ const CaregiverCard = ({
             )}
             <button
               onClick={handleFavorite}
+              aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
               className={cn(
-                "absolute top-2 right-2 p-1.5 rounded-full transition-all z-10",
+                "absolute top-2 right-2 p-2 rounded-full transition-all z-10 cursor-pointer",
                 favorite
                   ? "bg-destructive text-destructive-foreground"
                   : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:bg-background"
               )}
             >
-              <Heart className={cn("w-3.5 h-3.5", favorite && "fill-current")} />
+              <Heart className={cn("w-4 h-4", favorite && "fill-current")} />
             </button>
           </div>
 

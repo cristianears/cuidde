@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { signOut } from "@/lib/auth";
 import {
   Heart,
   User,
@@ -66,20 +67,18 @@ interface AppSidebarProps {
   role: UserRole;
   userName?: string;
   userPhoto?: string;
-  verificationStatus?: 'pending' | 'analyzing' | 'verified' | 'rejected';
 }
 
-const statusLabels: Record<string, { label: string; className: string }> = {
-  pending: { label: 'Pendente', className: 'bg-amber-100 text-amber-700' },
-  analyzing: { label: 'Em verificação', className: 'bg-blue-100 text-blue-700' },
-  verified: { label: 'Verificado', className: 'bg-emerald-100 text-emerald-700' },
-  rejected: { label: 'Rejeitado', className: 'bg-red-100 text-red-700' },
-};
-
-const AppSidebar = ({ role, userName = 'Usuário', userPhoto, verificationStatus = 'pending' }: AppSidebarProps) => {
+const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const items = sidebarItems[role];
+
+  async function handleLogout() {
+    await signOut()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <aside
@@ -106,7 +105,7 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto, verificationStatus
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-muted overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
               {userPhoto ? (
-                <img src={userPhoto} alt={userName} className="w-full h-full object-cover" />
+                <img src={userPhoto} alt={userName} className="w-full h-full object-cover" loading="lazy" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <User className="w-6 h-6 text-muted-foreground" />
@@ -115,14 +114,6 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto, verificationStatus
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
-              {role === 'caregiver' && verificationStatus && (
-                <span className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-1",
-                  statusLabels[verificationStatus].className
-                )}>
-                  {statusLabels[verificationStatus].label}
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -152,8 +143,9 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto, verificationStatus
 
       {/* Logout Section */}
       <div className="p-3 border-t border-border">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
           className={cn(
             "w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted",
             collapsed && "justify-center px-0"
@@ -167,7 +159,8 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto, verificationStatus
       {/* Collapse Toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm"
+        aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+        className="absolute -right-3 top-20 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm"
       >
         {collapsed ? (
           <ChevronRight className="w-4 h-4" />
