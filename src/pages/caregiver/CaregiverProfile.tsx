@@ -113,6 +113,13 @@ const CaregiverProfile = () => {
   const [editRef, setEditRef] = useState<NewRef>({ name: "", phone: "", workplace: "", position: "", work_duration: "", notes: "" });
   const [editRefErrors, setEditRefErrors] = useState({ name: false, phone: false });
 
+  const formatPhone = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11)
+    if (digits.length <= 2) return digits
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+  }
+
   // Sincronizar form com dados do Supabase quando carregarem
   useEffect(() => {
     if (profileData) {
@@ -462,14 +469,14 @@ const CaregiverProfile = () => {
                       <Label htmlFor="neighborhood" className="text-xs md:text-sm">Bairro</Label>
                       <Input id="neighborhood" value={formData.neighborhood} onChange={(e) => setFormData((prev) => ({ ...prev, neighborhood: e.target.value }))} className="mt-1.5 text-sm" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="grid grid-cols-[1fr_5rem] gap-3 md:gap-4">
                       <div>
                         <Label htmlFor="city" className="text-xs md:text-sm">Cidade</Label>
                         <Input id="city" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} className="mt-1.5 text-sm" />
                       </div>
                       <div>
                         <Label htmlFor="state" className="text-xs md:text-sm">UF</Label>
-                        <Input id="state" value={formData.state} onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Input id="state" value={formData.state} onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))} maxLength={2} className="mt-1.5 text-sm" />
                       </div>
                     </div>
                   </div>
@@ -862,8 +869,9 @@ const CaregiverProfile = () => {
                               Telefone <span className="text-destructive">*</span>
                             </Label>
                             <Input
+                              placeholder="(11) 99999-9999"
                               value={editRef.phone}
-                              onChange={(e) => { setEditRef((p) => ({ ...p, phone: e.target.value })); setEditRefErrors((p) => ({ ...p, phone: false })); }}
+                              onChange={(e) => { setEditRef((p) => ({ ...p, phone: formatPhone(e.target.value) })); setEditRefErrors((p) => ({ ...p, phone: false })); }}
                               className={cn("mt-1.5 text-sm", editRefErrors.phone && "border-destructive focus-visible:ring-destructive")}
                             />
                             {editRefErrors.phone && <p className="text-xs text-destructive mt-1">Campo obrigatório</p>}
@@ -966,7 +974,7 @@ const CaregiverProfile = () => {
                           id="refPhone"
                           placeholder="(11) 99999-9999"
                           value={newReference.phone}
-                          onChange={(e) => { setNewReference((prev) => ({ ...prev, phone: e.target.value })); setRefErrors((p) => ({ ...p, phone: false })); }}
+                          onChange={(e) => { setNewReference((prev) => ({ ...prev, phone: formatPhone(e.target.value) })); setRefErrors((p) => ({ ...p, phone: false })); }}
                           className={cn("mt-1.5 text-sm", refErrors.phone && "border-destructive focus-visible:ring-destructive")}
                         />
                         {refErrors.phone && <p className="text-xs text-destructive mt-1">Campo obrigatório</p>}

@@ -328,7 +328,7 @@ const FamilyProfile = () => {
                   <Label htmlFor="neighborhood" className="text-xs md:text-sm">Bairro</Label>
                   <Input id="neighborhood" value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Bairro" className="mt-1.5 text-sm" />
                 </div>
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                <div className="grid grid-cols-[1fr_5rem] gap-3 md:gap-4">
                   <div>
                     <Label htmlFor="city" className="text-xs md:text-sm">Cidade</Label>
                     <Input id="city" value={city} onChange={(e) => setCity(e.target.value)} className="mt-1.5 text-sm" />
