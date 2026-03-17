@@ -54,8 +54,10 @@ export default function Login() {
       const redirect = redirectRef.current
       const cep = cepRef.current
 
-      if (redirect) {
-        navigate(cep ? `${redirect}?cep=${cep}` : redirect, { replace: true })
+      // Validação de segurança: prevenir open redirect
+      const safeRedirect = redirect && redirect.startsWith('/') && !redirect.startsWith('//') && !redirect.includes('://') ? redirect : null
+      if (safeRedirect) {
+        navigate(cep ? `${safeRedirect}?cep=${encodeURIComponent(cep)}` : safeRedirect, { replace: true })
         return
       }
 

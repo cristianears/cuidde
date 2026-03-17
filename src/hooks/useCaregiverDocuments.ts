@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { queryKeys } from '@/lib/query-keys'
 import type { CaregiverDocument, DocumentType, ProfessionalRegType } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -19,7 +20,7 @@ export function useDocuments() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['caregiver-documents', user?.id],
+    queryKey: queryKeys.caregiverDocuments(user?.id ?? ''),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('caregiver_documents')
@@ -40,11 +41,28 @@ export function useUploadDocument() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  const docQueryKey = ['caregiver-documents', user?.id]
+  const docQueryKey = queryKeys.caregiverDocuments(user?.id ?? '')
 
   return useMutation({
     mutationFn: async ({ docType, file }: { docType: DocumentType; file: File }) => {
-      const ext = file.name.split('.').pop() ?? 'pdf'
+      // Validação de segurança: tamanho máximo 10MB
+      const MAX_FILE_SIZE = 10 * 1024 * 1024
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error('Arquivo muito grande. Máximo permitido: 10MB.')
+      }
+
+      // Validação de segurança: tipos permitidos
+      const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        throw new Error('Tipo de arquivo não permitido. Use PDF, JPG ou PNG.')
+      }
+
+      const ALLOWED_EXTS = ['pdf', 'jpg', 'jpeg', 'png']
+      const ext = (file.name.split('.').pop() ?? '').toLowerCase()
+      if (!ALLOWED_EXTS.includes(ext)) {
+        throw new Error('Extensão de arquivo não permitida.')
+      }
+
       const storagePath = `${user!.id}/${docType}.${ext}`
 
       // Upload para Storage (substitui se já existir)
@@ -78,8 +96,7 @@ export function useUploadDocument() {
       toast.success('Documento enviado com sucesso!')
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao enviar documento: ${error.message}`)
-      console.error('[useUploadDocument]', error)
+      toast.error(error.message || 'Erro ao enviar documento.')
     },
   })
 }
@@ -101,11 +118,12 @@ export function useRemoveDocument() {
         if (storageError) throw storageError
       }
 
-      // Deleta o registro da tabela
+      // Deleta o registro da tabela (com filtro de ownership)
       const { error } = await supabase
         .from('caregiver_documents')
         .delete()
         .eq('id', doc.id)
+        .eq('caregiver_id', user!.id)
 
       if (error) throw error
     },
@@ -114,8 +132,7 @@ export function useRemoveDocument() {
       toast.success('Documento removido.')
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao remover documento: ${error.message}`)
-      console.error('[useRemoveDocument]', error)
+      toast.error(error.message || 'Erro ao remover documento.')
     },
   })
 }
@@ -132,6 +149,7 @@ export function useToggleDocumentVisibility() {
         .from('caregiver_documents')
         .update({ is_visible })
         .eq('id', id)
+        .eq('caregiver_id', user!.id)
 
       if (error) throw error
     },
@@ -139,8 +157,7 @@ export function useToggleDocumentVisibility() {
       queryClient.invalidateQueries({ queryKey: ['caregiver-documents', user?.id] })
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar visibilidade: ${error.message}`)
-      console.error('[useToggleDocumentVisibility]', error)
+      toast.error(error.message || 'Erro ao atualizar visibilidade.')
     },
   })
 }
@@ -168,12 +185,11 @@ export function useUpdateProfessionalReg() {
       if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS.')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiverProfile', user?.id] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.caregiverProfile(user!.id) })
       toast.success('Registro profissional salvo!')
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao salvar registro: ${error.message}`)
-      console.error('[useUpdateProfessionalReg]', error)
+      toast.error(error.message || 'Erro ao salvar registro.')
     },
   })
 }

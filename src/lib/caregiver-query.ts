@@ -2,6 +2,9 @@ import type { CaregiverPublic } from '@/types/database'
 
 // ─── SELECT compartilhado para queries de cuidadores ────────────────────────
 
+// SEGURANÇA: whatsapp e professional_reg_number removidos da query pública
+// para proteger PII dos cuidadores. Esses dados devem ser expostos apenas
+// em visualizações detalhadas com controle de acesso (assinatura ativa).
 export const CAREGIVER_SELECT = `
   id,
   photo_url,
@@ -20,9 +23,7 @@ export const CAREGIVER_SELECT = `
   idiomas,
   possui_cnh,
   has_insurance,
-  professional_reg_number,
   emergency_available,
-  whatsapp,
   has_rg_cnh,
   has_antecedentes,
   has_certificado,
@@ -51,9 +52,7 @@ export type RawCaregiverRow = {
   idiomas: string[]
   possui_cnh: boolean
   has_insurance: boolean
-  professional_reg_number: string | null
   emergency_available: boolean
-  whatsapp: string | null
   has_rg_cnh: boolean
   has_antecedentes: boolean
   has_certificado: boolean
@@ -84,9 +83,9 @@ export function mapCaregiverRow(row: RawCaregiverRow): CaregiverPublic {
     idiomas: row.idiomas ?? [],
     possui_cnh: row.possui_cnh,
     has_insurance: row.has_insurance,
-    professional_reg_number: row.professional_reg_number,
+    professional_reg_number: null, // Protegido: não exposto na busca pública
     emergency_available: row.emergency_available,
-    whatsapp: row.whatsapp,
+    whatsapp: null, // Protegido: não exposto na busca pública
     has_rg_cnh: row.has_rg_cnh,
     has_antecedentes: row.has_antecedentes,
     has_certificado: row.has_certificado,

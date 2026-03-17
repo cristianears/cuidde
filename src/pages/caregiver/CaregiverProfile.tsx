@@ -28,6 +28,7 @@ import { specialtiesList, modalitiesList, idiomasList } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAddressByCep } from "@/lib/viacep";
+import { formatPhone } from "@/lib/formatters";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ProfessionalReference } from "@/types/database";
@@ -112,13 +113,6 @@ const CaregiverProfile = () => {
   const [editingRefId, setEditingRefId] = useState<string | null>(null);
   const [editRef, setEditRef] = useState<NewRef>({ name: "", phone: "", workplace: "", position: "", work_duration: "", notes: "" });
   const [editRefErrors, setEditRefErrors] = useState({ name: false, phone: false });
-
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 11)
-    if (digits.length <= 2) return digits
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-  }
 
   // Sincronizar form com dados do Supabase quando carregarem
   useEffect(() => {

@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
+import { queryKeys } from '@/lib/query-keys'
+import { CAREGIVER_SELECT, mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
 import type { CaregiverPublic } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@ export function useFavorites() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['favorites', user?.id],
+    queryKey: queryKeys.favorites(user?.id ?? ''),
     queryFn: async (): Promise<FavoriteWithCaregiver[]> => {
       if (!user) return []
 
@@ -39,7 +40,7 @@ export function useFavorites() {
 
       if (error) throw error
 
-      return (data ?? []).map((row: any) => ({
+      return (data ?? []).map((row: { id: string; caregiver_id: string; caregiver_profiles: RawCaregiverRow }) => ({
         favorite_id: row.id,
         caregiver: mapCaregiverRow(row.caregiver_profiles),
       }))
@@ -57,7 +58,7 @@ export function useFavoriteIds() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['favorite_ids', user?.id],
+    queryKey: queryKeys.favoriteIds(user?.id ?? ''),
     queryFn: async (): Promise<string[]> => {
       if (!user) return []
 
@@ -96,12 +97,11 @@ export function useAddFavorite() {
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['favorites', user?.id] })
-      qc.invalidateQueries({ queryKey: ['favorite_ids', user?.id] })
+      qc.invalidateQueries({ queryKey: queryKeys.favorites(user!.id) })
+      qc.invalidateQueries({ queryKey: queryKeys.favoriteIds(user!.id) })
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast.error('Erro ao adicionar favorito.')
-      console.error('[useAddFavorite]', error)
     },
   })
 }
@@ -126,12 +126,11 @@ export function useRemoveFavorite() {
       if (error) throw error
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['favorites', user?.id] })
-      qc.invalidateQueries({ queryKey: ['favorite_ids', user?.id] })
+      qc.invalidateQueries({ queryKey: queryKeys.favorites(user!.id) })
+      qc.invalidateQueries({ queryKey: queryKeys.favoriteIds(user!.id) })
     },
-    onError: (error: Error) => {
+    onError: () => {
       toast.error('Erro ao remover favorito.')
-      console.error('[useRemoveFavorite]', error)
     },
   })
 }

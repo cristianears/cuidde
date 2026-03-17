@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { queryKeys } from '@/lib/query-keys'
 import type { CaregiverProfile, ProfessionalReference } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -65,10 +66,10 @@ export interface UpdatePricingPayload {
   pricing_note: string
 }
 
-// ─── Query Keys ──────────────────────────────────────────────────────────────
+// ─── Query Keys (centralizadas em @/lib/query-keys) ─────────────────────────
 
-const PROFILE_KEY = (userId: string) => ['caregiverProfile', userId]
-const REFS_KEY = (userId: string) => ['professionalReferences', userId]
+const PROFILE_KEY = queryKeys.caregiverProfile
+const REFS_KEY = queryKeys.professionalRefs
 
 // ─── Query: perfil completo ───────────────────────────────────────────────────
 
@@ -150,10 +151,8 @@ export function useUpdateCaregiverBasic() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success('Dados básicos salvos com sucesso.')
     },
-    onError: (error: unknown) => {
-      console.error('[useUpdateCaregiverBasic]', error)
-      const msg = (error as { message?: string })?.message
-      toast.error(msg ? `Erro: ${msg}` : 'Erro ao salvar. Tente novamente.')
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao salvar. Tente novamente.')
     },
   })
 }
@@ -185,10 +184,8 @@ export function useUpdateCaregiverBio() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success('Biografia salva com sucesso.')
     },
-    onError: (error: unknown) => {
-      console.error('[useUpdateCaregiverBio]', error)
-      const msg = (error as { message?: string })?.message
-      toast.error(msg ? `Erro: ${msg}` : 'Erro ao salvar. Tente novamente.')
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao salvar. Tente novamente.')
     },
   })
 }
@@ -219,10 +216,8 @@ export function useUpdateCaregiverSpecialties() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success('Especialidades salvas com sucesso.')
     },
-    onError: (error: unknown) => {
-      console.error('[useUpdateCaregiverSpecialties]', error)
-      const msg = (error as { message?: string })?.message
-      toast.error(msg ? `Erro: ${msg}` : 'Erro ao salvar. Tente novamente.')
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao salvar. Tente novamente.')
     },
   })
 }

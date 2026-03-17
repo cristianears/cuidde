@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Heart, Eye, EyeOff, Lock } from "lucide-react"
 import { toast } from "sonner"
+import { checkPasswordStrength, PASSWORD_REQUIREMENTS } from "@/lib/password-validation"
 
 export default function ResetPassword() {
   const navigate = useNavigate()
@@ -15,11 +16,14 @@ export default function ResetPassword() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const strength = checkPasswordStrength(password)
+  const { hasMinLength, hasUpperCase, hasSpecialChar, isStrong: isPasswordStrong } = strength
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres.")
+    if (!isPasswordStrong) {
+      toast.error("A senha deve ter no mínimo 8 caracteres, uma letra maiúscula e um caractere especial.")
       return
     }
 
@@ -69,7 +73,7 @@ export default function ResetPassword() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres, maiúscula e especial"
                   className="pl-10 pr-10 focus-visible:ring-2 focus-visible:ring-primary/50"
                   required
                 />
@@ -82,6 +86,24 @@ export default function ResetPassword() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {password.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Requisitos da senha:</p>
+                  {PASSWORD_REQUIREMENTS.map((req) => {
+                    const met = req.check(strength)
+                    return (
+                      <div key={req.key} className="flex items-center gap-2 text-xs">
+                        <span className={met ? 'text-green-500' : 'text-muted-foreground'}>
+                          {met ? '✓' : '○'}
+                        </span>
+                        <span className={met ? 'text-green-600' : 'text-muted-foreground'}>
+                          {req.label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Confirmar senha */}

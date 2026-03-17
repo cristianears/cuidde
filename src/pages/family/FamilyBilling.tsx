@@ -217,7 +217,7 @@ const FamilyBilling = () => {
                   .filter(Boolean)
                   .join(" ");
 
-                const buttonVariant =
+                const buttonVariant: "default" | "secondary" | "outline" =
                   isCurrentPlan ? "secondary" : plan.id === "monthly" ? "default" : "outline";
 
                 const buttonClass =
@@ -265,7 +265,7 @@ const FamilyBilling = () => {
                       <div className="pt-4 mt-auto">
                         <Button
                           className={`w-full ${buttonClass}`}
-                          variant={buttonVariant as any}
+                          variant={buttonVariant}
                           disabled={isCurrentPlan}
                           onClick={() => handleSelectPlan(plan)}
                         >

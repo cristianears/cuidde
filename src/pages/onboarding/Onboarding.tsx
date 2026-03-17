@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { signUpWithEmail, signInWithGoogle } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
+import { formatPhone } from '@/lib/formatters'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -160,12 +161,7 @@ const Onboarding = () => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const formatPhone = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 11)
-    if (digits.length <= 2) return digits
-    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-  }
+  // formatPhone importado de @/lib/formatters
 
   const phoneDigitsCount = formData.phone.replace(/\D/g, '').length
   const isPhoneValid = phoneDigitsCount === 11

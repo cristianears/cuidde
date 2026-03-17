@@ -31,18 +31,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, role, full_name, phone, avatar_url, created_at')
         .eq('id', userId)
         .single()
 
       if (error) {
-        console.error('[AuthContext] Erro ao carregar perfil:', error.message)
         setProfile(null)
         return
       }
       setProfile(data ?? null)
-    } catch (err) {
-      console.error('[AuthContext] Erro inesperado ao carregar perfil:', err)
+    } catch {
       setProfile(null)
     }
   }
