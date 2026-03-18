@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { queryKeys } from '@/lib/query-keys'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import type { CaregiverPublic } from '@/types/database'
 
@@ -8,7 +9,7 @@ export function useFamilyMatches(limit = 3) {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['family_matches', user?.id, limit],
+    queryKey: queryKeys.familyMatches(user?.id ?? '', limit),
     queryFn: async (): Promise<CaregiverPublic[]> => {
       if (!user) return []
 

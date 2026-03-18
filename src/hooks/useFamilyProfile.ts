@@ -1,6 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { queryKeys } from '@/lib/query-keys'
+import { geocodeAddress } from '@/lib/geocode'
 import type { FamilyProfile } from '@/types/database'
 
 export type FamilyProfileFull = FamilyProfile & {
@@ -14,7 +17,7 @@ export function useFamilyProfile() {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['family_profile', user?.id],
+    queryKey: queryKeys.familyProfile(user?.id ?? ''),
     queryFn: async (): Promise<FamilyProfileFull | null> => {
       if (!user) return null
 
@@ -33,5 +36,158 @@ export function useFamilyProfile() {
     },
     enabled: !!user,
     staleTime: 60_000,
+  })
+}
+
+// ─── Helper: geocodificar e salvar lat/lng (best-effort) ────────────────────
+
+async function geocodeAndUpdate(cep: string | undefined, userId: string) {
+  if (!cep) return
+  const geo = await geocodeAddress({ cep })
+  if (geo) {
+    await supabase
+      .from('family_profiles')
+      .update({ lat: geo.lat, lng: geo.lng })
+      .eq('id', userId)
+  }
+}
+
+// ─── Payload para atualização de endereço da família ─────────────────────────
+
+export interface UpdateFamilyAddressPayload {
+  cep: string
+  street: string
+  number: string
+  neighborhood: string
+  city: string
+  state: string
+}
+
+// ─── Mutation: atualizar endereço e geocodificar ─────────────────────────────
+
+export function useUpdateFamilyAddress() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: UpdateFamilyAddressPayload) => {
+      const { error } = await supabase
+        .from('family_profiles')
+        .update({
+          cep: payload.cep,
+          street: payload.street,
+          number: payload.number,
+          neighborhood: payload.neighborhood,
+          city: payload.city,
+          state: payload.state,
+        })
+        .eq('id', user!.id)
+
+      if (error) throw error
+
+      await geocodeAndUpdate(payload.cep, user!.id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
+      toast.success('Endereço salvo com sucesso.')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao salvar endereço. Tente novamente.')
+    },
+  })
+}
+
+// ─── Payload completo para salvar todo o perfil da família ───────────────────
+
+export interface UpdateFamilyProfilePayload {
+  // Responsável
+  full_name: string
+  phone: string
+  relationship: string
+  // Endereço
+  cep: string
+  street: string
+  number: string
+  neighborhood: string
+  city: string
+  state: string
+  // Idoso
+  elderly_name: string
+  elderly_age: number | null
+  elderly_conditions: string[]
+  blood_type: string
+  pre_existing_conditions: string
+  allergies: string
+  continuous_medications: string
+  responsible_doctor: string
+  health_insurance: string
+  care_needs: string
+  // Preferências
+  service_formats: string[]
+  hourly_range_min: number | null
+  hourly_range_max: number | null
+  daily_range_min: number | null
+  daily_range_max: number | null
+  distance_preference: string
+}
+
+// ─── Mutation: salvar perfil completo ────────────────────────────────────────
+
+export function useUpdateFamilyProfileFull() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: UpdateFamilyProfilePayload) => {
+      // 1. Atualizar tabela profiles (nome e telefone)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ full_name: payload.full_name, phone: payload.phone })
+        .eq('id', user!.id)
+
+      if (profileError) throw profileError
+
+      // 2. Atualizar tabela family_profiles
+      const { error } = await supabase
+        .from('family_profiles')
+        .update({
+          relationship: payload.relationship,
+          cep: payload.cep,
+          street: payload.street,
+          number: payload.number,
+          neighborhood: payload.neighborhood,
+          city: payload.city,
+          state: payload.state,
+          elderly_name: payload.elderly_name,
+          elderly_age: payload.elderly_age,
+          elderly_conditions: payload.elderly_conditions,
+          blood_type: payload.blood_type,
+          pre_existing_conditions: payload.pre_existing_conditions || null,
+          allergies: payload.allergies || null,
+          continuous_medications: payload.continuous_medications || null,
+          responsible_doctor: payload.responsible_doctor || null,
+          health_insurance: payload.health_insurance || null,
+          care_needs: payload.care_needs || null,
+          service_formats: payload.service_formats,
+          hourly_range_min: payload.hourly_range_min,
+          hourly_range_max: payload.hourly_range_max,
+          daily_range_min: payload.daily_range_min,
+          daily_range_max: payload.daily_range_max,
+          distance_preference: payload.distance_preference || null,
+        })
+        .eq('id', user!.id)
+
+      if (error) throw error
+
+      // 3. Geocodificar endereço (best-effort)
+      await geocodeAndUpdate(payload.cep, user!.id)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
+      toast.success('Perfil atualizado com sucesso.')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao salvar perfil. Tente novamente.')
+    },
   })
 }

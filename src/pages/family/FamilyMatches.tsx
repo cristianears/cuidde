@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { mockFamilies } from "@/data/mockData";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
@@ -71,7 +71,7 @@ const mockMatchRequests: MatchRequest[] = [
 const FamilyMatches = () => {
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
-  const currentUser = mockFamilies[0];
+
   const hasAnyMatches = mockMatchRequests.length > 0;
 
   const getStatusBadge = (status: MatchStatus) => {

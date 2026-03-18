@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/shared/StatusBadge";
-import { mockFamilies } from "@/data/mockData";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
@@ -51,8 +51,6 @@ const mockFamilyAppointments = [
 const FamilyAppointments = () => {
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
-  const currentUser = mockFamilies[0];
-  
   const activeAppointments = mockFamilyAppointments.filter(a => a.status === "active");
   const finishedAppointments = mockFamilyAppointments.filter(a => a.status === "finished");
   const hasAnyAppointments = mockFamilyAppointments.length > 0;

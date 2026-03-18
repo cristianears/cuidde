@@ -12,4 +12,6 @@ export const queryKeys = {
   familyProfile: (userId: string) => ['family_profile', userId] as const,
   familyMatches: (userId: string, limit: number) => ['family_matches', userId, limit] as const,
   searchCaregivers: (filters: Record<string, unknown>) => ['caregivers', 'search', filters] as const,
+  appointments: (userId: string, role: string) => ['appointments', role, userId] as const,
+  appointmentDetail: (id: string) => ['appointment', id] as const,
 } as const

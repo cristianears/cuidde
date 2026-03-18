@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe } from "lucide-react";
+import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe, Locate } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import CaregiverCard from "@/components/shared/CaregiverCard";
@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { modalitiesList, idiomasList } from "@/data/mockData";
-import { useSearchCaregivers, type SearchFilters } from "@/hooks/useSearchCaregivers";
+import { useSearchCaregivers, type SearchFilters, type CaregiverPublicWithDistance } from "@/hooks/useSearchCaregivers";
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // Idiomas exibíveis no filtro (sem "Outro")
@@ -24,7 +26,7 @@ const SearchCaregivers = () => {
   const { data: familyProfileData } = useFamilyProfile();
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(true);
-  const [priceRange, setPriceRange] = useState([0, 200]);
+  const [priceRange, setPriceRange] = useState([0, MAX_PRICE_PER_HOUR]);
   const [minRating, setMinRating] = useState(0);
   const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
   const [selectedIdiomas, setSelectedIdiomas] = useState<string[]>([]);
@@ -32,6 +34,9 @@ const SearchCaregivers = () => {
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [cityFilter, setCityFilter] = useState("");
   const [neighborhoodFilter, setNeighborhoodFilter] = useState("");
+  const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_RADIUS_KM);
+
+  const familyHasLocation = familyProfileData?.lat != null && familyProfileData?.lng != null;
 
   const filters: SearchFilters = useMemo(() => ({
     query: searchQuery || undefined,
@@ -41,10 +46,13 @@ const SearchCaregivers = () => {
     idiomas: selectedIdiomas.length > 0 ? selectedIdiomas : undefined,
     withReferences: withReferences || undefined,
     minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
-    maxPrice: priceRange[1] < 200 ? priceRange[1] : undefined,
+    maxPrice: priceRange[1] < MAX_PRICE_PER_HOUR ? priceRange[1] : undefined,
     minRating: minRating > 0 ? minRating : undefined,
     emergencyOnly: emergencyOnly || undefined,
-  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly]);
+    radiusKm: familyHasLocation ? radiusKm : undefined,
+    familyLat: familyProfileData?.lat ?? undefined,
+    familyLng: familyProfileData?.lng ?? undefined,
+  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly, radiusKm, familyHasLocation, familyProfileData?.lat, familyProfileData?.lng]);
 
   const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
   const { data: favoriteIdsList = [] } = useFavoriteIds();
@@ -59,7 +67,7 @@ const SearchCaregivers = () => {
   ) => setList((prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]);
 
   const clearFilters = () => {
-    setPriceRange([0, 200]);
+    setPriceRange([0, MAX_PRICE_PER_HOUR]);
     setMinRating(0);
     setSelectedModalities([]);
     setSelectedIdiomas([]);
@@ -70,7 +78,7 @@ const SearchCaregivers = () => {
   };
 
   const hasActiveFilters =
-    priceRange[0] > 0 || priceRange[1] < 200 ||
+    priceRange[0] > 0 || priceRange[1] < MAX_PRICE_PER_HOUR ||
     minRating > 0 ||
     selectedModalities.length > 0 ||
     selectedIdiomas.length > 0 ||
@@ -80,7 +88,7 @@ const SearchCaregivers = () => {
     neighborhoodFilter.trim() !== "";
 
   const activeFilterCount =
-    (priceRange[0] > 0 || priceRange[1] < 200 ? 1 : 0) +
+    (priceRange[0] > 0 || priceRange[1] < MAX_PRICE_PER_HOUR ? 1 : 0) +
     (minRating > 0 ? 1 : 0) +
     (selectedModalities.length > 0 ? 1 : 0) +
     (selectedIdiomas.length > 0 ? 1 : 0) +
@@ -219,6 +227,30 @@ const SearchCaregivers = () => {
                   </div>
                 </div>
 
+                {/* Raio de proximidade */}
+                {familyHasLocation && (
+                  <div>
+                    <Label className="flex items-center gap-2 mb-2 text-xs">
+                      <Locate className="w-4 h-4 text-muted-foreground" />
+                      Raio de busca
+                    </Label>
+                    <Select
+                      value={String(radiusKm)}
+                      onValueChange={(v) => setRadiusKm(Number(v))}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5">5 km</SelectItem>
+                        <SelectItem value="10">10 km</SelectItem>
+                        <SelectItem value="20">20 km</SelectItem>
+                        <SelectItem value="50">50 km</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {/* Valor por hora */}
                 <div>
                   <Label className="flex items-center gap-2 mb-2 text-xs">
@@ -228,7 +260,7 @@ const SearchCaregivers = () => {
                   <Slider
                     value={priceRange}
                     onValueChange={setPriceRange}
-                    max={200}
+                    max={MAX_PRICE_PER_HOUR}
                     step={5}
                     className="mb-2"
                   />
@@ -325,6 +357,7 @@ const SearchCaregivers = () => {
                     hasAntecedentes={caregiver.has_antecedentes}
                     hasCertificados={caregiver.has_certificado}
                     hasReferencias={caregiver.has_references}
+                    distanceKm={caregiver.distance_km}
                   />
                 ))}
               </div>

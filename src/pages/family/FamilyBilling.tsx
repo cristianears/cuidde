@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { mockFamilies } from "@/data/mockData";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
@@ -87,8 +87,6 @@ const planStatusLabels: Record<string, { label: string; className: string }> = {
 const FamilyBilling = () => {
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
-  const currentUser = mockFamilies[0];
-
   // Mock current plan state (começa no Mensal)
   const [currentPlan, setCurrentPlan] = useState<PlanType>("monthly");
   const [planStatus] = useState<"active" | "trial" | "inactive">("active");

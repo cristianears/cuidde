@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
+import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES, ALLOWED_FILE_EXTS } from '@/lib/constants'
 import type { CaregiverDocument, DocumentType, ProfessionalRegType } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -45,21 +46,16 @@ export function useUploadDocument() {
 
   return useMutation({
     mutationFn: async ({ docType, file }: { docType: DocumentType; file: File }) => {
-      // Validação de segurança: tamanho máximo 10MB
-      const MAX_FILE_SIZE = 10 * 1024 * 1024
       if (file.size > MAX_FILE_SIZE) {
         throw new Error('Arquivo muito grande. Máximo permitido: 10MB.')
       }
 
-      // Validação de segurança: tipos permitidos
-      const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png']
-      if (!ALLOWED_TYPES.includes(file.type)) {
+      if (!ALLOWED_MIME_TYPES.includes(file.type as typeof ALLOWED_MIME_TYPES[number])) {
         throw new Error('Tipo de arquivo não permitido. Use PDF, JPG ou PNG.')
       }
 
-      const ALLOWED_EXTS = ['pdf', 'jpg', 'jpeg', 'png']
       const ext = (file.name.split('.').pop() ?? '').toLowerCase()
-      if (!ALLOWED_EXTS.includes(ext)) {
+      if (!ALLOWED_FILE_EXTS.includes(ext as typeof ALLOWED_FILE_EXTS[number])) {
         throw new Error('Extensão de arquivo não permitida.')
       }
 
@@ -128,7 +124,7 @@ export function useRemoveDocument() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiver-documents', user?.id] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.caregiverDocuments(user?.id ?? '') })
       toast.success('Documento removido.')
     },
     onError: (error: Error) => {
@@ -154,7 +150,7 @@ export function useToggleDocumentVisibility() {
       if (error) throw error
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['caregiver-documents', user?.id] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.caregiverDocuments(user?.id ?? '') })
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erro ao atualizar visibilidade.')

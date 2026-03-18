@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { mockFamilies } from "@/data/mockData";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 
@@ -93,7 +93,6 @@ const formatDate = (dateString: string) => {
 const FamilyInvoices = () => {
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
-  const currentUser = mockFamilies[0];
   const hasInvoices = mockInvoices.length > 0;
 
   const handleDownloadReceipt = (invoiceId: string) => {
