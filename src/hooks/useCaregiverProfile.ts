@@ -4,6 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import type { CaregiverProfile, ProfessionalReference } from '@/types/database'
+import { geocodeAddress } from '@/lib/geocode'
+import { validateAvatarFile } from '@/lib/constants'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -146,6 +148,17 @@ export function useUpdateCaregiverBasic() {
         .eq('id', user!.id)
 
       if (error) throw error
+
+      // Geocodificar endereço (best-effort — não bloqueia o save)
+      if (payload.cep) {
+        const geo = await geocodeAddress({ cep: payload.cep })
+        if (geo) {
+          await supabase
+            .from('caregiver_profiles')
+            .update({ lat: geo.lat, lng: geo.lng })
+            .eq('id', user!.id)
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
@@ -284,7 +297,7 @@ export function useUploadCaregiverPhoto() {
 
   return useMutation({
     mutationFn: async (file: File) => {
-      const ext = file.name.split('.').pop()
+      const ext = validateAvatarFile(file)
       const path = `${user!.id}/avatar.${ext}`
 
       const { error: uploadError } = await supabase.storage

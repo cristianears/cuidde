@@ -25,7 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-type UserRole = 'caregiver' | 'family' | 'admin';
+import type { UserRole } from '@/types/database';
 
 interface SidebarItem {
   icon: React.ElementType;
@@ -69,6 +69,13 @@ interface AppSidebarProps {
   userPhoto?: string;
 }
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0][0].toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
@@ -106,6 +113,10 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
             <div className="w-11 h-11 rounded-full bg-muted overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
               {userPhoto ? (
                 <img src={userPhoto} alt={userName} className="w-full h-full object-cover" loading="lazy" />
+              ) : getInitials(userName) ? (
+                <div className="w-full h-full flex items-center justify-center bg-primary/10">
+                  <span className="text-sm font-semibold text-primary">{getInitials(userName)}</span>
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <User className="w-6 h-6 text-muted-foreground" />

@@ -10,6 +10,7 @@ import type { Appointment, AppointmentStatus } from '@/types/database'
 export interface AppointmentWithNames extends Appointment {
   family_name: string | null
   caregiver_name: string | null
+  elderly_name: string | null
 }
 
 interface CreateAppointmentPayload {
@@ -28,6 +29,51 @@ interface UpdateStatusPayload {
   cancel_reason?: string
 }
 
+// ─── Helper: buscar nomes de profiles por IDs ──────────────────────────────
+
+async function fetchProfileNames(ids: string[]): Promise<Record<string, string>> {
+  if (ids.length === 0) return {}
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', ids)
+  return Object.fromEntries((data ?? []).map((p) => [p.id, p.full_name]))
+}
+
+// ─── Helper: buscar dados da família (elderly_name + nome do responsável) ────
+
+interface FamilyInfo {
+  elderly_name: string | null
+  responsible_name: string | null
+}
+
+async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, FamilyInfo>> {
+  if (familyIds.length === 0) return {}
+
+  // Buscar elderly_name e full_name em queries separadas (evita PGRST201)
+  const [{ data: familyData }, { data: profileData }] = await Promise.all([
+    supabase
+      .from('family_profiles')
+      .select('id, elderly_name')
+      .in('id', familyIds),
+    supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', familyIds),
+  ])
+
+  const profileNames = Object.fromEntries(
+    (profileData ?? []).map((p) => [p.id, p.full_name])
+  )
+
+  return Object.fromEntries(
+    (familyData ?? []).map((p) => [p.id, {
+      elderly_name: p.elderly_name ?? null,
+      responsible_name: profileNames[p.id] ?? null,
+    }])
+  )
+}
+
 // ─── Query: listar agendamentos ──────────────────────────────────────────────
 
 export function useAppointments(role: 'caregiver' | 'family') {
@@ -42,23 +88,29 @@ export function useAppointments(role: 'caregiver' | 'family') {
 
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          family_profiles:family_id ( profiles:id ( full_name ) ),
-          caregiver_profiles:caregiver_id ( profiles:id ( full_name ) )
-        `)
+        .select('*')
         .eq(column, user.id)
         .order('created_at', { ascending: false })
 
       if (error) throw error
+      if (!data || data.length === 0) return []
 
-      return (data ?? []).map((row: any) => ({
-        ...row,
-        family_name: row.family_profiles?.profiles?.full_name ?? null,
-        caregiver_name: row.caregiver_profiles?.profiles?.full_name ?? null,
-        family_profiles: undefined,
-        caregiver_profiles: undefined,
-      }))
+      const uniqueIds = [...new Set(data.flatMap((a) => [a.family_id, a.caregiver_id]))]
+      const familyIds = [...new Set(data.map((a) => a.family_id))]
+      const [names, familyInfo] = await Promise.all([
+        fetchProfileNames(uniqueIds),
+        fetchFamilyInfo(familyIds),
+      ])
+
+      return data.map((row) => {
+        const info = familyInfo[row.family_id]
+        return {
+          ...row,
+          family_name: info?.responsible_name ?? names[row.family_id] ?? null,
+          caregiver_name: names[row.caregiver_id] ?? null,
+          elderly_name: info?.elderly_name ?? null,
+        }
+      })
     },
     enabled: !!user,
     staleTime: 30_000,
@@ -77,11 +129,7 @@ export function useAppointmentDetail(appointmentId: string | undefined) {
 
       const { data, error } = await supabase
         .from('appointments')
-        .select(`
-          *,
-          family_profiles:family_id ( profiles:id ( full_name ) ),
-          caregiver_profiles:caregiver_id ( profiles:id ( full_name ) )
-        `)
+        .select('*')
         .eq('id', appointmentId)
         .single()
 
@@ -90,12 +138,17 @@ export function useAppointmentDetail(appointmentId: string | undefined) {
         throw error
       }
 
+      const [names, familyInfo] = await Promise.all([
+        fetchProfileNames([data.family_id, data.caregiver_id]),
+        fetchFamilyInfo([data.family_id]),
+      ])
+
+      const info = familyInfo[data.family_id]
       return {
         ...data,
-        family_name: (data as any).family_profiles?.profiles?.full_name ?? null,
-        caregiver_name: (data as any).caregiver_profiles?.profiles?.full_name ?? null,
-        family_profiles: undefined,
-        caregiver_profiles: undefined,
+        family_name: info?.responsible_name ?? names[data.family_id] ?? null,
+        caregiver_name: names[data.caregiver_id] ?? null,
+        elderly_name: info?.elderly_name ?? null,
       } as AppointmentWithNames
     },
     enabled: !!user && !!appointmentId,
@@ -133,7 +186,7 @@ export function useCreateAppointment() {
       return data
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['appointments'] })
+      qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll })
       toast.success('Solicitação de atendimento enviada!')
     },
     onError: (error: Error) => {
@@ -170,7 +223,7 @@ export function useUpdateAppointmentStatus() {
       if (error) throw error
     },
     onSuccess: (_, payload) => {
-      qc.invalidateQueries({ queryKey: ['appointments'] })
+      qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll })
       qc.invalidateQueries({ queryKey: queryKeys.appointmentDetail(payload.id) })
 
       const messages: Record<AppointmentStatus, string> = {

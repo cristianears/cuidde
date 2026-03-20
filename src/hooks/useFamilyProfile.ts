@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { geocodeAddress } from '@/lib/geocode'
-import type { FamilyProfile } from '@/types/database'
+import { validateAvatarFile } from '@/lib/constants'
+import type { FamilyProfile, ElderlyMedication } from '@/types/database'
 
 export type FamilyProfileFull = FamilyProfile & {
   profiles: {
@@ -50,6 +51,73 @@ async function geocodeAndUpdate(cep: string | undefined, userId: string) {
       .update({ lat: geo.lat, lng: geo.lng })
       .eq('id', userId)
   }
+}
+
+// ─── Mutation: upload de foto do responsável ─────────────────────────────────
+
+export function useUploadFamilyPhoto() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const ext = validateAvatarFile(file)
+      const path = `${user!.id}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(path)
+
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`
+
+      const { error: updateError } = await supabase
+        .from('family_profiles')
+        .update({ photo_url: publicUrl })
+        .eq('id', user!.id)
+
+      if (updateError) throw updateError
+
+      return publicUrl
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
+      toast.success('Foto atualizada com sucesso!')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao enviar foto.')
+    },
+  })
+}
+
+// ─── Mutation: remover foto do responsável ───────────────────────────────────
+
+export function useRemoveFamilyPhoto() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('family_profiles')
+        .update({ photo_url: null })
+        .eq('id', user!.id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
+      toast.success('Foto removida.')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao remover foto.')
+    },
+  })
 }
 
 // ─── Payload para atualização de endereço da família ─────────────────────────
@@ -122,6 +190,8 @@ export interface UpdateFamilyProfilePayload {
   responsible_doctor: string
   health_insurance: string
   care_needs: string
+  // Medicamentos do idoso
+  elderly_medications: ElderlyMedication[]
   // Preferências
   service_formats: string[]
   hourly_range_min: number | null
@@ -168,6 +238,7 @@ export function useUpdateFamilyProfileFull() {
           responsible_doctor: payload.responsible_doctor || null,
           health_insurance: payload.health_insurance || null,
           care_needs: payload.care_needs || null,
+          elderly_medications: payload.elderly_medications ?? [],
           service_formats: payload.service_formats,
           hourly_range_min: payload.hourly_range_min,
           hourly_range_max: payload.hourly_range_max,
