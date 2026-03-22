@@ -110,10 +110,21 @@ export function useUpdateCareRoutine() {
       if (!user) throw new Error('Não autenticado')
 
       const { id, appointment_id, ...fields } = payload
+
+      // Verificar que o usuário é participante do agendamento antes de atualizar
+      const { data: apt, error: aptError } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('id', appointment_id)
+        .single()
+
+      if (aptError || !apt) throw new Error('Agendamento não encontrado ou acesso negado.')
+
       const { error } = await supabase
         .from('care_routines')
         .update(fields)
         .eq('id', id)
+        .eq('appointment_id', appointment_id)
 
       if (error) throw error
       return { appointmentId: appointment_id }
@@ -135,10 +146,20 @@ export function useDeleteCareRoutine() {
 
   return useMutation({
     mutationFn: async ({ id, appointmentId }: { id: string; appointmentId: string }) => {
+      // Verificar que o usuário é participante do agendamento antes de excluir
+      const { data: apt, error: aptError } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('id', appointmentId)
+        .single()
+
+      if (aptError || !apt) throw new Error('Agendamento não encontrado ou acesso negado.')
+
       const { error } = await supabase
         .from('care_routines')
         .delete()
         .eq('id', id)
+        .eq('appointment_id', appointmentId)
 
       if (error) throw error
       return { appointmentId }

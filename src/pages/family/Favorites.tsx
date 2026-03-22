@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useFavorites, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Favorites = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
   const { data: favorites = [], isLoading } = useFavorites();
@@ -21,7 +22,7 @@ const Favorites = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
 
       <main className="flex-1 p-4 lg:p-6 min-w-0">
         <div className="max-w-3xl">
@@ -43,6 +44,7 @@ const Favorites = () => {
                 caregiver={caregiver}
                 isFavorite={true}
                 onFavorite={handleRemoveFavorite}
+                onContact={(id) => navigate(`/family/caregiver/${id}`)}
                 hasDocsSent={caregiver.has_rg_cnh}
                 hasAntecedentes={caregiver.has_antecedentes}
                 hasCertificados={caregiver.has_certificado}

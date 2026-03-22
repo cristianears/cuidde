@@ -125,7 +125,7 @@ const FamilyBilling = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader

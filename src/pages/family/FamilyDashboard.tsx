@@ -5,13 +5,14 @@ import MetricCard from "@/components/shared/MetricCard";
 import CaregiverCard from "@/components/shared/CaregiverCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useFamilyMatches } from "@/hooks/useFamilyMatches";
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useAuth } from "@/contexts/AuthContext";
 
 const FamilyDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: familyProfile } = useFamilyProfile();
   const { data: matchedCaregivers = [], isLoading: loadingMatches } = useFamilyMatches(3);
@@ -37,6 +38,7 @@ const FamilyDashboard = () => {
       <AppSidebar
         role="family"
         userName={displayName}
+        userPhoto={familyProfile?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture}
       />
 
       <main className="flex-1 p-4 lg:p-6">
@@ -99,6 +101,7 @@ const FamilyDashboard = () => {
                     caregiver={caregiver}
                     isFavorite={favoriteIds.has(caregiver.id)}
                     onFavorite={handleFavorite}
+                    onContact={(id) => navigate(`/family/caregiver/${id}`)}
                     hasDocsSent={caregiver.has_rg_cnh}
                     hasAntecedentes={caregiver.has_antecedentes}
                     hasCertificados={caregiver.has_certificado}

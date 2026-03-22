@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe, Locate } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -21,20 +22,59 @@ import { cn } from "@/lib/utils";
 // Idiomas exibíveis no filtro (sem "Outro")
 const idiomasFilter = idiomasList.filter((i) => i !== "Outro");
 
+const FILTERS_STORAGE_KEY = "cuidde_search_filters";
+
+interface StoredFilters {
+  searchQuery: string;
+  showFilters: boolean;
+  priceRange: number[];
+  minRating: number;
+  selectedModalities: string[];
+  selectedIdiomas: string[];
+  withReferences: boolean;
+  emergencyOnly: boolean;
+  cityFilter: string;
+  neighborhoodFilter: string;
+  radiusKm: number;
+}
+
+function loadStoredFilters(): Partial<StoredFilters> {
+  try {
+    const raw = sessionStorage.getItem(FILTERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 const SearchCaregivers = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(true);
-  const [priceRange, setPriceRange] = useState([0, MAX_PRICE_PER_HOUR]);
-  const [minRating, setMinRating] = useState(0);
-  const [selectedModalities, setSelectedModalities] = useState<string[]>([]);
-  const [selectedIdiomas, setSelectedIdiomas] = useState<string[]>([]);
-  const [withReferences, setWithReferences] = useState(false);
-  const [emergencyOnly, setEmergencyOnly] = useState(false);
-  const [cityFilter, setCityFilter] = useState("");
-  const [neighborhoodFilter, setNeighborhoodFilter] = useState("");
-  const [radiusKm, setRadiusKm] = useState<number>(DEFAULT_RADIUS_KM);
+  const stored = useMemo(() => loadStoredFilters(), []);
+  const [searchQuery, setSearchQuery] = useState(stored.searchQuery ?? "");
+  const [showFilters, setShowFilters] = useState(stored.showFilters ?? true);
+  const [priceRange, setPriceRange] = useState(stored.priceRange ?? [0, MAX_PRICE_PER_HOUR]);
+  const [minRating, setMinRating] = useState(stored.minRating ?? 0);
+  const [selectedModalities, setSelectedModalities] = useState<string[]>(stored.selectedModalities ?? []);
+  const [selectedIdiomas, setSelectedIdiomas] = useState<string[]>(stored.selectedIdiomas ?? []);
+  const [withReferences, setWithReferences] = useState(stored.withReferences ?? false);
+  const [emergencyOnly, setEmergencyOnly] = useState(stored.emergencyOnly ?? false);
+  const [cityFilter, setCityFilter] = useState(stored.cityFilter ?? "");
+  const [neighborhoodFilter, setNeighborhoodFilter] = useState(stored.neighborhoodFilter ?? "");
+  const [radiusKm, setRadiusKm] = useState<number>(stored.radiusKm ?? DEFAULT_RADIUS_KM);
+
+  // Persistir filtros no sessionStorage
+  const persistFilters = useCallback(() => {
+    const data: StoredFilters = {
+      searchQuery, showFilters, priceRange, minRating,
+      selectedModalities, selectedIdiomas, withReferences,
+      emergencyOnly, cityFilter, neighborhoodFilter, radiusKm,
+    };
+    sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(data));
+  }, [searchQuery, showFilters, priceRange, minRating, selectedModalities, selectedIdiomas, withReferences, emergencyOnly, cityFilter, neighborhoodFilter, radiusKm]);
+
+  useEffect(() => { persistFilters(); }, [persistFilters]);
 
   const familyHasLocation = familyProfileData?.lat != null && familyProfileData?.lng != null;
 
@@ -108,7 +148,7 @@ const SearchCaregivers = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
 
       <main className="flex-1 min-w-0 overflow-hidden p-4 lg:p-5">
         <PageHeader
@@ -353,6 +393,7 @@ const SearchCaregivers = () => {
                     caregiver={caregiver}
                     isFavorite={favoriteIds.has(caregiver.id)}
                     onFavorite={handleFavorite}
+                    onContact={(id) => navigate(`/family/caregiver/${id}`)}
                     hasDocsSent={caregiver.has_rg_cnh}
                     hasAntecedentes={caregiver.has_antecedentes}
                     hasCertificados={caregiver.has_certificado}

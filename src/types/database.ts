@@ -52,6 +52,22 @@ export type CareType =
   | 'monitoring'
   | 'other'
 
+export type FeedingStatus = 'full' | 'partial' | 'refused'
+
+export type MoodStatus = 'agitated' | 'calm' | 'sleepy'
+
+export interface MedicationItem {
+  name: string
+  time: string         // formato 'HH:MM'
+  applied: boolean
+  applied_at: string | null  // ISO timestamp ou null
+}
+
+export interface ElderlyMedication {
+  name: string
+  time: string  // formato 'HH:MM'
+}
+
 export type InvoiceStatus = 'paid' | 'pending' | 'open' | 'overdue'
 
 export type SupportSubject =
@@ -93,6 +109,9 @@ export interface CaregiverProfile {
   city: string | null
   state: string | null
   zona: 'zona_norte' | 'zona_sul' | 'zona_leste' | 'zona_oeste' | 'centro' | null
+  // Geocodificação
+  lat: number | null
+  lng: number | null
   // Profissional
   specialties: string[]
   modalities: string[]
@@ -203,6 +222,9 @@ export interface FamilyProfile {
   neighborhood: string | null
   city: string | null
   state: string | null
+  // Geocodificação
+  lat: number | null
+  lng: number | null
   // Idoso
   elderly_name: string | null
   elderly_age: number | null
@@ -221,6 +243,8 @@ export interface FamilyProfile {
   daily_range_min: number | null
   daily_range_max: number | null
   distance_preference: string | null
+  // Medicamentos do idoso (pré-definidos pela família)
+  elderly_medications: ElderlyMedication[]
   // Stripe
   stripe_customer_id: string | null
   plan: SubscriptionPlan | null
@@ -262,6 +286,14 @@ export interface CareRoutine {
   observations: string | null
   has_occurrence: boolean
   occurrence_description: string | null
+  // Checklist de medicamentos (aplicados pelo cuidador)
+  medication_items: MedicationItem[]
+  // Diário de bem-estar
+  feeding_status: FeedingStatus | null
+  hygiene_done: boolean | null
+  mood: MoodStatus | null
+  // Itens em falta
+  items_running_low: string[]
   recorded_at: string
 }
 
@@ -356,6 +388,8 @@ export interface CaregiverPublic {
   city: string | null
   state: string | null
   zona: 'zona_norte' | 'zona_sul' | 'zona_leste' | 'zona_oeste' | 'centro' | null
+  lat: number | null
+  lng: number | null
   price_per_hour: number | null
   price_per_day: number | null
   average_rating: number
@@ -418,7 +452,13 @@ export interface Database {
       }
       care_routines: {
         Row: CareRoutine
-        Insert: Omit<CareRoutine, 'id' | 'recorded_at'>
+        Insert: Omit<CareRoutine, 'id' | 'recorded_at'> & {
+          medication_items?: MedicationItem[]
+          feeding_status?: FeedingStatus | null
+          hygiene_done?: boolean | null
+          mood?: MoodStatus | null
+          items_running_low?: string[]
+        }
         Update: Partial<Omit<CareRoutine, 'id' | 'recorded_at'>>
       }
       messages: {
@@ -453,7 +493,16 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      search_caregivers_by_proximity: {
+        Args: { p_lat: number; p_lng: number; p_radius_km?: number }
+        Returns: { id: string; distance_km: number }[]
+      }
+      haversine_distance: {
+        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Returns: number
+      }
+    }
     Enums: Record<string, never>
   }
 }

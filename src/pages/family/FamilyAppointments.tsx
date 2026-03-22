@@ -21,12 +21,12 @@ const FamilyAppointments = () => {
   const { active, finished } = useMemo(() => {
     const list = appointments ?? [];
     return {
-      active: list.filter((a) => a.status === "ativo" || a.status === "pendente"),
-      finished: list.filter((a) => a.status === "finalizado" || a.status === "cancelado"),
+      active: list.filter((a) => a.status === "ativo"),
+      finished: list.filter((a) => a.status === "finalizado"),
     };
   }, [appointments]);
 
-  const hasAny = (appointments ?? []).length > 0;
+  const hasAny = active.length > 0 || finished.length > 0;
 
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const status = appointmentStatusConfig[appointment.status] ?? statusConfig.pendente;

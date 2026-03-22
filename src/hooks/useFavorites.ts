@@ -100,8 +100,8 @@ export function useAddFavorite() {
       qc.invalidateQueries({ queryKey: queryKeys.favorites(user!.id) })
       qc.invalidateQueries({ queryKey: queryKeys.favoriteIds(user!.id) })
     },
-    onError: () => {
-      toast.error('Erro ao adicionar favorito.')
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao adicionar favorito.')
     },
   })
 }
@@ -129,8 +129,8 @@ export function useRemoveFavorite() {
       qc.invalidateQueries({ queryKey: queryKeys.favorites(user!.id) })
       qc.invalidateQueries({ queryKey: queryKeys.favoriteIds(user!.id) })
     },
-    onError: () => {
-      toast.error('Erro ao remover favorito.')
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao remover favorito.')
     },
   })
 }

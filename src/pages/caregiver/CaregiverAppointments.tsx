@@ -18,14 +18,13 @@ const CaregiverAppointments = () => {
   const { user } = useAuth();
   const { data: profileData } = useCaregiverProfile();
   const { data: appointments, isLoading } = useAppointments("caregiver");
-  const [activeTab, setActiveTab] = useState<"ativos" | "finalizados" | "pendentes">("ativos");
+  const [activeTab, setActiveTab] = useState<"ativos" | "finalizados">("ativos");
 
   const appointmentsByTab = useMemo(() => {
     const list = appointments ?? [];
     const ativos = list.filter((a) => a.status === "ativo");
     const finalizados = list.filter((a) => a.status === "finalizado");
-    const pendentes = list.filter((a) => a.status === "pendente");
-    return { ativos, finalizados, pendentes };
+    return { ativos, finalizados };
   }, [appointments]);
 
   const getStatusBadge = (status: AppointmentStatus) => {
@@ -143,7 +142,7 @@ const CaregiverAppointments = () => {
     </div>
   );
 
-  const renderTabContent = (key: "ativos" | "finalizados" | "pendentes") => {
+  const renderTabContent = (key: "ativos" | "finalizados") => {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center py-16">
@@ -159,19 +158,9 @@ const CaregiverAppointments = () => {
         return (
           <EmptyState
             title="Nenhum atendimento ativo no momento"
-            description="Quando uma família iniciar uma combinação com você, seus atendimentos aparecerão aqui."
-            ctaLabel="Ajustar disponibilidade"
-            ctaHref="/caregiver/availability"
-          />
-        );
-      }
-      if (key === "pendentes") {
-        return (
-          <EmptyState
-            title="Nenhuma solicitação pendente"
-            description="Quando houver interesse de famílias, as solicitações aparecerão aqui para você responder com calma."
-            ctaLabel="Completar perfil para aumentar visibilidade"
-            ctaHref="/caregiver/profile"
+            description="Quando você aceitar uma solicitação de família, o atendimento aparecerá aqui."
+            ctaLabel="Ver solicitações"
+            ctaHref="/caregiver/solicitations"
           />
         );
       }
@@ -179,7 +168,7 @@ const CaregiverAppointments = () => {
         <EmptyState
           title="Ainda não há atendimentos finalizados"
           description="Assim que você concluir atendimentos, eles ficam registrados aqui como histórico."
-          ctaLabel="Registrar atendimentos"
+          ctaLabel="Ver atendimentos ativos"
           ctaHref="/caregiver/appointments"
         />
       );
@@ -222,17 +211,10 @@ const CaregiverAppointments = () => {
                 {appointmentsByTab.finalizados.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="pendentes" className="text-xs md:text-sm">
-              Pendentes
-              <Badge variant="secondary" className="ml-1.5 md:ml-2 h-4 md:h-5 px-1 md:px-1.5 text-xs">
-                {appointmentsByTab.pendentes.length}
-              </Badge>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ativos">{renderTabContent("ativos")}</TabsContent>
           <TabsContent value="finalizados">{renderTabContent("finalizados")}</TabsContent>
-          <TabsContent value="pendentes">{renderTabContent("pendentes")}</TabsContent>
         </Tabs>
       </main>
     </div>

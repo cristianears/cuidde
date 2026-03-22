@@ -9,8 +9,10 @@ import {
   MapPin,
   Heart,
   Stethoscope,
-  SlidersHorizontal,
   Search,
+  Pill,
+  Plus,
+  Clock,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -21,13 +23,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { mockFamilies } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { useFamilyProfile, useUpdateFamilyProfileFull, useUploadFamilyPhoto, useRemoveFamilyPhoto } from "@/hooks/useFamilyProfile";
 import { fetchAddressByCep } from "@/lib/viacep";
+import type { ElderlyMedication } from "@/types/database";
 
 const healthConditionOptions = [
   "Alzheimer",
@@ -42,17 +44,14 @@ const healthConditionOptions = [
   "Outros"
 ];
 
-const serviceFormatOptions = [
-  { value: "plantoes", label: "Plantões avulsos" },
-  { value: "diarias", label: "Diárias" },
-  { value: "turnos", label: "Turnos fixos" },
-  { value: "cobertura", label: "Cobertura temporária / substituição" }
-];
 
 const FamilyProfile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
+  const { mutate: saveProfile, isPending: isSaving } = useUpdateFamilyProfileFull();
+  const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadFamilyPhoto();
+  const { mutate: removePhoto } = useRemoveFamilyPhoto();
   const currentUser = mockFamilies[0];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,20 +64,41 @@ const FamilyProfile = () => {
   const [responsibleEmail, setResponsibleEmail] = useState(realEmail || currentUser.email);
   const [responsiblePhone, setResponsiblePhone] = useState(realPhone || currentUser.phone);
   const [relationship, setRelationship] = useState("filho");
-  const [responsiblePhoto, setResponsiblePhoto] = useState<string | null>(currentUser.photo || null);
+  const [responsiblePhoto, setResponsiblePhoto] = useState<string | null>(null);
 
   // Sincronizar dados reais quando carregarem
   useEffect(() => {
     if (familyProfileData) {
-      const name = familyProfileData.profiles?.full_name ?? "";
-      const phone = familyProfileData.profiles?.phone ?? "";
+      const fp = familyProfileData;
+      const name = fp.profiles?.full_name ?? "";
+      const phone = fp.profiles?.phone ?? "";
       if (name) setResponsibleName(name);
       if (phone) setResponsiblePhone(phone);
+      if (fp.relationship) setRelationship(fp.relationship);
+      // Endereço
+      if (fp.cep) setCep(fp.cep);
+      if (fp.street) setStreet(fp.street);
+      if (fp.number) setNumber(fp.number);
+      if (fp.neighborhood) setNeighborhood(fp.neighborhood);
+      if (fp.city) setCity(fp.city);
+      if (fp.state) setState(fp.state);
+      // Idoso
+      if (fp.elderly_name) setElderlyName(fp.elderly_name);
+      if (fp.elderly_age) setElderlyAge(String(fp.elderly_age));
+      if (fp.elderly_conditions?.length) setSelectedConditions(fp.elderly_conditions);
+      if (fp.blood_type) setBloodType(fp.blood_type);
+      if (fp.pre_existing_conditions) setPreExistingConditions(fp.pre_existing_conditions);
+      if (fp.allergies) setAllergies(fp.allergies);
+      if (fp.continuous_medications) setContinuousMedications(fp.continuous_medications);
+      if (fp.responsible_doctor) setResponsibleDoctor(fp.responsible_doctor);
+      if (fp.health_insurance) setHealthInsurance(fp.health_insurance);
+      if (fp.care_needs) setCareNeeds(fp.care_needs);
+      if (fp.elderly_medications?.length) setElderlyMedications(fp.elderly_medications);
+      setResponsiblePhoto(fp.photo_url ?? null);
     }
     if (user?.email) setResponsibleEmail(user.email);
   }, [familyProfileData, user?.email]);
 
-  // Photo upload handler (mock)
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -90,18 +110,20 @@ const FamilyProfile = () => {
       toast.error("Formato inválido. Use JPG ou PNG.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setResponsiblePhoto(event.target?.result as string);
-      toast.success("Foto atualizada com sucesso!");
-    };
-    reader.readAsDataURL(file);
+    uploadPhoto(file, {
+      onSuccess: (url) => {
+        setResponsiblePhoto(url);
+      },
+    });
   };
 
   const handleRemovePhoto = () => {
-    setResponsiblePhoto(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    toast.success("Foto removida.");
+    removePhoto(undefined, {
+      onSuccess: () => {
+        setResponsiblePhoto(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      },
+    });
   };
 
   // Address
@@ -125,21 +147,35 @@ const FamilyProfile = () => {
   const [healthInsurance, setHealthInsurance] = useState("Bradesco Saúde");
   const [careNeeds, setCareNeeds] = useState(currentUser.elderlyInfo.careNeeds);
 
-  // Preferences
-  const [selectedServiceFormats, setSelectedServiceFormats] = useState<string[]>(["diarias"]);
-  const [hourlyRange, setHourlyRange] = useState([15, 35]);
-  const [dailyRange, setDailyRange] = useState([150, 350]);
-  const [distancePreference, setDistancePreference] = useState("10km");
+  // Medications
+  const [elderlyMedications, setElderlyMedications] = useState<ElderlyMedication[]>([]);
+  const [newMedName, setNewMedName] = useState("");
+  const [newMedTime, setNewMedTime] = useState("");
+
+  const handleAddMedication = () => {
+    if (!newMedName.trim() || !newMedTime.trim()) {
+      toast.error("Preencha o nome do medicamento e o horário.");
+      return;
+    }
+    const existingTimes = elderlyMedications
+      .filter((m) => m.name.toLowerCase() === newMedName.trim().toLowerCase())
+      .map((m) => m.time);
+    if (existingTimes.length > 0) {
+      toast.info(`${newMedName.trim()} já cadastrado para ${existingTimes.join(", ")}. Adicionando novo horário.`);
+    }
+    setElderlyMedications((prev) => [...prev, { name: newMedName.trim(), time: newMedTime }]);
+    setNewMedName("");
+    setNewMedTime("");
+  };
+
+  const handleRemoveMedication = (index: number) => {
+    setElderlyMedications((prev) => prev.filter((_, i) => i !== index));
+  };
+
 
   const toggleCondition = (condition: string) => {
     setSelectedConditions(prev =>
       prev.includes(condition) ? prev.filter(c => c !== condition) : [...prev, condition]
-    );
-  };
-
-  const toggleServiceFormat = (format: string) => {
-    setSelectedServiceFormats(prev =>
-      prev.includes(format) ? prev.filter(f => f !== format) : [...prev, format]
     );
   };
 
@@ -163,7 +199,28 @@ const FamilyProfile = () => {
   };
 
   const handleSave = () => {
-    toast.success("Perfil atualizado com sucesso!");
+    saveProfile({
+      full_name: responsibleName,
+      phone: responsiblePhone,
+      relationship,
+      cep,
+      street,
+      number,
+      neighborhood,
+      city,
+      state,
+      elderly_name: elderlyName,
+      elderly_age: elderlyAge ? parseInt(elderlyAge, 10) : null,
+      elderly_conditions: selectedConditions,
+      blood_type: bloodType,
+      pre_existing_conditions: preExistingConditions,
+      allergies,
+      continuous_medications: continuousMedications,
+      responsible_doctor: responsibleDoctor,
+      health_insurance: healthInsurance,
+      care_needs: careNeeds,
+      elderly_medications: elderlyMedications,
+    });
   };
 
   const handleCancel = () => {
@@ -175,6 +232,7 @@ const FamilyProfile = () => {
       <AppSidebar
         role="family"
         userName={familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? user?.email ?? ""}
+        userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture}
       />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
@@ -449,7 +507,7 @@ const FamilyProfile = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="continuousMedications" className="text-xs md:text-sm">Medicações de uso contínuo</Label>
+                    <Label htmlFor="continuousMedications" className="text-xs md:text-sm">Medicações de uso contínuo (texto livre)</Label>
                     <Textarea
                       id="continuousMedications"
                       value={continuousMedications}
@@ -459,6 +517,77 @@ const FamilyProfile = () => {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Checklist de Medicamentos */}
+              <div className="pt-4 border-t border-border">
+                <h4 className="text-sm md:text-base font-medium text-foreground mb-1 flex items-center gap-2">
+                  <Pill className="w-4 h-4" />
+                  Checklist de Medicamentos
+                </h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Cadastre os medicamentos e horários. O cuidador poderá marcar cada um como "Aplicado" durante o atendimento.
+                </p>
+
+                {/* Lista de medicamentos cadastrados */}
+                {elderlyMedications.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    {elderlyMedications.map((med, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-muted/30"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Pill className="w-4 h-4 text-primary shrink-0" />
+                          <span className="text-sm font-medium truncate">{med.name}</span>
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                            <Clock className="w-3 h-3" />
+                            {med.time}
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive shrink-0 h-8 w-8 p-0"
+                          onClick={() => handleRemoveMedication(index)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Formulário para adicionar medicamento */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Input
+                    value={newMedName}
+                    onChange={(e) => setNewMedName(e.target.value)}
+                    placeholder="Nome do medicamento (ex: Losartana 50mg)"
+                    className="text-sm flex-1"
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddMedication())}
+                  />
+                  <Input
+                    type="time"
+                    value={newMedTime}
+                    onChange={(e) => setNewMedTime(e.target.value)}
+                    className="text-sm w-full sm:w-32"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddMedication}
+                    className="gap-1 shrink-0"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Adicionar
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-2">
+                  O registro é meramente informativo. A plataforma não realiza prescrições médicas.
+                </p>
               </div>
 
               {/* Acompanhamento Médico */}
@@ -493,93 +622,11 @@ const FamilyProfile = () => {
             </CardContent>
           </Card>
 
-          {/* Seção D — Preferências de busca */}
-          <Card className="animate-fade-in">
-            <CardHeader className="pb-4 md:pb-6">
-              <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                Preferências de Busca
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-5 md:space-y-6">
-              <p className="text-xs md:text-sm text-muted-foreground -mt-2">
-                Essas preferências ajudam a filtrar cuidadores e acelerar o match. Você pode alterar quando quiser.
-              </p>
-
-              <div>
-                <Label className="text-xs md:text-sm">Formato de atendimento</Label>
-                <p className="text-xs md:text-sm text-muted-foreground mb-3">
-                  Selecione os formatos que melhor atendem suas necessidades
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {serviceFormatOptions.map((option) => (
-                    <Badge
-                      key={option.value}
-                      variant={selectedServiceFormats.includes(option.value) ? "default" : "outline"}
-                      className={cn(
-                        "cursor-pointer transition-all text-xs",
-                        selectedServiceFormats.includes(option.value)
-                          ? "bg-accent hover:bg-accent/90 text-accent-foreground"
-                          : "hover:bg-muted",
-                      )}
-                      onClick={() => toggleServiceFormat(option.value)}
-                    >
-                      {option.label}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border space-y-4 md:space-y-5">
-                <div className="space-y-3">
-                  <Label className="text-xs md:text-sm">Faixa de valor por hora: R$ {hourlyRange[0]} - R$ {hourlyRange[1]}</Label>
-                  <Slider
-                    value={hourlyRange}
-                    onValueChange={setHourlyRange}
-                    min={10}
-                    max={80}
-                    step={5}
-                    className="w-full"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-xs md:text-sm">Faixa de valor por diária: R$ {dailyRange[0]} - R$ {dailyRange[1]}</Label>
-                  <Slider
-                    value={dailyRange}
-                    onValueChange={setDailyRange}
-                    min={100}
-                    max={600}
-                    step={25}
-                    className="w-full"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <div className="max-w-xs">
-                  <Label htmlFor="distance" className="text-xs md:text-sm">Preferência de distância</Label>
-                  <Select value={distancePreference} onValueChange={setDistancePreference}>
-                    <SelectTrigger className="mt-1.5 text-sm">
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="3km">Até 3 km</SelectItem>
-                      <SelectItem value="5km">Até 5 km</SelectItem>
-                      <SelectItem value="10km">Até 10 km</SelectItem>
-                      <SelectItem value="20km">Até 20 km</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Rodapé de ações */}
           <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-6">
-            <Button onClick={handleSave} className="gap-2">
+            <Button onClick={handleSave} disabled={isSaving} className="gap-2">
               <Save className="w-4 h-4" />
-              Salvar alterações
+              {isSaving ? "Salvando..." : "Salvar alterações"}
             </Button>
             <Button variant="outline" onClick={handleCancel} className="gap-2">
               <X className="w-4 h-4" />

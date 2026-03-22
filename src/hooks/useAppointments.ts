@@ -138,6 +138,11 @@ export function useAppointmentDetail(appointmentId: string | undefined) {
         throw error
       }
 
+      // Validação client-side: verificar que o usuário é participante
+      if (data.family_id !== user!.id && data.caregiver_id !== user!.id) {
+        return null
+      }
+
       const [names, familyInfo] = await Promise.all([
         fetchProfileNames([data.family_id, data.caregiver_id]),
         fetchFamilyInfo([data.family_id]),

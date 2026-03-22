@@ -90,7 +90,7 @@ const FamilyInvoiceDetails = () => {
   if (!invoice) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} />
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
         <main className="flex-1 p-6 lg:p-8">
           <div className="flex flex-col items-center justify-center h-full text-center">
             <FileText className="w-16 h-16 text-muted-foreground mb-4" />

@@ -40,9 +40,9 @@ const sidebarItems: Record<UserRole, SidebarItem[]> = {
     { icon: FileText, label: 'Documentos', href: '/caregiver/documents' },
     { icon: Calendar, label: 'Disponibilidade', href: '/caregiver/availability' },
     { icon: DollarSign, label: 'Valores', href: '/caregiver/pricing' },
+    { icon: ClipboardCheck, label: 'Solicitações', href: '/caregiver/solicitations' },
     { icon: Briefcase, label: 'Atendimentos', href: '/caregiver/appointments' },
     { icon: Star, label: 'Avaliações', href: '/caregiver/reviews' },
-    
     { icon: Headphones, label: 'Suporte', href: '/caregiver/support' },
   ],
   family: [

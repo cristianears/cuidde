@@ -795,7 +795,7 @@ TanStack Query v5 para mutations.
 - 4 slots de documentos fixos derivados de `DOC_DEFINITIONS`; slots sem registro exibem `status: 'pending'`
 - Upsert usa `UNIQUE(caregiver_id, type)` — reenvio sobrescreve o arquivo no Storage e o registro no banco
 - Visibilidade desabilitada para slots ainda não enviados (sem `id` real no banco)
-- Viewer de documentos para família (signed URL + iframe) → escopo do Sprint 3.x
+- Viewer de documentos para família → ✅ implementado no Sprint 3.2 (blob URL + iframe/img em Dialog)
 
 ✅ **Sprint 2.2 concluído — verificado em produção:**
 - Upload de documento aparece no Supabase Storage bucket `documents`
@@ -822,9 +822,9 @@ TanStack Query v5 para mutations.
 - `supabase_sprint31b.sql` — coluna `profile_complete`, função + triggers, RLS atualizado
 
 **Decisões tomadas:**
-- Filtro de proximidade por km removido do MVP (ViaCEP não fornece lat/lng)
-  → Substituído por filtros de **cidade** e **bairro** (ilike no banco)
-  → Geocodificação registrada como sprint futuro
+- Filtro de proximidade por km removido do MVP inicial (ViaCEP não fornece lat/lng)
+  → Substituído por filtros de **cidade** e **bairro** (ilike no banco) como fallback
+  → ✅ Geocodificação implementada na Sprint 3.x (Google Maps API + Haversine)
 - `CaregiverPublic` é um tipo flat (JOIN de `caregiver_profiles` + `profiles.full_name`)
 - `FamilyMatches.tsx` permanece mock — escopo real é Sprint 4.1 (agendamentos)
 - `useFamilyMatches` alimenta o card "Cuidadores recomendados" no FamilyDashboard
@@ -840,20 +840,97 @@ TanStack Query v5 para mutations.
 
 ---
 
-#### Sprint 3.x (futuro) — Geocodificação e Filtro por Proximidade (km)
-```
-Registrado como sprint futuro. ViaCEP não retorna coordenadas geográficas.
+#### Sprint 3.x (concluído) — Geocodificação e Filtro por Proximidade (km)
 
-Opções para implementar no futuro:
-1. Google Maps Geocoding API — converte CEP → lat/lng (pago)
-2. OpenCage / Nominatim (OpenStreetMap) — gratuito com limites de taxa
-3. Tabela local de CEPs com coordenadas (grandes cidades brasileiras)
+**Implementação escolhida:** Google Maps Geocoding API (client-side)
 
-Ao implementar:
-- Armazenar lat/lng em caregiver_profiles e family_profiles (colunas: lat DECIMAL(9,6), lng DECIMAL(9,6))
-- Usar fórmula de Haversine para calcular distância no Supabase (função SQL)
-- Substituir filtros de cidade/bairro pelo filtro de raio (km) no SearchCaregivers.tsx
+**SQL executado no Supabase:**
+- `supabase_sprint3x.sql` — colunas `lat`/`lng` em `caregiver_profiles` e `family_profiles`, função `haversine_distance`, RPC `search_caregivers_by_proximity` com bounding box
+- `supabase_sprint3x_security.sql` — `SET search_path = public` em ambas as funções, role check (apenas famílias podem buscar por proximidade)
+
+**Arquivos criados/modificados:**
+- `src/lib/geocode.ts` — chama Google Maps Geocoding API via `VITE_GMAPS_GEOCODE_KEY`, retorna `{ lat, lng }` ou `null`
+- `src/hooks/useCaregiverProfile.ts` — geocodifica CEP ao salvar endereço do cuidador (best-effort)
+- `src/hooks/useFamilyProfile.ts` — geocodifica CEP ao salvar endereço/perfil da família (best-effort, helper `geocodeAndUpdate`)
+- `src/hooks/useSearchCaregivers.ts` — se família tem lat/lng, chama RPC `search_caregivers_by_proximity` e ordena por distância; senão, fallback para filtros cidade/bairro
+- `src/pages/family/SearchCaregivers.tsx` — seletor de raio (5/10/20/50 km), só visível quando família tem coordenadas
+- `src/types/database.ts` — `lat`/`lng` em `CaregiverProfile`, `FamilyProfile`, `CaregiverPublic`; tipos das RPCs
+- `src/lib/constants.ts` — `DEFAULT_RADIUS_KM = 20`, `MAX_PRICE_PER_HOUR = 200`
+
+**Fluxo:**
+1. Família/cuidador salva endereço → `geocodeAddress({ cep })` → Google Maps API → lat/lng gravados no banco
+2. Família abre busca → se tem lat/lng → RPC `search_caregivers_by_proximity(lat, lng, raio)` → IDs + distância
+3. IDs filtrados no SELECT principal → distância exibida no `CaregiverCard`
+4. Se família não tem lat/lng → filtros tradicionais cidade/bairro (ilike)
+
+**Decisões:**
+- Geocodificação é best-effort (não bloqueia o save se falhar)
+- lat/lng do cuidador NÃO são expostos na busca pública (removidos do `CAREGIVER_SELECT`)
+- Filtros cidade/bairro mantidos como fallback quando não há coordenadas
+- `VITE_GMAPS_GEOCODE_KEY` deve ser restrita no Google Cloud Console (HTTP referrer + Geocoding API only)
+
+✅ **Sprint 3.x concluído quando:**
+- Salvar endereço grava lat/lng automaticamente
+- Seletor de raio aparece quando família tem coordenadas
+- Busca retorna cuidadores ordenados por distância dentro do raio
+- Cuidadores fora do raio não aparecem nos resultados
+
+---
+
+#### Sprint 3.2 (concluído) — Perfil Público Detalhado do Cuidador + Visualizador de Documentos
+
+**Arquivos criados/modificados:**
+- `src/hooks/usePublicCaregiverProfile.ts` — tipo `CaregiverPublicDetail` (estende `CaregiverPublic`), `DETAIL_SELECT` separado do `CAREGIVER_SELECT` da busca, busca referências/documentos/reviews relacionados
+- `src/pages/family/CaregiverPublicProfile.tsx` — perfil público completo com todas as seções + visualizador de documentos em Dialog
+- `projeto/index.html` — CSP atualizado: `blob:` adicionado a `img-src` e novo `frame-src 'self' blob:` para permitir visualização de documentos
+- `supabase_storage_family_read.sql` — Storage RLS policy para família assinante ler bucket `documents`
+
+**Seções do perfil público (`/family/caregiver/:id`):**
+1. Header: foto, nome, profissão, experiência, localização, preços, avaliação, selos de verificação (badges inline), CTAs (Solicitar Atendimento / Favoritar)
+2. Sobre + Formação complementar
+3. Especialidades, Formatos de atendimento, Idiomas
+4. Registro Profissional (tipo, número, UF)
+5. Disponibilidade (tipos de jornada aceitos, área de atendimento, observações)
+6. Observações sobre valores
+7. Documentos visíveis (view-only em modal, sem download)
+8. Referências Profissionais (com mascaramento de telefone e nomes conforme flags)
+9. Avaliações (estrelas, nome, foto, comentário, data)
+
+**Visualizador de documentos:**
+- Família clica "Visualizar" → `supabase.storage.download()` → `URL.createObjectURL()` → blob URL
+- PDFs: exibidos em `<iframe>` com `#toolbar=0&navpanes=0&scrollbar=1` (sem opção de download)
+- Imagens: exibidas em `<img>` com `pointer-events-none`, `select-none`, `draggable=false`, `onContextMenu` bloqueado
+- Requer `subscription_status = 'active'` na família (RLS do banco + Storage)
+
+**Storage RLS adicionada:**
+```sql
+CREATE POLICY "documents: família assinante lê"
+  ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'documents'
+    AND EXISTS (
+      SELECT 1 FROM public.family_profiles
+      WHERE id = auth.uid()
+      AND subscription_status = 'active'
+    )
+  );
 ```
+
+**Decisões tomadas:**
+- `DETAIL_SELECT` é separado do `CAREGIVER_SELECT` para não impactar performance da listagem de busca
+- Referências são sempre buscadas quando `has_references=true`; mascaramento de nomes/telefones aplicado no client conforme flags do cuidador
+- Documentos filtrados por `is_visible=true` e `type != 'rg_cnh'` (RG/CNH nunca exposto)
+- `staleTime: 0` para garantir dados frescos ao abrir o perfil (visibilidade reflete alterações imediatas)
+- Selos de verificação exibidos como chips inline no header (sem card/título separado)
+- Layout usa `max-w-3xl` alinhado à esquerda (mesmo padrão de Documentos e Disponibilidade do cuidador)
+- CSP ampliado com `frame-src 'self' blob:` e `img-src blob:` — necessário para renderizar blob URLs de documentos baixados via Storage
+
+✅ **Sprint 3.2 concluído quando:**
+- Família vê perfil completo com todas as seções ao clicar em um cuidador
+- Documentos visíveis abrem em modal (view-only) sem opção de download
+- Documentos com `is_visible=false` não aparecem no perfil
+- Referências respeitam mascaramento configurado pelo cuidador
+- Avaliações aparecem quando existem reviews no banco
 
 ---
 

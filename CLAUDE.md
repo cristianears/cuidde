@@ -34,11 +34,12 @@ O trabalho aqui é **conectar o backend**, não recriar UI.
 3. **Uma sessão = um sprint** — não misturar sprints; consultar SPEC.md para o sprint atual
 4. **TanStack Query v5** — sintaxe obrigatória:
    ```typescript
-   // Query
-   useQuery({ queryKey: ['key'], queryFn: () => ... })
+   // Query — usar queryKeys centralizados
+   useQuery({ queryKey: queryKeys.familyProfile(userId), queryFn: () => ... })
    // Mutation
    useMutation({ mutationFn: (data) => ... })
    ```
+   - **Query keys**: sempre usar `queryKeys` de `@/lib/query-keys` — nunca inline `['key', id]`
 5. **Nunca expor `service_role_key` no cliente** — sempre via Supabase Edge Function
 6. **Stripe Webhook é a fonte de verdade** — nunca atualizar `plan` ou `subscription_status` diretamente pelo cliente
 
@@ -48,7 +49,7 @@ O trabalho aqui é **conectar o backend**, não recriar UI.
 
 ```
 src/
-├── lib/              ← clientes e helpers (supabase.ts, auth.ts, viacep.ts, stripe.ts)
+├── lib/              ← clientes e helpers (supabase.ts, auth.ts, viacep.ts, stripe.ts, constants.ts, query-keys.ts, geocode.ts)
 ├── types/            ← database.ts com todos os tipos do Supabase
 ├── contexts/         ← AuthContext.tsx
 ├── hooks/            ← todos os hooks de dados (useAuth, useCaregiverProfile, etc.)
@@ -114,6 +115,171 @@ Não deletar o arquivo `mockData.ts` — outras páginas ainda podem depender de
 - **Sem `console.log`** no código entregue — apenas durante debug
 - **Sem comentários óbvios** — comentar apenas lógica não-trivial
 - **Tratamento de erro**: usar `toast` do `sonner` (já instalado) para feedback ao usuário
+- **Constantes**: valores reutilizados (limites de upload, raio padrão, preço máximo) ficam em `@/lib/constants.ts`
+- **Query keys**: centralizados em `@/lib/query-keys.ts` — nunca criar keys inline nos hooks
+
+---
+
+## Padrão de layout e UI
+
+### Estrutura de página
+
+Toda página segue esta estrutura base:
+
+```tsx
+<div className="flex min-h-screen bg-background">
+  <AppSidebar role="caregiver|family|admin" userName={...} userPhoto={...} />
+
+  <main className="flex-1 p-4 md:p-6 lg:p-8">
+    <PageHeader title="Título" description="Descrição opcional" />
+
+    <div className="max-w-3xl space-y-4 md:space-y-6">
+      {/* Cards/seções aqui */}
+    </div>
+  </main>
+</div>
+```
+
+- **Wrapper**: `flex min-h-screen bg-background`
+- **Main**: `flex-1 p-4 md:p-6 lg:p-8`
+- **Container de conteúdo**: `max-w-3xl space-y-4 md:space-y-6` (alinhado à esquerda, sem `mx-auto`)
+- **Max-width por tipo**: formulários simples `max-w-2xl`, padrão `max-w-3xl`, perfil completo `max-w-4xl`, dashboards sem max-w
+
+### PageHeader (componente compartilhado)
+
+```tsx
+import PageHeader from "@/components/shared/PageHeader"
+<PageHeader title="Título" description="Subtítulo" />
+// Props: title (string), description? (string), children? (action buttons), className?
+```
+
+### Cards e seções
+
+```tsx
+<Card>
+  <CardHeader className="pb-3 md:pb-6">
+    <CardTitle className="text-base md:text-lg flex items-center gap-2">
+      <Icon className="w-4 h-4" /> Título da seção
+    </CardTitle>
+    <CardDescription className="text-xs md:text-sm">Descrição</CardDescription>
+  </CardHeader>
+  <CardContent className="space-y-3 md:space-y-4">
+    {/* Conteúdo */}
+  </CardContent>
+</Card>
+```
+
+- Espaço entre cards: `space-y-4 md:space-y-6` (no container pai)
+- Espaço dentro do card: `space-y-3 md:space-y-4`
+
+### Formulários
+
+```tsx
+{/* Grid de campos */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+  <div>
+    <Label className="text-xs md:text-sm">Label</Label>
+    <Input className="mt-1.5 text-sm" />
+  </div>
+</div>
+
+{/* Botões de ação */}
+<div className="flex flex-col sm:flex-row gap-3 pb-4 md:pb-0">
+  <Button variant="outline">Cancelar</Button>
+  <Button>Salvar</Button>
+</div>
+```
+
+### Tipografia responsiva
+
+| Elemento | Classes |
+|----------|---------|
+| Título da página (h1) | `text-2xl sm:text-3xl font-bold` |
+| Título de seção (h2) | `text-base md:text-lg font-semibold` |
+| Label de campo | `text-xs md:text-sm` |
+| Texto auxiliar | `text-sm text-muted-foreground` |
+| Texto pequeno | `text-xs text-muted-foreground` |
+
+### Loading states
+
+```tsx
+// Página inteira — spinner centralizado
+<main className="flex-1 flex items-center justify-center">
+  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+</main>
+
+// Em botão — spinner inline
+<Button disabled={mutation.isPending}>
+  {mutation.isPending ? (
+    <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+  ) : (
+    <Save className="w-4 h-4" />
+  )}
+  Salvar
+</Button>
+```
+
+### Empty states
+
+```tsx
+<Card className="border-dashed">
+  <CardContent className="py-16 text-center">
+    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+      <Icon className="w-8 h-8 text-muted-foreground" />
+    </div>
+    <h3 className="text-lg font-semibold text-foreground mb-2">Título</h3>
+    <p className="text-muted-foreground max-w-md mx-auto mb-6">Mensagem explicativa</p>
+    <Button>Ação sugerida</Button>
+  </CardContent>
+</Card>
+```
+
+### Breakpoints e responsividade
+
+| Breakpoint | Uso principal |
+|------------|---------------|
+| `sm` (640px) | Flex direction (`sm:flex-row`), largura de botão (`sm:w-auto`) |
+| `md` (768px) | Padding (`md:p-6`), grid cols (`md:grid-cols-2`), text size (`md:text-lg`) |
+| `lg` (1024px) | Padding (`lg:p-8`), grid cols desktop (`lg:grid-cols-3`) |
+
+---
+
+## Geocodificação e busca por proximidade (Sprint 3.x)
+
+**Fluxo:**
+1. Família/cuidador salva endereço → `geocodeAddress({ cep })` → Google Maps API → `lat`/`lng` gravados no banco
+2. Família abre busca → se tem `lat`/`lng` → RPC `search_caregivers_by_proximity(lat, lng, raio)` → IDs + distância
+3. Se família não tem coordenadas → fallback para filtros cidade/bairro (ilike)
+
+**Arquivos-chave:**
+- `src/lib/geocode.ts` — client-side Google Maps Geocoding (env: `VITE_GMAPS_GEOCODE_KEY`)
+- `src/hooks/useSearchCaregivers.ts` — lógica de proximidade + fallback
+- `src/hooks/useFamilyProfile.ts` — helper `geocodeAndUpdate()` chamado nas mutations
+- `src/hooks/useCaregiverProfile.ts` — geocodifica CEP ao salvar endereço
+
+**Regras:**
+- Geocodificação é best-effort (não bloqueia o save)
+- `lat`/`lng` do cuidador **não são expostos** na busca pública
+- Raio padrão: `DEFAULT_RADIUS_KM = 20` (em `@/lib/constants.ts`)
+- SQL: `supabase_sprint3x.sql` + `supabase_sprint3x_security.sql`
+
+---
+
+## Perfil público do cuidador (Sprint 3.2)
+
+**Rota:** `/family/caregiver/:id`
+
+**Arquivos-chave:**
+- `src/hooks/usePublicCaregiverProfile.ts` — `CaregiverPublicDetail` + `DETAIL_SELECT` (separado do `CAREGIVER_SELECT` da busca)
+- `src/pages/family/CaregiverPublicProfile.tsx` — perfil completo + visualizador de documentos
+
+**Regras:**
+- Documentos: família visualiza em modal (view-only, sem download) via `supabase.storage.download()` + blob URL
+- Referências: sempre buscadas se `has_references=true`; mascaramento de nomes/telefones conforme flags do cuidador
+- Documentos filtrados por `is_visible=true` e `type != 'rg_cnh'`
+- Requer `subscription_status = 'active'` para acessar documentos e referências (RLS do banco + Storage)
+- CSP em `index.html` inclui `frame-src 'self' blob:` e `img-src blob:` para renderizar documentos
+- SQL de Storage RLS: `supabase_storage_family_read.sql` (deve ser executado no Supabase)
 
 ---
 
@@ -124,7 +290,7 @@ Não deletar o arquivo `mockData.ts` — outras páginas ainda podem depender de
 | `caregiver_profiles.status` | `pending \| analyzing \| verified \| rejected` | inglês — mantido no banco, mas NÃO controla busca |
 | `caregiver_profiles.profile_complete` | `true \| false` | calculado por trigger — controla visibilidade na busca |
 | `appointments.status` | `pendente \| ativo \| finalizado \| cancelado` | português — exibido diretamente na UI |
-| `family_profiles.subscription_status` | `active \| trial \| inactive \| cancelled \| expired` | inglês — espelho do Stripe |
+| `family_profiles.subscription_status` | `free \| active \| past_due \| canceled \| incomplete` | inglês — espelho do Stripe |
 | `invoices.status` | `paid \| pending \| open` | inglês — espelho do Stripe |
 | `caregiver_documents.status` | `pending \| sent \| approved \| rejected` | inglês — fluxo de aprovação |
 | `support_tickets.status` | `enviado \| em_analise \| respondido` | português — exibido na UI |
@@ -146,7 +312,8 @@ Não deletar o arquivo `mockData.ts` — outras páginas ainda podem depender de
 - Schema completo + RLS: `SPEC.md` → seção "Schema do Banco de Dados"
 - Plano de sprints: `SPEC.md` → seção "Plano de Implementação"
 - Regras de negócio: `PRD.md` → seção "Regras de Negócio"
-- SQL para rodar no Supabase: `supabase_setup.sql`
+- SQL para rodar no Supabase: `supabase_setup.sql`, `supabase_sprint3x.sql`, `supabase_sprint3x_security.sql`, `supabase_storage_family_read.sql`
+- Geocodificação: `src/lib/geocode.ts` (Google Maps API via `VITE_GMAPS_GEOCODE_KEY`)
 - Docs Supabase Auth Google: https://supabase.com/docs/guides/auth/social-login/auth-google
 - Docs Supabase Storage RLS: https://supabase.com/docs/guides/storage/security/access-control
 - Docs Supabase Realtime: https://supabase.com/docs/guides/realtime/subscribing-to-database-changes

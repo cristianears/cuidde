@@ -285,7 +285,7 @@ export function useUpdateCaregiverReferences() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success('Referências salvas com sucesso.')
     },
-    onError: () => toast.error('Erro ao salvar. Tente novamente.'),
+    onError: (error: Error) => toast.error(error.message || 'Erro ao salvar. Tente novamente.'),
   })
 }
 
@@ -323,7 +323,7 @@ export function useUploadCaregiverPhoto() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success('Foto atualizada com sucesso.')
     },
-    onError: () => toast.error('Erro ao enviar foto. Tente novamente.'),
+    onError: (error: Error) => toast.error(error.message || 'Erro ao enviar foto. Tente novamente.'),
   })
 }
 
@@ -379,7 +379,7 @@ export function useUpdatePricing() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success('Valores salvos com sucesso.')
     },
-    onError: () => toast.error('Erro ao salvar. Tente novamente.'),
+    onError: (error: Error) => toast.error(error.message || 'Erro ao salvar. Tente novamente.'),
   })
 }
 
@@ -402,6 +402,6 @@ export function useToggleVisibility() {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
       toast.success(isVisible ? 'Perfil agora visível no marketplace.' : 'Perfil ocultado do marketplace.')
     },
-    onError: () => toast.error('Erro ao atualizar visibilidade.'),
+    onError: (error: Error) => toast.error(error.message || 'Erro ao atualizar visibilidade.'),
   })
 }

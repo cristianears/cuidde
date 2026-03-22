@@ -22,6 +22,7 @@ import CaregiverSupport from './pages/caregiver/CaregiverSupport'
 import CaregiverAppointments from './pages/caregiver/CaregiverAppointments'
 import AppointmentDetails from './pages/caregiver/AppointmentDetails'
 import CareRoutine from './pages/caregiver/CareRoutine'
+import CaregiverSolicitations from './pages/caregiver/CaregiverSolicitations'
 import FamilyDashboard from './pages/family/FamilyDashboard'
 import FamilyProfile from './pages/family/FamilyProfile'
 import FamilyBilling from './pages/family/FamilyBilling'
@@ -33,6 +34,7 @@ import FamilyAppointmentDetails from './pages/family/FamilyAppointmentDetails'
 import FamilyInvoices from './pages/family/FamilyInvoices'
 import FamilyInvoiceDetails from './pages/family/FamilyInvoiceDetails'
 import FamilySupport from './pages/family/FamilySupport'
+import CaregiverPublicProfile from './pages/family/CaregiverPublicProfile'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ApprovalQueue from './pages/admin/ApprovalQueue'
 import Finance from './pages/admin/Finance'
@@ -65,6 +67,7 @@ const App = () => (
             <Route path="/caregiver/availability" element={<ProtectedRoute role="caregiver"><CaregiverAvailability /></ProtectedRoute>} />
             <Route path="/caregiver/pricing" element={<ProtectedRoute role="caregiver"><CaregiverPricing /></ProtectedRoute>} />
             <Route path="/caregiver/support" element={<ProtectedRoute role="caregiver"><CaregiverSupport /></ProtectedRoute>} />
+            <Route path="/caregiver/solicitations" element={<ProtectedRoute role="caregiver"><CaregiverSolicitations /></ProtectedRoute>} />
             <Route path="/caregiver/appointments" element={<ProtectedRoute role="caregiver"><CaregiverAppointments /></ProtectedRoute>} />
             <Route path="/caregiver/appointments/:id" element={<ProtectedRoute role="caregiver"><AppointmentDetails /></ProtectedRoute>} />
             <Route path="/caregiver/appointments/:id/care-routine" element={<ProtectedRoute role="caregiver"><CareRoutine /></ProtectedRoute>} />
@@ -74,6 +77,7 @@ const App = () => (
             <Route path="/family/profile" element={<ProtectedRoute role="family"><FamilyProfile /></ProtectedRoute>} />
             <Route path="/family/billing" element={<ProtectedRoute role="family"><FamilyBilling /></ProtectedRoute>} />
             <Route path="/family/search" element={<ProtectedRoute role="family"><SearchCaregivers /></ProtectedRoute>} />
+            <Route path="/family/caregiver/:id" element={<ProtectedRoute role="family"><CaregiverPublicProfile /></ProtectedRoute>} />
             <Route path="/family/matches" element={<ProtectedRoute role="family"><FamilyMatches /></ProtectedRoute>} />
             <Route path="/family/favorites" element={<ProtectedRoute role="family"><Favorites /></ProtectedRoute>} />
             <Route path="/family/appointments" element={<ProtectedRoute role="family"><FamilyAppointments /></ProtectedRoute>} />

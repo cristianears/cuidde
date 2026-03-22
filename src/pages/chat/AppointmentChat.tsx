@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Send, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 type MessageSender = "family" | "caregiver";
 
@@ -72,8 +73,8 @@ const mockMessages: ChatMessage[] = [
 const AppointmentChat = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const userRole = searchParams.get("role") as "family" | "caregiver" || "family";
+  const { profile } = useAuth();
+  const userRole: MessageSender = profile?.role === "caregiver" ? "caregiver" : "family";
   
   const [messages, setMessages] = useState<ChatMessage[]>(mockMessages);
   const [newMessage, setNewMessage] = useState("");

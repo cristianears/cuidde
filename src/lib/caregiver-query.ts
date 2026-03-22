@@ -91,5 +91,7 @@ export function mapCaregiverRow(row: RawCaregiverRow): CaregiverPublic {
     has_certificado: row.has_certificado,
     has_references: row.has_references,
     zona: row.zona as CaregiverPublic['zona'],
+    lat: null,  // Protegido: não exposto na busca pública
+    lng: null,  // Protegido: não exposto na busca pública
   }
 }
