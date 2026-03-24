@@ -34,7 +34,7 @@ import { mockCaregivers, mockDocuments, mockReviews, mockAppointments, mockRefer
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
+import { useCaregiverProfile, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
 
 // ---------------------------------------------------------------------------
 // Insights mock data
@@ -115,6 +115,7 @@ function getWeeklyTip() {
 const CaregiverDashboard = () => {
   const { user } = useAuth();
   const { data: profileData } = useCaregiverProfile();
+  useAutoGeocodeCaregiver(profileData);
   // Using first caregiver as current user for demo
   const currentUser = mockCaregivers[0];
   const userDocuments = mockDocuments.filter((d) => d.caregiverId === currentUser.id);

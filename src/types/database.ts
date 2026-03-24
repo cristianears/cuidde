@@ -388,6 +388,7 @@ export interface CaregiverPublic {
   city: string | null
   state: string | null
   zona: 'zona_norte' | 'zona_sul' | 'zona_leste' | 'zona_oeste' | 'centro' | null
+  cep: string | null
   lat: number | null
   lng: number | null
   price_per_hour: number | null

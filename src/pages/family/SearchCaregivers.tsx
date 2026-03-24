@@ -84,33 +84,38 @@ const SearchCaregivers = () => {
   const familyHasLocation = familyProfileData?.lat != null && familyProfileData?.lng != null;
 
   // Auto-geocodificar se o perfil não tem lat/lng
-  // Tenta CEP primeiro, depois cidade/estado como fallback
+  // Dependências estáveis para evitar cancelamento prematuro por re-render
+  const familyCep = familyProfileData?.cep ?? '';
+  const familyCity = familyProfileData?.city ?? '';
+  const familyState = familyProfileData?.state ?? '';
+  const userId = user?.id;
+
   useEffect(() => {
-    if (familyHasLocation || !user || !familyProfileData) return;
-    const hasCep = !!familyProfileData.cep;
-    const hasCity = !!familyProfileData.city && !!familyProfileData.state;
+    if (familyHasLocation || !userId) return;
+    const hasCep = !!familyCep;
+    const hasCity = !!familyCity && !!familyState;
     if (!hasCep && !hasCity) return;
 
     let cancelled = false;
     (async () => {
       let geo = hasCep
-        ? await geocodeAddress({ cep: familyProfileData.cep! })
+        ? await geocodeAddress({ cep: familyCep })
         : null;
 
       // Fallback: geocodificar por cidade/estado
       if (!geo && hasCity) {
-        geo = await geocodeByCity(familyProfileData.city!, familyProfileData.state!);
+        geo = await geocodeByCity(familyCity, familyState);
       }
 
       if (cancelled || !geo) return;
       await supabase
         .from('family_profiles')
         .update({ lat: geo.lat, lng: geo.lng })
-        .eq('id', user.id);
-      qc.invalidateQueries({ queryKey: queryKeys.familyProfile(user.id) });
+        .eq('id', userId);
+      qc.invalidateQueries({ queryKey: queryKeys.familyProfile(userId) });
     })();
     return () => { cancelled = true; };
-  }, [familyHasLocation, familyProfileData, user, qc]);
+  }, [familyHasLocation, familyCep, familyCity, familyState, userId, qc]);
 
   const filters: SearchFilters = useMemo(() => ({
     query: searchQuery || undefined,

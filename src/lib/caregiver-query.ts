@@ -29,6 +29,9 @@ export const CAREGIVER_SELECT = `
   has_certificado,
   has_references,
   zona,
+  cep,
+  lat,
+  lng,
   profiles!inner ( full_name )
 ` as const
 
@@ -58,6 +61,9 @@ export type RawCaregiverRow = {
   has_certificado: boolean
   has_references: boolean
   zona: string | null
+  cep: string | null
+  lat: number | null
+  lng: number | null
   profiles: { full_name: string | null } | null
 }
 
@@ -91,7 +97,8 @@ export function mapCaregiverRow(row: RawCaregiverRow): CaregiverPublic {
     has_certificado: row.has_certificado,
     has_references: row.has_references,
     zona: row.zona as CaregiverPublic['zona'],
-    lat: null,  // Protegido: não exposto na busca pública
-    lng: null,  // Protegido: não exposto na busca pública
+    cep: row.cep,
+    lat: row.lat,
+    lng: row.lng,
   }
 }

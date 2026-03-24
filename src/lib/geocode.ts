@@ -1,5 +1,8 @@
 // Geocodificação client-side com fallback.
 // Tenta Google Maps primeiro, se falhar usa Nominatim (OpenStreetMap) como fallback gratuito.
+// Para CEPs: resolve via ViaCEP → endereço completo → Nominatim (structured query)
+
+import { fetchAddressByCep } from './viacep'
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GMAPS_GEOCODE_KEY
 
@@ -11,28 +14,54 @@ export interface GeocodeResult {
 
 /**
  * Geocodifica um CEP ou endereço.
+ * Para CEP: resolve endereço via ViaCEP e usa structured query no Nominatim.
  * Tenta Google Maps API primeiro; se falhar, usa Nominatim como fallback.
  */
 export async function geocodeAddress(params: { cep?: string; address?: string }): Promise<GeocodeResult | null> {
-  const query = params.cep
-    ? `${params.cep}, Brasil`
-    : params.address
-      ? params.address
-      : null
+  if (params.cep) {
+    // Google Maps entende CEP brasileiro diretamente
+    const googleResult = await geocodeWithGoogle(`${params.cep}, Brasil`)
+    if (googleResult) return googleResult
 
-  if (!query) return null
+    // Nominatim NÃO entende CEP brasileiro — resolver via ViaCEP primeiro
+    const addr = await fetchAddressByCep(params.cep)
+    if (addr) {
+      // 1) Tentar structured query rua + cidade (mais preciso no Nominatim)
+      if (addr.street) {
+        const streetResult = await geocodeNominatimStructured({
+          street: addr.street,
+          city: addr.city,
+          state: addr.state,
+        })
+        if (streetResult) return streetResult
+      }
 
-  // Tentar Google Maps primeiro
-  const googleResult = await geocodeWithGoogle(query)
-  if (googleResult) return googleResult
+      // 2) Tentar free-text com endereço completo
+      const fullAddress = [addr.street, addr.neighborhood, addr.city, addr.state, 'Brasil']
+        .filter(Boolean)
+        .join(', ')
+      const result = await geocodeWithNominatim(fullAddress)
+      if (result) return result
 
-  // Fallback: Nominatim (OpenStreetMap) — gratuito, sem API key
-  return geocodeWithNominatim(query)
+      // 3) Fallback: structured query só com cidade + estado
+      return geocodeByCity(addr.city, addr.state)
+    }
+
+    return null
+  }
+
+  if (params.address) {
+    const googleResult = await geocodeWithGoogle(params.address)
+    if (googleResult) return googleResult
+    return geocodeWithNominatim(params.address)
+  }
+
+  return null
 }
 
 /**
- * Geocodifica usando cidade + estado via Nominatim.
- * Mais confiável que CEP para Nominatim no Brasil.
+ * Geocodifica usando cidade + estado via Nominatim structured query.
+ * Mais confiável que free-text para o Brasil.
  */
 export async function geocodeByCity(city: string, state: string): Promise<GeocodeResult | null> {
   // Tentar Google Maps primeiro
@@ -43,7 +72,7 @@ export async function geocodeByCity(city: string, state: string): Promise<Geocod
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=Brazil&limit=1`
     const response = await fetch(url, {
-      headers: { 'Accept-Language': 'pt-BR' },
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'Cuidde/1.0' },
     })
     const data = await response.json()
 
@@ -81,11 +110,44 @@ async function geocodeWithGoogle(query: string): Promise<GeocodeResult | null> {
   }
 }
 
+async function geocodeNominatimStructured(params: {
+  street?: string
+  city: string
+  state: string
+}): Promise<GeocodeResult | null> {
+  try {
+    const parts: string[] = []
+    if (params.street) parts.push(`street=${encodeURIComponent(params.street)}`)
+    parts.push(`city=${encodeURIComponent(params.city)}`)
+    parts.push(`state=${encodeURIComponent(params.state)}`)
+    parts.push('country=Brazil')
+    parts.push('format=json')
+    parts.push('limit=1')
+
+    const url = `https://nominatim.openstreetmap.org/search?${parts.join('&')}`
+    const response = await fetch(url, {
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'Cuidde/1.0' },
+    })
+    const data = await response.json()
+
+    if (!Array.isArray(data) || data.length === 0) return null
+
+    const result = data[0]
+    return {
+      lat: parseFloat(result.lat),
+      lng: parseFloat(result.lon),
+      formatted_address: result.display_name ?? `${params.street}, ${params.city}`,
+    }
+  } catch {
+    return null
+  }
+}
+
 async function geocodeWithNominatim(query: string): Promise<GeocodeResult | null> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=1`
     const response = await fetch(url, {
-      headers: { 'Accept-Language': 'pt-BR' },
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'Cuidde/1.0' },
     })
     const data = await response.json()
 

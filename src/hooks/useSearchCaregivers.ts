@@ -40,7 +40,7 @@ export type CaregiverPublicWithDistance = CaregiverPublic & {
 export function useSearchCaregivers(filters: SearchFilters = {}) {
   const { user } = useAuth()
 
-  return useQuery({
+  const query = useQuery({
     queryKey: queryKeys.searchCaregivers(filters as Record<string, unknown>),
     queryFn: async (): Promise<CaregiverPublicWithDistance[]> => {
       const useProximity = filters.familyLat != null && filters.familyLng != null
@@ -62,8 +62,11 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
           (nearbyIds ?? []).map((r: { id: string; distance_km: number }) => [r.id, r.distance_km])
         )
 
-        // Se nenhum cuidador dentro do raio, retornar vazio
-        if (proximityMap.size === 0) return []
+        // Se nenhum cuidador dentro do raio, retornar lista vazia
+        // (respeitar o filtro de proximidade — não fazer fallback)
+        if (proximityMap.size === 0) {
+          return []
+        }
       }
 
       let q = supabase
@@ -77,8 +80,8 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         q = q.in('id', ids)
       }
 
-      // Filtros tradicionais (cidade/bairro como fallback quando sem proximidade)
-      if (!useProximity) {
+      // Filtros de cidade/bairro: usados quando não há proximidade OU como fallback
+      if (!proximityMap) {
         if (filters.city && filters.city.trim()) {
           q = q.ilike('city', `%${escapeLike(filters.city.trim())}%`)
         }
@@ -147,4 +150,6 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
     enabled: !!user,
     staleTime: 30_000,
   })
+
+  return query
 }
