@@ -842,32 +842,39 @@ TanStack Query v5 para mutations.
 
 #### Sprint 3.x (concluído) — Geocodificação e Filtro por Proximidade (km)
 
-**Implementação escolhida:** Google Maps Geocoding API (client-side)
+**Implementação escolhida:** Google Maps Geocoding API (primário) + Nominatim/OpenStreetMap (fallback)
 
 **SQL executado no Supabase:**
 - `supabase_sprint3x.sql` — colunas `lat`/`lng` em `caregiver_profiles` e `family_profiles`, função `haversine_distance`, RPC `search_caregivers_by_proximity` com bounding box
 - `supabase_sprint3x_security.sql` — `SET search_path = public` em ambas as funções, role check (apenas famílias podem buscar por proximidade)
 
 **Arquivos criados/modificados:**
-- `src/lib/geocode.ts` — chama Google Maps Geocoding API via `VITE_GMAPS_GEOCODE_KEY`, retorna `{ lat, lng }` ou `null`
-- `src/hooks/useCaregiverProfile.ts` — geocodifica CEP ao salvar endereço do cuidador (best-effort)
+- `src/lib/geocode.ts` — pipeline: Google Maps API → ViaCEP (resolve CEP → endereço) → Nominatim structured query (rua+cidade) → Nominatim free-text → fallback cidade+estado
+- `src/hooks/useCaregiverProfile.ts` — geocodifica CEP ao salvar endereço do cuidador (best-effort, com fallback `geocodeByCity`); hook `useAutoGeocodeCaregiver` para backfill automático
 - `src/hooks/useFamilyProfile.ts` — geocodifica CEP ao salvar endereço/perfil da família (best-effort, helper `geocodeAndUpdate`)
-- `src/hooks/useSearchCaregivers.ts` — se família tem lat/lng, chama RPC `search_caregivers_by_proximity` e ordena por distância; senão, fallback para filtros cidade/bairro
-- `src/pages/family/SearchCaregivers.tsx` — seletor de raio (5/10/20/50 km), só visível quando família tem coordenadas
-- `src/types/database.ts` — `lat`/`lng` em `CaregiverProfile`, `FamilyProfile`, `CaregiverPublic`; tipos das RPCs
+- `src/hooks/useSearchCaregivers.ts` — se família tem lat/lng, chama RPC `search_caregivers_by_proximity` e ordena por distância; se RPC retorna 0 resultados, retorna lista vazia (respeita o raio); senão, fallback para filtros cidade/bairro
+- `src/pages/family/SearchCaregivers.tsx` — seletor de raio (5/10/20/50 km), só visível quando família tem coordenadas; auto-geocode com dependências estáveis (primitivas)
+- `src/pages/caregiver/CaregiverDashboard.tsx` — chama `useAutoGeocodeCaregiver` para backfill de lat/lng
+- `src/lib/caregiver-query.ts` — `CAREGIVER_SELECT` inclui `cep`, `lat`, `lng`; `mapCaregiverRow` mapeia valores reais (não mais hardcoded null)
+- `src/types/database.ts` — `lat`/`lng` e `cep` em `CaregiverPublic`; tipos das RPCs
 - `src/lib/constants.ts` — `DEFAULT_RADIUS_KM = 20`, `MAX_PRICE_PER_HOUR = 200`
+- `index.html` — CSP `connect-src` inclui `https://nominatim.openstreetmap.org`
 
 **Fluxo:**
-1. Família/cuidador salva endereço → `geocodeAddress({ cep })` → Google Maps API → lat/lng gravados no banco
+1. Família/cuidador salva endereço → `geocodeAddress({ cep })` → Google Maps API (ou ViaCEP + Nominatim fallback) → lat/lng gravados no banco
 2. Família abre busca → se tem lat/lng → RPC `search_caregivers_by_proximity(lat, lng, raio)` → IDs + distância
 3. IDs filtrados no SELECT principal → distância exibida no `CaregiverCard`
-4. Se família não tem lat/lng → filtros tradicionais cidade/bairro (ilike)
+4. Se RPC retorna 0 resultados → lista vazia (raio respeitado)
+5. Se família não tem lat/lng → filtros tradicionais cidade/bairro (ilike)
 
 **Decisões:**
 - Geocodificação é best-effort (não bloqueia o save se falhar)
-- lat/lng do cuidador NÃO são expostos na busca pública (removidos do `CAREGIVER_SELECT`)
-- Filtros cidade/bairro mantidos como fallback quando não há coordenadas
+- Nominatim NÃO entende CEPs brasileiros (retorna coordenadas erradas) — sempre resolver via ViaCEP primeiro
+- Pipeline de fallback para Nominatim: structured query rua+cidade → free-text endereço completo → structured query cidade+estado
+- Distância calculada em linha reta (haversine) — distância por estradas é tipicamente 1.3-1.8x maior
+- Filtros cidade/bairro mantidos como fallback quando família não tem coordenadas
 - `VITE_GMAPS_GEOCODE_KEY` deve ser restrita no Google Cloud Console (HTTP referrer + Geocoding API only)
+- Google Maps API key com restrição de referer pode falhar com REQUEST_DENIED — Nominatim cobre esse cenário
 
 ✅ **Sprint 3.x concluído quando:**
 - Salvar endereço grava lat/lng automaticamente
