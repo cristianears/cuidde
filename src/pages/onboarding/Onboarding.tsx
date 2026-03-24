@@ -26,6 +26,7 @@ import { signUpWithEmail, signInWithGoogle } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
 import { formatPhone } from '@/lib/formatters'
 import { supabase } from '@/lib/supabase'
+import { geocodeAddress } from '@/lib/geocode'
 import { useAuth } from '@/contexts/AuthContext'
 
 type ProfileType = 'family' | 'caregiver' | null
@@ -170,6 +171,12 @@ const Onboarding = () => {
     setIsGoogleLoading(true)
     try {
       localStorage.setItem('cuidde_pending_signup', 'true')
+      // Preservar dados do onboarding para recuperar após callback OAuth
+      localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
+        type: formData.profileType,
+        cep: formData.cep,
+        phone: formData.phone,
+      }))
       const { error } = await signInWithGoogle()
       if (error) {
         toast.error(error.message)
@@ -222,10 +229,15 @@ const Onboarding = () => {
     setIsSubmitting(true)
     try {
       if (isGoogleFlow && user) {
+        // Upsert garante criação do row caso não exista (novo usuário Google)
         await supabase
           .from('profiles')
-          .update({ role: formData.profileType, phone: formData.phone })
-          .eq('id', user.id)
+          .upsert({
+            id: user.id,
+            role: formData.profileType,
+            full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? formData.name,
+            phone: formData.phone,
+          }, { onConflict: 'id' })
 
         const addressData = {
           id: user.id,
@@ -238,13 +250,26 @@ const Onboarding = () => {
           state: formData.state,
         }
 
-        if (formData.profileType === 'caregiver') {
-          await supabase.from('caregiver_profiles').upsert(addressData)
-        } else {
-          await supabase.from('family_profiles').upsert(addressData)
+        const table = formData.profileType === 'caregiver' ? 'caregiver_profiles' : 'family_profiles'
+        await supabase.from(table).upsert(addressData)
+
+        // Geocodificar CEP — aguardar antes de navegar para garantir lat/lng no perfil
+        if (formData.cep) {
+          try {
+            const geo = await geocodeAddress({ cep: formData.cep })
+            if (geo) {
+              await supabase.from(table).update({ lat: geo.lat, lng: geo.lng }).eq('id', user.id)
+            }
+          } catch {
+            // Falha na geocodificação não bloqueia o fluxo
+          }
         }
 
-        navigate(formData.profileType === 'caregiver' ? '/caregiver' : '/family', { replace: true })
+        if (formData.profileType === 'caregiver') {
+          navigate('/caregiver', { replace: true })
+        } else {
+          navigate(formData.cep ? '/family/search' : '/family', { replace: true })
+        }
       } else {
         const { data, error } = await signUpWithEmail(formData.email, formData.password, {
           role: formData.profileType,
@@ -261,6 +286,14 @@ const Onboarding = () => {
         }
 
         if (data.user) {
+          // Garantir que o profile row existe (caso trigger do Supabase não tenha criado)
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            role: formData.profileType,
+            full_name: formData.name,
+            phone: formData.phone,
+          }, { onConflict: 'id' })
+
           const addressData = {
             id: data.user.id,
             cep: formData.cep,
@@ -272,10 +305,19 @@ const Onboarding = () => {
             state: formData.state,
           }
 
-          if (formData.profileType === 'caregiver') {
-            await supabase.from('caregiver_profiles').upsert(addressData)
-          } else {
-            await supabase.from('family_profiles').upsert(addressData)
+          const table2 = formData.profileType === 'caregiver' ? 'caregiver_profiles' : 'family_profiles'
+          await supabase.from(table2).upsert(addressData)
+
+          // Geocodificar CEP — aguardar para garantir lat/lng
+          if (formData.cep) {
+            try {
+              const geo = await geocodeAddress({ cep: formData.cep })
+              if (geo) {
+                await supabase.from(table2).update({ lat: geo.lat, lng: geo.lng }).eq('id', data.user!.id)
+              }
+            } catch {
+              // Falha na geocodificação não bloqueia o fluxo
+            }
           }
         }
 

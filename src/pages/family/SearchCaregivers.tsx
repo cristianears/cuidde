@@ -16,6 +16,10 @@ import { useSearchCaregivers, type SearchFilters, type CaregiverPublicWithDistan
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { geocodeAddress, geocodeByCity } from "@/lib/geocode";
+import { supabase } from "@/lib/supabase";
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +54,7 @@ function loadStoredFilters(): Partial<StoredFilters> {
 const SearchCaregivers = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const qc = useQueryClient();
   const { data: familyProfileData } = useFamilyProfile();
   const stored = useMemo(() => loadStoredFilters(), []);
   const [searchQuery, setSearchQuery] = useState(stored.searchQuery ?? "");
@@ -77,6 +82,35 @@ const SearchCaregivers = () => {
   useEffect(() => { persistFilters(); }, [persistFilters]);
 
   const familyHasLocation = familyProfileData?.lat != null && familyProfileData?.lng != null;
+
+  // Auto-geocodificar se o perfil não tem lat/lng
+  // Tenta CEP primeiro, depois cidade/estado como fallback
+  useEffect(() => {
+    if (familyHasLocation || !user || !familyProfileData) return;
+    const hasCep = !!familyProfileData.cep;
+    const hasCity = !!familyProfileData.city && !!familyProfileData.state;
+    if (!hasCep && !hasCity) return;
+
+    let cancelled = false;
+    (async () => {
+      let geo = hasCep
+        ? await geocodeAddress({ cep: familyProfileData.cep! })
+        : null;
+
+      // Fallback: geocodificar por cidade/estado
+      if (!geo && hasCity) {
+        geo = await geocodeByCity(familyProfileData.city!, familyProfileData.state!);
+      }
+
+      if (cancelled || !geo) return;
+      await supabase
+        .from('family_profiles')
+        .update({ lat: geo.lat, lng: geo.lng })
+        .eq('id', user.id);
+      qc.invalidateQueries({ queryKey: queryKeys.familyProfile(user.id) });
+    })();
+    return () => { cancelled = true; };
+  }, [familyHasLocation, familyProfileData, user, qc]);
 
   const filters: SearchFilters = useMemo(() => ({
     query: searchQuery || undefined,

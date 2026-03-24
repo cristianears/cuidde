@@ -936,68 +936,92 @@ CREATE POLICY "documents: família assinante lê"
 
 ### FASE 4 — Agendamentos e Chat (Semana 3)
 
-#### Sprint 4.1 — Agendamentos
-```
-Preciso implementar o sistema de agendamentos.
+#### Sprint 4.1 — Agendamentos e Solicitações ✅ CONCLUÍDO
 
-Arquivos afetados:
-- src/pages/caregiver/CaregiverAppointments.tsx (tabs: ativos/finalizados/pendentes)
-- src/pages/caregiver/AppointmentDetails.tsx
-- src/pages/caregiver/CareRoutine.tsx
-- src/pages/family/FamilyAppointments.tsx
-- src/pages/family/FamilyAppointmentDetails.tsx
+**Arquivos criados:**
+- `src/hooks/useAppointments.ts` — `useAppointments(role)`, `useAppointmentDetail(id)`, `useCreateAppointment()`, `useUpdateAppointmentStatus()`; tipo exportado `AppointmentWithNames` (Appointment + family_name, caregiver_name, elderly_name desnormalizados)
+- `src/hooks/useCareRoutine.ts` — `useCareRoutines(appointmentId)`, `useCreateCareRoutine()`, `useUpdateCareRoutine()`, `useDeleteCareRoutine()`
+- `src/pages/caregiver/CaregiverSolicitations.tsx` — página de solicitações do cuidador (tabs: Pendentes/Aceitas/Recusadas), com ações aceitar/recusar e dialog de motivo de recusa
+- `src/components/shared/RequestAppointmentDialog.tsx` — dialog para família solicitar atendimento (tipo, datas, modalidade, descrição, observações sobre o idoso). Usa `useCreateAppointment()`
+- `src/lib/labels.ts` — labels de status de agendamento, care types, feeding status, mood status
 
-Tarefas:
-1. Criar src/hooks/useAppointments.ts:
-   - query: listar por role (caregiver_id ou family_id) e status
-   - query: buscar detalhe por ID
-   - mutation: família cria agendamento (status: pendente)
-   - mutation: cuidador aceita → status: ativo
-   - mutation: cuidador recusa → status: cancelado (com motivo)
-   - mutation: finalizar → status: finalizado
+**Arquivos reescritos (dados reais, sem mock):**
+- `src/pages/caregiver/CaregiverAppointments.tsx` — tabs Ativos/Finalizados, dados reais via `useAppointments("caregiver")`
+- `src/pages/caregiver/AppointmentDetails.tsx` — 4 tabs (Perfil do Idoso, Resumo, Registro de Cuidados, Histórico), busca dados do idoso direto de `family_profiles`, ações de aceitar/recusar/finalizar
+- `src/pages/caregiver/CareRoutine.tsx` — formulário create/edit, medicações auto-populadas de `family_profiles.elderly_medications`, bem-estar (humor, higiene), itens em falta, ocorrências
+- `src/pages/family/FamilyAppointments.tsx` — tabs Ativos/Finalizados, dados reais via `useAppointments("family")`
+- `src/pages/family/FamilyAppointmentDetails.tsx` — 3 tabs (Resumo, Rotina de Cuidados, Histórico), read-only (família não edita registros do cuidador), ação de finalizar
+- `src/pages/family/FamilyMatches.tsx` — renomeado conceitualmente para "Solicitações da família" (tabs: Pendentes/Aceitas/Recusadas), usa `useAppointments("family")`
 
-2. Criar src/hooks/useCareRoutine.ts:
-   - query: listar atividades do agendamento
-   - mutation: adicionar atividade
-   - mutation: marcar atividade como concluída
-   - Guard: só editável se appointment.status === 'ativo'
+**Arquivos modificados:**
+- `src/types/database.ts` — tipos `Appointment`, `AppointmentType`, `AppointmentStatus`, `CareRoutine`, `CareShift`, `CareType`, `MedicationItem`, `FeedingStatus`, `MoodStatus`
+- `src/lib/query-keys.ts` — keys: `appointmentsAll`, `appointments(userId, role)`, `appointmentDetail(id)`, `careRoutines(appointmentId)`
+- `src/components/shared/AppSidebar.tsx` — menu do cuidador inclui "Solicitações" (`/caregiver/solicitations`), menu da família inclui "Solicitações" (`/family/matches`)
+- `src/App.tsx` — rota `/caregiver/solicitations` protegida por role
+- `src/pages/family/CaregiverPublicProfile.tsx` — botão "Solicitar Atendimento" abre `RequestAppointmentDialog`
 
-3. Substituir mockAppointments locais por dados reais em todas as páginas
+**SQL:**
+- `supabase_sprint4x.sql` — RLS policies para appointments (family creates, participants update) e care_routines (caregiver CRUD apenas em agendamentos ativos)
+- `supabase_sprint42_security.sql` — policies de segurança adicionais
 
-Tipos reais: plantão | contínuo | turno
-Status reais: pendente | ativo | finalizado | cancelado
-```
+**Decisões tomadas:**
+- Fluxo de solicitação separado de atendimento: **Solicitações** (pendente/aceitas/recusadas) vs **Atendimentos** (ativos/finalizados) são menus distintos no sidebar
+- Família solicita via `RequestAppointmentDialog` no perfil público do cuidador → cuidador vê em Solicitações → aceita → aparece em Atendimentos para ambos
+- Medicações do idoso (`elderly_medications`) auto-populadas no formulário de cuidado como checklist com timestamp de aplicação
+- Care routines ordenadas por date DESC, recorded_at DESC (mais recente primeiro)
+- RLS requer `appointment.status = 'ativo'` para insert/update/delete de care_routines
+- Validação client-side de autorização em `useAppointmentDetail()` além do RLS
+- Stale time de 30s nas queries de appointments
 
-✅ **Sprint 4.1 concluído quando:**
-- Família cria agendamento e ele aparece para o cuidador com status `pendente`
-- Cuidador aceita e status muda para `ativo` para os dois lados
-- Registro de rotina de cuidado salva no banco e aparece no histórico
+✅ **Sprint 4.1 concluído — verificado em produção:**
+- Família solicita atendimento pelo perfil do cuidador e aparece em Solicitações
+- Cuidador aceita/recusa solicitação com motivo opcional
+- Solicitação aceita aparece como atendimento ativo nos dois lados
+- Registro de rotina de cuidado salva no banco com medicações, bem-estar e ocorrências
+- Cuidador pode editar/excluir registros apenas em agendamentos ativos
 
-#### Sprint 4.2 — Chat
-> 📖 **Referência obrigatória antes de implementar:** [Supabase Realtime — Subscribing to Database Changes](https://supabase.com/docs/guides/realtime/subscribing-to-database-changes)
-```
-Preciso implementar chat em tempo real com Supabase Realtime.
+---
 
-Arquivo afetado: src/pages/chat/AppointmentChat.tsx
+#### Sprint 4.2 — Chat ✅ CONCLUÍDO
 
-Tarefas:
-1. Criar src/hooks/useChat.ts:
-   - query: buscar histórico de mensagens por appointment_id
-   - mutation: enviar mensagem (INSERT em messages)
-   - realtime: subscribar ao canal do Supabase para novas mensagens
-     (usar supabase.channel('messages').on('INSERT', callback).subscribe())
-   - mutation: marcar mensagens como lidas (read_at)
+**Arquivos criados:**
+- `src/hooks/useChat.ts` — `useChatMessages(appointmentId)`, `useSendMessage(appointmentId)`, `useMarkMessagesAsRead(appointmentId)`, `useChatRealtime(appointmentId)`
+- `src/pages/chat/AppointmentChat.tsx` — chat completo com Supabase Realtime, agrupamento por data, read receipts (✓/✓✓), auto-scroll, textarea com Enter para enviar e Shift+Enter para nova linha
+- `src/lib/contact-filter.ts` — `filterContactInfo(text)`, `hasContactInfo(text)`, `CONTACT_WARNING_MESSAGE`, `MAX_MESSAGE_LENGTH` (2000 chars). Filtra telefone, email e URLs via regex
 
-2. Conectar AppointmentChat.tsx com hook real
-3. Identificar sender pelo auth.uid() — mostrar mensagens próprias à direita
+**Arquivos modificados:**
+- `src/types/database.ts` — tipo `Message` adicionado
+- `src/lib/query-keys.ts` — key: `messages(appointmentId)`
+- `src/App.tsx` — rota `/chat/:id` protegida (qualquer role autenticado)
+- `src/pages/caregiver/AppointmentDetails.tsx` — botão "Conversar com família" (apenas se `ativo`)
+- `src/pages/family/FamilyAppointmentDetails.tsx` — botão "Conversar com o cuidador" (apenas se `ativo`)
+- `src/pages/caregiver/CaregiverSolicitations.tsx` — botão de chat nas solicitações pendentes e aceitas
 
-Docs Supabase Realtime: https://supabase.com/docs/guides/realtime/postgres-changes
-```
+**SQL:**
+- `supabase_sprint42_security.sql` — RLS separado por operação:
+  - SELECT: participantes do agendamento
+  - INSERT: `sender_id = auth.uid()` (anti-spoofing) + participante do agendamento
+  - UPDATE: apenas `read_at` pelo destinatário (`sender_id != auth.uid()`)
+  - CHECK constraint: `char_length(content) <= 2000`
 
-✅ **Sprint 4.2 concluído quando:**
-- Mensagem enviada aparece na tela sem precisar de refresh (Realtime funcionando)
-- Mensagens do remetente aparecem à direita, do destinatário à esquerda
-- Histórico de mensagens anteriores carrega ao abrir o chat
+**Decisões tomadas:**
+- Realtime escuta apenas `INSERT` (mensagens são imutáveis exceto `read_at`)
+- Canal por agendamento: `messages:{appointmentId}` (escalável)
+- Deduplicação no realtime hook: se mensagem já existe no cache (por `id`), ignora
+- Auto-mark as read: ao renderizar mensagens, chama `markAsRead()` automaticamente
+- Filtro de contato (telefone/email/URL) ativo apenas durante status `pendente` — conteúdo original preservado no banco, filtro aplicado apenas na exibição
+- Chat read-only quando appointment `finalizado` ou `cancelado` (input desabilitado + aviso)
+- Read receipts: ✓ = enviada, ✓✓ = lida (apenas nas mensagens próprias)
+- Stale time de 10s nas mensagens + realtime para updates instantâneos
+- Rota `/chat/:id` sem restrição de role — segurança via RLS (participantes do agendamento)
+
+✅ **Sprint 4.2 concluído — verificado em produção:**
+- Mensagens aparecem em tempo real sem refresh (Realtime funcionando)
+- Mensagens próprias à direita, do outro participante à esquerda
+- Histórico carrega ao abrir o chat, agrupado por data
+- Read receipts visíveis (✓ enviada / ✓✓ lida)
+- Filtro de contato ativo em solicitações pendentes
+- Chat desabilitado após finalização/cancelamento do agendamento
 
 ---
 

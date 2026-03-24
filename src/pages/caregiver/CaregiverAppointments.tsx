@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Clock, FileText, Loader2 } from "lucide-react";
+import { Calendar, User, Clock, FileText, Loader2, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
@@ -105,14 +105,27 @@ const CaregiverAppointments = () => {
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 self-start sm:self-auto text-xs md:text-sm"
-              onClick={() => navigate(`/caregiver/appointments/${appointment.id}`)}
-            >
-              Ver detalhes
-            </Button>
+            <div className="flex gap-2 shrink-0 self-start sm:self-auto">
+              {appointment.status === "ativo" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs md:text-sm gap-1.5"
+                  onClick={() => navigate(`/chat/${appointment.id}`)}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs md:text-sm"
+                onClick={() => navigate(`/caregiver/appointments/${appointment.id}`)}
+              >
+                Ver detalhes
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -41,6 +41,7 @@ import {
   User,
   Activity,
   ClipboardList,
+  MessageCircle,
 } from "lucide-react";
 import type { AppointmentStatus, CareRoutine, CareType, ElderlyMedication, FamilyProfile } from "@/types/database";
 import {
@@ -385,10 +386,16 @@ const AppointmentDetails = () => {
                     </>
                   )}
                   {isActive && (
-                    <Button size="sm" variant="outline" onClick={handleFinalize} disabled={isUpdating}>
-                      <History className="w-4 h-4 mr-2" />
-                      Finalizar atendimento
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/chat/${appointment.id}`)} className="gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        Conversar com família
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={handleFinalize} disabled={isUpdating}>
+                        <History className="w-4 h-4 mr-2" />
+                        Finalizar atendimento
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

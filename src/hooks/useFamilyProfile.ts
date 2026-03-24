@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import { geocodeAddress } from '@/lib/geocode'
+import { geocodeAddress, geocodeByCity } from '@/lib/geocode'
 import { validateAvatarFile } from '@/lib/constants'
 import type { FamilyProfile, ElderlyMedication } from '@/types/database'
 
@@ -42,9 +42,20 @@ export function useFamilyProfile() {
 
 // ─── Helper: geocodificar e salvar lat/lng (best-effort) ────────────────────
 
-async function geocodeAndUpdate(cep: string | undefined, userId: string) {
-  if (!cep) return
-  const geo = await geocodeAddress({ cep })
+async function geocodeAndUpdate(
+  userId: string,
+  cep?: string,
+  city?: string,
+  state?: string,
+) {
+  // Tentar CEP primeiro (Google Maps → Nominatim)
+  let geo = cep ? await geocodeAddress({ cep }) : null
+
+  // Fallback: cidade + estado
+  if (!geo && city && state) {
+    geo = await geocodeByCity(city, state)
+  }
+
   if (geo) {
     await supabase
       .from('family_profiles')
@@ -153,7 +164,7 @@ export function useUpdateFamilyAddress() {
 
       if (error) throw error
 
-      await geocodeAndUpdate(payload.cep, user!.id)
+      await geocodeAndUpdate(user!.id, payload.cep, payload.city, payload.state)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
@@ -251,7 +262,7 @@ export function useUpdateFamilyProfileFull() {
       if (error) throw error
 
       // 3. Geocodificar endereço (best-effort)
-      await geocodeAndUpdate(payload.cep, user!.id)
+      await geocodeAndUpdate(user!.id, payload.cep, payload.city, payload.state)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })

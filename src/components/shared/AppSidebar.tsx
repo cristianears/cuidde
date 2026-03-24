@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "@/lib/auth";
+import { queryClient } from "@/lib/query-client";
 import {
   Heart,
   User,
@@ -84,6 +85,9 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
 
   async function handleLogout() {
     await signOut()
+    queryClient.clear()
+    localStorage.removeItem('cuidde_pending_signup')
+    sessionStorage.clear()
     navigate('/login', { replace: true })
   }
 

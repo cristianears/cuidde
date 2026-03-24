@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Send, User, MessageCircle } from "lucide-react";
+import { ArrowLeft, Send, MessageCircle, Loader2, ShieldAlert, Check, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,91 +8,59 @@ import { Card, CardContent } from "@/components/ui/card";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-
-type MessageSender = "family" | "caregiver";
-
-interface ChatMessage {
-  id: string;
-  sender: MessageSender;
-  content: string;
-  timestamp: string;
-}
-
-interface AppointmentInfo {
-  id: string;
-  elderlyName: string;
-  caregiverName: string;
-  caregiverPhoto?: string;
-  familyName: string;
-  status: "active" | "finished";
-}
-
-// Mock data
-const mockAppointmentInfo: AppointmentInfo = {
-  id: "1",
-  elderlyName: "Dona Maria",
-  caregiverName: "Maria Silva",
-  caregiverPhoto: "",
-  familyName: "João Oliveira",
-  status: "active",
-};
-
-const mockMessages: ChatMessage[] = [
-  {
-    id: "1",
-    sender: "family",
-    content: "Olá Maria! Tudo bem? Queria saber se a mamãe tomou os remédios hoje de manhã.",
-    timestamp: "2024-01-25T09:30:00",
-  },
-  {
-    id: "2",
-    sender: "caregiver",
-    content: "Bom dia, João! Sim, ela tomou todos os medicamentos no horário correto. Está bem disposta hoje!",
-    timestamp: "2024-01-25T09:35:00",
-  },
-  {
-    id: "3",
-    sender: "family",
-    content: "Que ótimo! E como está o apetite dela?",
-    timestamp: "2024-01-25T09:40:00",
-  },
-  {
-    id: "4",
-    sender: "caregiver",
-    content: "O apetite está bom. Ela tomou o café da manhã completo e pediu uma fruta depois. Vou registrar tudo na rotina de cuidados.",
-    timestamp: "2024-01-25T09:45:00",
-  },
-  {
-    id: "5",
-    sender: "family",
-    content: "Perfeito, muito obrigado pelo cuidado! 🙏",
-    timestamp: "2024-01-25T10:00:00",
-  },
-];
+import { useAppointmentDetail } from "@/hooks/useAppointments";
+import { useChatMessages, useSendMessage, useChatRealtime, useMarkMessagesAsRead } from "@/hooks/useChat";
+import { filterContactInfo, hasContactInfo, CONTACT_WARNING_MESSAGE } from "@/lib/contact-filter";
+import type { AppointmentStatus } from "@/types/database";
 
 const AppointmentChat = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  const userRole: MessageSender = profile?.role === "caregiver" ? "caregiver" : "family";
-  
-  const [messages, setMessages] = useState<ChatMessage[]>(mockMessages);
+  const { user, profile } = useAuth();
+  const userRole = profile?.role === "caregiver" ? "caregiver" : "family";
+
+  const { data: appointment, isLoading: isLoadingAppointment } = useAppointmentDetail(id, { refetchInterval: 15_000 });
+  const { data: messages = [], isLoading: isLoadingMessages } = useChatMessages(id);
+  const { mutate: sendMessage, isPending: isSending } = useSendMessage(id);
+  const { mutate: markAsRead } = useMarkMessagesAsRead(id);
+
+  useChatRealtime(id);
+
   const [newMessage, setNewMessage] = useState("");
-  
-  const appointment = mockAppointmentInfo;
-  const isActive = appointment.status === "active";
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [contactWarningShown, setContactWarningShown] = useState(false);
+
+  // Status helpers
+  const status: AppointmentStatus | undefined = appointment?.status;
+  const isWritable = status === "pendente" || status === "ativo";
+  const isReadOnly = status === "finalizado" || status === "cancelado";
+  const isContactFiltered = status === "pendente";
+
+  // Auto-scroll ao receber novas mensagens
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Marcar como lidas ao abrir o chat
+  useEffect(() => {
+    if (messages.length > 0) {
+      markAsRead();
+    }
+  }, [messages.length, markAsRead]);
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !isActive) return;
+    if (!newMessage.trim() || !isWritable) return;
 
-    const message: ChatMessage = {
-      id: String(Date.now()),
-      sender: userRole,
-      content: newMessage.trim(),
-      timestamp: new Date().toISOString(),
-    };
+    const content = newMessage.trim();
 
-    setMessages([...messages, message]);
+    // Se o filtro está ativo e a mensagem contém contato, avisa o usuário
+    if (isContactFiltered && hasContactInfo(content)) {
+      setContactWarningShown(true);
+    }
+
+    // Envia a mensagem original — o filtro é aplicado na exibição, não no envio
+    // Isso preserva o conteúdo original no banco para quando o status mudar para ativo
+    sendMessage(content);
     setNewMessage("");
   };
 
@@ -129,15 +97,23 @@ const AppointmentChat = () => {
     }
   };
 
+  // Aplica filtro de contato se necessário
+  const getDisplayContent = (content: string): string => {
+    if (isContactFiltered) {
+      return filterContactInfo(content);
+    }
+    return content;
+  };
+
   // Group messages by date
   const groupedMessages = messages.reduce((groups, message) => {
-    const date = new Date(message.timestamp).toDateString();
+    const date = new Date(message.created_at).toDateString();
     if (!groups[date]) {
       groups[date] = [];
     }
     groups[date].push(message);
     return groups;
-  }, {} as Record<string, ChatMessage[]>);
+  }, {} as Record<string, typeof messages>);
 
   const handleBack = () => {
     if (userRole === "caregiver") {
@@ -147,7 +123,30 @@ const AppointmentChat = () => {
     }
   };
 
-  const otherPartyName = userRole === "family" ? appointment.caregiverName : appointment.familyName;
+  // Loading state
+  if (isLoadingAppointment || isLoadingMessages) {
+    return (
+      <div className="flex flex-col h-screen bg-background items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Appointment não encontrado
+  if (!appointment) {
+    return (
+      <div className="flex flex-col h-screen bg-background items-center justify-center gap-4">
+        <p className="text-muted-foreground">Agendamento não encontrado.</p>
+        <Button variant="outline" onClick={() => navigate(-1)}>Voltar</Button>
+      </div>
+    );
+  }
+
+  const otherPartyName = userRole === "family"
+    ? (appointment.caregiver_name ?? "Cuidador")
+    : (appointment.family_name ?? "Família");
+
+  const elderlyName = appointment.elderly_name ?? "o idoso";
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -164,7 +163,6 @@ const AppointmentChat = () => {
           </Button>
 
           <Avatar className="w-10 h-10 flex-shrink-0">
-            <AvatarImage src={appointment.caregiverPhoto} alt={otherPartyName} />
             <AvatarFallback className="bg-primary/10 text-primary">
               {otherPartyName.split(" ").map(n => n[0]).join("").slice(0, 2)}
             </AvatarFallback>
@@ -175,14 +173,26 @@ const AppointmentChat = () => {
               <h1 className="font-semibold text-foreground truncate">
                 {otherPartyName}
               </h1>
-              <StatusBadge status={appointment.status} size="sm" />
+              <StatusBadge status={status!} size="sm" />
             </div>
             <p className="text-sm text-muted-foreground truncate">
-              Cuidado de {appointment.elderlyName}
+              Cuidado de {elderlyName}
             </p>
           </div>
         </div>
       </header>
+
+      {/* Banner de filtro de contato ativo */}
+      {isContactFiltered && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+          <div className="max-w-3xl mx-auto flex items-start gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+            <p className="text-xs text-amber-800">
+              {CONTACT_WARNING_MESSAGE}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Messages Area */}
       <main className="flex-1 overflow-y-auto px-4 py-4">
@@ -204,13 +214,13 @@ const AppointmentChat = () => {
                 {/* Date Separator */}
                 <div className="flex items-center justify-center">
                   <span className="px-3 py-1 bg-muted rounded-full text-xs text-muted-foreground">
-                    {formatDate(dateMessages[0].timestamp)}
+                    {formatDate(dateMessages[0].created_at)}
                   </span>
                 </div>
 
                 {/* Messages */}
                 {dateMessages.map((message) => {
-                  const isOwnMessage = message.sender === userRole;
+                  const isOwnMessage = message.sender_id === user?.id;
 
                   return (
                     <div
@@ -229,17 +239,22 @@ const AppointmentChat = () => {
                         )}
                       >
                         <p className="text-sm whitespace-pre-wrap break-words">
-                          {message.content}
+                          {getDisplayContent(message.content)}
                         </p>
                         <p
                           className={cn(
-                            "text-[10px] mt-1 text-right",
+                            "text-[10px] mt-1 flex items-center gap-1",
                             isOwnMessage
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
+                              ? "justify-end text-primary-foreground/70"
+                              : "justify-end text-muted-foreground"
                           )}
                         >
-                          {formatTime(message.timestamp)}
+                          {formatTime(message.created_at)}
+                          {isOwnMessage && (
+                            message.read_at
+                              ? <CheckCheck className="w-3 h-3" />
+                              : <Check className="w-3 h-3" />
+                          )}
                         </p>
                       </div>
                     </div>
@@ -248,13 +263,34 @@ const AppointmentChat = () => {
               </div>
             ))
           )}
+          <div ref={messagesEndRef} />
         </div>
       </main>
+
+      {/* Contact warning toast (aparece uma vez quando o filtro bloqueia) */}
+      {contactWarningShown && isContactFiltered && (
+        <div className="bg-amber-50 border-t border-amber-200 px-4 py-2">
+          <div className="max-w-3xl mx-auto flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+            <p className="text-xs text-amber-800">
+              Sua mensagem foi enviada, mas informações de contato aparecerão como [contato removido] até o atendimento ser confirmado.
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs h-6 px-2 shrink-0"
+              onClick={() => setContactWarningShown(false)}
+            >
+              OK
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Input Area */}
       <footer className="sticky bottom-0 bg-card border-t border-border px-4 py-3">
         <div className="max-w-3xl mx-auto">
-          {isActive ? (
+          {isWritable ? (
             <div className="flex items-end gap-2">
               <Textarea
                 value={newMessage}
@@ -266,17 +302,24 @@ const AppointmentChat = () => {
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
+                disabled={!newMessage.trim() || isSending}
                 size="icon"
                 className="flex-shrink-0 h-11 w-11"
               >
-                <Send className="w-5 h-5" />
+                {isSending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
               </Button>
             </div>
           ) : (
             <div className="text-center py-2">
               <p className="text-sm text-muted-foreground">
-                O atendimento foi finalizado. O chat não está mais disponível.
+                {status === "finalizado"
+                  ? "O atendimento foi finalizado. Este chat é apenas para consulta do histórico."
+                  : "O atendimento foi cancelado. Este chat é apenas para consulta do histórico."
+                }
               </p>
             </div>
           )}

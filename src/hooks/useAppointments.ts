@@ -119,11 +119,15 @@ export function useAppointments(role: 'caregiver' | 'family') {
 
 // ─── Query: detalhe de um agendamento ────────────────────────────────────────
 
-export function useAppointmentDetail(appointmentId: string | undefined) {
+export function useAppointmentDetail(
+  appointmentId: string | undefined,
+  options?: { refetchInterval?: number },
+) {
   const { user } = useAuth()
 
   return useQuery({
     queryKey: queryKeys.appointmentDetail(appointmentId ?? ''),
+    refetchInterval: options?.refetchInterval,
     queryFn: async (): Promise<AppointmentWithNames | null> => {
       if (!user || !appointmentId) return null
 
@@ -230,11 +234,13 @@ export function useUpdateAppointmentStatus() {
     onSuccess: (_, payload) => {
       qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll })
       qc.invalidateQueries({ queryKey: queryKeys.appointmentDetail(payload.id) })
+      // Forçar refetch imediato para atualizar contagens em todas as telas
+      qc.refetchQueries({ queryKey: queryKeys.appointmentsAll })
 
       const messages: Record<AppointmentStatus, string> = {
-        ativo: 'Agendamento aceito!',
-        cancelado: 'Agendamento cancelado.',
-        finalizado: 'Agendamento finalizado.',
+        ativo: 'Atendimento aceito!',
+        cancelado: 'Atendimento cancelado.',
+        finalizado: 'Atendimento finalizado.',
         pendente: 'Status atualizado.',
       }
       toast.success(messages[payload.status])

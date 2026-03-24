@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import StarRating from "@/components/shared/StarRating";
 import { cn } from "@/lib/utils";
-import { useAppointmentDetail } from "@/hooks/useAppointments";
+import { useAppointmentDetail, useUpdateAppointmentStatus } from "@/hooks/useAppointments";
 import { useCareRoutines } from "@/hooks/useCareRoutine";
 import type { CareRoutine } from "@/types/database";
 import {
@@ -36,6 +36,7 @@ const FamilyAppointmentDetails = () => {
   const navigate = useNavigate();
   const { data: appointment, isLoading } = useAppointmentDetail(id);
   const { data: careRoutines, isLoading: isLoadingRoutines } = useCareRoutines(id);
+  const { mutate: updateStatus, isPending: isUpdating } = useUpdateAppointmentStatus();
 
   if (isLoading) {
     return (
@@ -233,13 +234,24 @@ const FamilyAppointmentDetails = () => {
             </div>
 
             {isActive && (
-              <Button
-                className="gap-2"
-                onClick={() => navigate(`/chat/${id}?role=family`)}
-              >
-                <MessageCircle className="h-4 w-4" />
-                Conversar com o cuidador
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  className="gap-2"
+                  onClick={() => navigate(`/chat/${id}?role=family`)}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Conversar com o cuidador
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => updateStatus({ id: appointment.id, status: "finalizado" })}
+                  disabled={isUpdating}
+                >
+                  <History className="h-4 w-4" />
+                  Finalizar atendimento
+                </Button>
+              </div>
             )}
           </div>
         </div>

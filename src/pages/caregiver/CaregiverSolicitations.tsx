@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import {
   Calendar, Clock, User, FileText, MapPin, Loader2, CheckCircle, XCircle,
-  ClipboardList, MessageSquare, Briefcase,
+  ClipboardList, MessageSquare, Briefcase, MessageCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/shared/AppSidebar";
@@ -255,10 +255,19 @@ const CaregiverSolicitations = () => {
                     Aceitar
                   </Button>
                   <RejectDialog appointmentId={appointment.id} />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => navigate(`/chat/${appointment.id}`)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                  </Button>
                 </div>
               )}
               {isAccepted && (
-                <div className="pt-2">
+                <div className="flex gap-2 pt-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -267,6 +276,15 @@ const CaregiverSolicitations = () => {
                   >
                     <Briefcase className="w-4 h-4" />
                     Ver atendimento
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => navigate(`/chat/${appointment.id}`)}
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
                   </Button>
                 </div>
               )}

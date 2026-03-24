@@ -49,14 +49,17 @@ O trabalho aqui é **conectar o backend**, não recriar UI.
 
 ```
 src/
-├── lib/              ← clientes e helpers (supabase.ts, auth.ts, viacep.ts, stripe.ts, constants.ts, query-keys.ts, geocode.ts)
+├── lib/              ← clientes e helpers (supabase.ts, auth.ts, viacep.ts, stripe.ts, constants.ts, query-keys.ts, geocode.ts, labels.ts, contact-filter.ts)
 ├── types/            ← database.ts com todos os tipos do Supabase
 ├── contexts/         ← AuthContext.tsx
-├── hooks/            ← todos os hooks de dados (useAuth, useCaregiverProfile, etc.)
+├── hooks/            ← todos os hooks de dados (useAuth, useCaregiverProfile, useAppointments, useCareRoutine, useChat, etc.)
 ├── components/
-│   ├── shared/       ← AppSidebar, PageHeader, StatusBadge, StarRating (JÁ EXISTEM)
+│   ├── shared/       ← AppSidebar, PageHeader, StatusBadge, StarRating, RequestAppointmentDialog (JÁ EXISTEM)
 │   └── ui/           ← shadcn components (JÁ EXISTEM)
-└── pages/            ← todas as páginas (JÁ EXISTEM, mockadas)
+├── pages/
+│   ├── chat/         ← AppointmentChat.tsx (chat em tempo real)
+│   └── ...           ← demais páginas (maioria já conectada ao backend)
+└── data/             ← mockData.ts (ainda usado em páginas não conectadas)
 
 supabase/
 ├── functions/        ← Edge Functions (create-checkout, stripe-webhook, admin-actions)
@@ -73,6 +76,7 @@ supabase/
 | `PageHeader` | `@/components/shared/PageHeader` | `title`, `description`, `children` |
 | `StatusBadge` | `@/components/shared/StatusBadge` | `status` |
 | `StarRating` | `@/components/shared/StarRating` | `rating`, `size`, `showValue`, `className` |
+| `RequestAppointmentDialog` | `@/components/shared/RequestAppointmentDialog` | `open`, `onOpenChange`, `caregiverId`, `caregiverName` |
 
 ---
 
@@ -241,6 +245,37 @@ import PageHeader from "@/components/shared/PageHeader"
 | `sm` (640px) | Flex direction (`sm:flex-row`), largura de botão (`sm:w-auto`) |
 | `md` (768px) | Padding (`md:p-6`), grid cols (`md:grid-cols-2`), text size (`md:text-lg`) |
 | `lg` (1024px) | Padding (`lg:p-8`), grid cols desktop (`lg:grid-cols-3`) |
+
+---
+
+## Autenticação e sessão
+
+**Auth provider:** Supabase Auth (Email/senha + Google OAuth)
+
+**Configuração do client (`src/lib/supabase.ts`):**
+- `flowType: 'pkce'` — PKCE flow obrigatório (protege OAuth contra interceptação)
+- `storage: localStorage` — tokens persistidos no browser
+- `autoRefreshToken: true` — JWT renova automaticamente antes de expirar
+
+**Configuração no Supabase Dashboard (Authentication > Settings):**
+- JWT Expiry = `86400` (24 horas)
+- Refresh Token Reuse Interval = `10s` (padrão)
+- Refresh Token Rotation = habilitado (padrão, não tem toggle no Free)
+- Session Timeout (Inactivity) = **não disponível no plano Free** — configurar 7 dias quando migrar para Pro
+
+**Logout (`src/lib/auth.ts` + `AppSidebar.tsx`):**
+- `signOut({ scope: 'global' })` — invalida sessão em **todos** os dispositivos
+- `queryClient.clear()` — limpa cache do TanStack Query (dados sensíveis)
+- `localStorage.removeItem('cuidde_pending_signup')` + `sessionStorage.clear()` — limpa dados locais da app
+
+**QueryClient (`src/lib/query-client.ts`):**
+- Exportado como módulo separado para ser importado tanto no `App.tsx` quanto no logout
+- Não instanciar outro `QueryClient` — sempre usar o exportado
+
+**Regras:**
+- Nunca armazenar tokens manualmente — o Supabase JS gerencia automaticamente
+- Nunca usar `scope: 'local'` no signOut — sempre `'global'` para invalidar servidor
+- HttpOnly cookies requerem server-side proxy (não suportado em SPA) — manter localStorage
 
 ---
 

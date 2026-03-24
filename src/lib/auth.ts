@@ -35,13 +35,14 @@ export async function signInWithGoogle() {
     provider: 'google',
     options: {
       redirectTo: `${window.location.origin}/auth/callback`,
+      queryParams: { prompt: 'select_account' },
     },
   })
 }
 
 
 export async function signOut() {
-  return supabase.auth.signOut()
+  return supabase.auth.signOut({ scope: 'global' })
 }
 
 export async function getSession() {

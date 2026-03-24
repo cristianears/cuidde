@@ -25,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { mockFamilies } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile, useUpdateFamilyProfileFull, useUploadFamilyPhoto, useRemoveFamilyPhoto } from "@/hooks/useFamilyProfile";
 import { fetchAddressByCep } from "@/lib/viacep";
@@ -52,7 +51,6 @@ const FamilyProfile = () => {
   const { mutate: saveProfile, isPending: isSaving } = useUpdateFamilyProfileFull();
   const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadFamilyPhoto();
   const { mutate: removePhoto } = useRemoveFamilyPhoto();
-  const currentUser = mockFamilies[0];
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const realName = familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? "";
@@ -60,20 +58,23 @@ const FamilyProfile = () => {
   const realPhone = familyProfileData?.profiles?.phone ?? user?.user_metadata?.phone ?? "";
 
   // Responsible data
-  const [responsibleName, setResponsibleName] = useState(realName || currentUser.name);
-  const [responsibleEmail, setResponsibleEmail] = useState(realEmail || currentUser.email);
-  const [responsiblePhone, setResponsiblePhone] = useState(realPhone || currentUser.phone);
+  const [responsibleName, setResponsibleName] = useState("");
+  const [responsibleEmail, setResponsibleEmail] = useState("");
+  const [responsiblePhone, setResponsiblePhone] = useState("");
   const [relationship, setRelationship] = useState("filho");
   const [responsiblePhoto, setResponsiblePhoto] = useState<string | null>(null);
 
   // Sincronizar dados reais quando carregarem
   useEffect(() => {
+    // Dados do responsável — usa profile real ou metadata do auth
+    const name = familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? "";
+    const phone = familyProfileData?.profiles?.phone ?? user?.user_metadata?.phone ?? "";
+    if (name) setResponsibleName(name);
+    if (phone) setResponsiblePhone(phone);
+    if (user?.email) setResponsibleEmail(user.email);
+
     if (familyProfileData) {
       const fp = familyProfileData;
-      const name = fp.profiles?.full_name ?? "";
-      const phone = fp.profiles?.phone ?? "";
-      if (name) setResponsibleName(name);
-      if (phone) setResponsiblePhone(phone);
       if (fp.relationship) setRelationship(fp.relationship);
       // Endereço
       if (fp.cep) setCep(fp.cep);
@@ -96,8 +97,7 @@ const FamilyProfile = () => {
       if (fp.elderly_medications?.length) setElderlyMedications(fp.elderly_medications);
       setResponsiblePhoto(fp.photo_url ?? null);
     }
-    if (user?.email) setResponsibleEmail(user.email);
-  }, [familyProfileData, user?.email]);
+  }, [familyProfileData, user?.email, user?.user_metadata]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -127,25 +127,25 @@ const FamilyProfile = () => {
   };
 
   // Address
-  const [cep, setCep] = useState(currentUser.address?.cep || "01310-100");
-  const [street, setStreet] = useState(currentUser.address?.street || "Avenida Paulista");
-  const [number, setNumber] = useState(currentUser.address?.number || "1000");
-  const [neighborhood, setNeighborhood] = useState(currentUser.address?.neighborhood || "Bela Vista");
-  const [city, setCity] = useState(currentUser.address?.city || "São Paulo");
-  const [state, setState] = useState(currentUser.address?.state || "SP");
+  const [cep, setCep] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [isFetchingCep, setIsFetchingCep] = useState(false);
 
   // Elderly profile
-  const [elderlyName, setElderlyName] = useState(currentUser.elderlyInfo.name);
-  const [elderlyAge, setElderlyAge] = useState(currentUser.elderlyInfo.age.toString());
-  const [selectedConditions, setSelectedConditions] = useState<string[]>(currentUser.elderlyInfo.healthConditions);
-  const [bloodType, setBloodType] = useState("O+");
-  const [preExistingConditions, setPreExistingConditions] = useState("Diabetes tipo 2, hipertensão arterial controlada.");
-  const [allergies, setAllergies] = useState("Dipirona, frutos do mar.");
-  const [continuousMedications, setContinuousMedications] = useState("Metformina 850mg (08h e 20h), Losartana 50mg (08h).");
-  const [responsibleDoctor, setResponsibleDoctor] = useState("Dr. Carlos Mendes - Clínica Vida Plena");
-  const [healthInsurance, setHealthInsurance] = useState("Bradesco Saúde");
-  const [careNeeds, setCareNeeds] = useState(currentUser.elderlyInfo.careNeeds);
+  const [elderlyName, setElderlyName] = useState("");
+  const [elderlyAge, setElderlyAge] = useState("");
+  const [selectedConditions, setSelectedConditions] = useState<string[]>([]);
+  const [bloodType, setBloodType] = useState("");
+  const [preExistingConditions, setPreExistingConditions] = useState("");
+  const [allergies, setAllergies] = useState("");
+  const [continuousMedications, setContinuousMedications] = useState("");
+  const [responsibleDoctor, setResponsibleDoctor] = useState("");
+  const [healthInsurance, setHealthInsurance] = useState("");
+  const [careNeeds, setCareNeeds] = useState("");
 
   // Medications
   const [elderlyMedications, setElderlyMedications] = useState<ElderlyMedication[]>([]);

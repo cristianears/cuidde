@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Calendar, Search, Clock, CheckCircle, XCircle, UserCheck, Loader2,
-  FileText, MapPin, Briefcase,
+  FileText, MapPin, Briefcase, MessageCircle,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -138,16 +138,30 @@ const FamilyMatches = () => {
             )}
 
             {appointment.status === "pendente" && (
-              <p className="text-xs text-muted-foreground mt-2">
-                Aguardando resposta do cuidador.
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-xs text-muted-foreground">
+                  Aguardando resposta do cuidador.
+                </p>
+                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                  <Link to={`/chat/${appointment.id}`}>
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                  </Link>
+                </Button>
+              </div>
             )}
             {appointment.status === "ativo" && (
-              <div className="mt-3">
+              <div className="flex gap-2 mt-3">
                 <Button asChild size="sm" className="gap-2">
                   <Link to={`/family/appointments/${appointment.id}`}>
                     <CheckCircle className="w-4 h-4" />
                     Acessar atendimento
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                  <Link to={`/chat/${appointment.id}`}>
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
                   </Link>
                 </Button>
               </div>
@@ -249,8 +263,22 @@ const FamilyMatches = () => {
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="aceitas">Aceitas</TabsTrigger>
-            <TabsTrigger value="recusadas">Recusadas</TabsTrigger>
+            <TabsTrigger value="aceitas">
+              Aceitas
+              {accepted.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {accepted.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="recusadas">
+              Recusadas
+              {rejected.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {rejected.length}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="todas" className="mt-4 space-y-3">

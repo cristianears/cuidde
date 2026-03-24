@@ -29,7 +29,7 @@ const FamilyAppointments = () => {
   const hasAny = active.length > 0 || finished.length > 0;
 
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
-    const status = appointmentStatusConfig[appointment.status] ?? statusConfig.pendente;
+    const status = appointmentStatusConfig[appointment.status] ?? appointmentStatusConfig.pendente;
     return (
       <Link to={`/family/appointments/${appointment.id}`}>
         <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -145,7 +145,14 @@ const FamilyAppointments = () => {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="finished">Finalizados</TabsTrigger>
+            <TabsTrigger value="finished" className="gap-2">
+              Finalizados
+              {finished.length > 0 && (
+                <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full">
+                  {finished.length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="mt-4 space-y-3">

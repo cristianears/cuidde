@@ -63,6 +63,8 @@ export default function RequestAppointmentDialog({
   const [modality, setModality] = useState("")
   const [description, setDescription] = useState("")
   const [familyNotes, setFamilyNotes] = useState("")
+  const [startDateOpen, setStartDateOpen] = useState(false)
+  const [endDateOpen, setEndDateOpen] = useState(false)
 
   const isValid = type !== "" && startDate !== undefined
 
@@ -132,7 +134,7 @@ export default function RequestAppointmentDialog({
           {/* Data de início */}
           <div className="space-y-2">
             <Label>Data de início *</Label>
-            <Popover>
+            <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -145,11 +147,11 @@ export default function RequestAppointmentDialog({
                   {startDate ? format(startDate, "PPP", { locale: ptBR }) : "Selecione a data"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" sideOffset={4} collisionPadding={8}>
                 <Calendar
                   mode="single"
                   selected={startDate}
-                  onSelect={setStartDate}
+                  onSelect={(date) => { setStartDate(date); setStartDateOpen(false); }}
                   disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                   locale={ptBR}
                   initialFocus
@@ -161,7 +163,7 @@ export default function RequestAppointmentDialog({
           {/* Data de término (opcional) */}
           <div className="space-y-2">
             <Label>Data de término (opcional)</Label>
-            <Popover>
+            <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -174,11 +176,11 @@ export default function RequestAppointmentDialog({
                   {endDate ? format(endDate, "PPP", { locale: ptBR }) : "Sem data definida"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" sideOffset={4} collisionPadding={8}>
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={setEndDate}
+                  onSelect={(date) => { setEndDate(date); setEndDateOpen(false); }}
                   disabled={(date) =>
                     date < (startDate ?? new Date(new Date().setHours(0, 0, 0, 0)))
                   }

@@ -17,4 +17,5 @@ export const queryKeys = {
   appointmentDetail: (id: string) => ['appointment', id] as const,
   careRoutines: (appointmentId: string) => ['care_routines', appointmentId] as const,
   publicCaregiverProfile: (caregiverId: string) => ['publicCaregiverProfile', caregiverId] as const,
+  messages: (appointmentId: string) => ['messages', appointmentId] as const,
 } as const
