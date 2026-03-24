@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
+import { mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
 import type { CaregiverPublic, CaregiverProfile, ProfessionalReference, CaregiverDocument, Review, ProfessionalRegType } from '@/types/database'
 
 // ─── Tipo estendido para página de detalhe ──────────────────────────────────
@@ -28,33 +28,10 @@ export interface CaregiverPublicDetail extends CaregiverPublic {
   reviews: Review[]
 }
 
-// Tipo bruto retornado pelo Supabase para o DETAIL_SELECT
-type RawDetailRow = {
-  id: string
-  photo_url: string | null
-  bio: string | null
-  experience_years: number
-  profissao_formacao: string | null
+// Estende RawCaregiverRow com campos extras da página de detalhe
+type RawDetailRow = RawCaregiverRow & {
   formacao_complementar: string | null
-  neighborhood: string | null
-  city: string | null
-  state: string | null
-  price_per_hour: number | null
-  price_per_day: number | null
   pricing_note: string | null
-  average_rating: number
-  review_count: number
-  specialties: string[]
-  modalities: string[]
-  idiomas: string[]
-  possui_cnh: boolean
-  has_insurance: boolean
-  emergency_available: boolean
-  has_rg_cnh: boolean
-  has_antecedentes: boolean
-  has_certificado: boolean
-  has_references: boolean
-  zona: string | null
   professional_reg_type: ProfessionalRegType | null
   professional_reg_number: string | null
   professional_reg_uf: string | null
@@ -67,7 +44,6 @@ type RawDetailRow = {
   show_refs_to_subscribers: boolean
   mask_reference_phones: boolean
   show_reference_full_names: boolean
-  profiles: { full_name: string | null } | null
 }
 
 // Select estendido para página de detalhe (não altera CAREGIVER_SELECT da busca)
@@ -200,8 +176,8 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
 
       return {
         ...base,
-        // Expor reg number na página de detalhe (diferente da busca pública)
-        professional_reg_number: row.professional_reg_number ?? null,
+        // SEGURANÇA: reg number apenas para assinantes
+        professional_reg_number: isSubscriber ? (row.professional_reg_number ?? null) : null,
         formacao_complementar: row.formacao_complementar ?? null,
         pricing_note: row.pricing_note ?? null,
         availability_notes: row.availability_notes ?? null,

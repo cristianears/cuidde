@@ -6,6 +6,15 @@ import { queryKeys } from '@/lib/query-keys'
 import { MAX_FILE_SIZE, ALLOWED_MIME_TYPES, ALLOWED_FILE_EXTS } from '@/lib/constants'
 import type { CaregiverDocument, DocumentType, ProfessionalRegType } from '@/types/database'
 
+// Sanitiza nome do arquivo: remove path traversal, caracteres perigosos e limita tamanho
+function sanitizeFileName(name: string): string {
+  return name
+    .replace(/[/\\]/g, '_')       // remove separadores de caminho
+    .replace(/\.\./g, '_')        // remove path traversal
+    .replace(/[<>:"|?*\x00-\x1f]/g, '_') // remove caracteres inválidos
+    .slice(0, 200)                // limita tamanho
+}
+
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
 export interface UpdateProfessionalRegPayload {
@@ -59,6 +68,7 @@ export function useUploadDocument() {
         throw new Error('Extensão de arquivo não permitida.')
       }
 
+      const safeName = sanitizeFileName(file.name)
       const storagePath = `${user!.id}/${docType}.${ext}`
 
       // Upload para Storage (substitui se já existir)
@@ -76,7 +86,7 @@ export function useUploadDocument() {
             caregiver_id: user!.id,
             type: docType,
             file_url: storagePath,
-            file_name: file.name,
+            file_name: safeName,
             status: 'sent',
             uploaded_at: new Date().toISOString(),
           },

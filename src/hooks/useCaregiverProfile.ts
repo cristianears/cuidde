@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import type { CaregiverProfile, ProfessionalReference } from '@/types/database'
-import { geocodeAddress, geocodeByCity } from '@/lib/geocode'
+import { resolveAndSaveCoords } from '@/lib/geocode'
 import { validateAvatarFile } from '@/lib/constants'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -109,22 +109,14 @@ export function useAutoGeocodeCaregiver(profile: CaregiverProfileFull | undefine
 
   useEffect(() => {
     if (hasLocation || !userId || !profile) return
-    const hasCep = !!cep
-    const hasCity = !!city && !!state
-    if (!hasCep && !hasCity) return
+    if (!cep && !(city && state)) return
 
     let cancelled = false
     ;(async () => {
-      let geo = hasCep ? await geocodeAddress({ cep }) : null
-      if (!geo && hasCity) {
-        geo = await geocodeByCity(city, state)
+      await resolveAndSaveCoords('caregiver_profiles', userId, { cep, city, state })
+      if (!cancelled) {
+        qc.invalidateQueries({ queryKey: PROFILE_KEY(userId) })
       }
-      if (cancelled || !geo) return
-      await supabase
-        .from('caregiver_profiles')
-        .update({ lat: geo.lat, lng: geo.lng })
-        .eq('id', userId)
-      qc.invalidateQueries({ queryKey: PROFILE_KEY(userId) })
     })()
     return () => { cancelled = true }
   }, [hasLocation, cep, city, state, userId, profile, qc])
@@ -186,18 +178,9 @@ export function useUpdateCaregiverBasic() {
       if (error) throw error
 
       // Geocodificar endereço (best-effort — não bloqueia o save)
-      if (payload.cep || (payload.city && payload.state)) {
-        let geo = payload.cep ? await geocodeAddress({ cep: payload.cep }) : null
-        if (!geo && payload.city && payload.state) {
-          geo = await geocodeByCity(payload.city, payload.state)
-        }
-        if (geo) {
-          await supabase
-            .from('caregiver_profiles')
-            .update({ lat: geo.lat, lng: geo.lng })
-            .eq('id', user!.id)
-        }
-      }
+      await resolveAndSaveCoords('caregiver_profiles', user!.id, {
+        cep: payload.cep, city: payload.city, state: payload.state,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })

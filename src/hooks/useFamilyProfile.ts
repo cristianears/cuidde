@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import { geocodeAddress, geocodeByCity } from '@/lib/geocode'
+import { resolveAndSaveCoords } from '@/lib/geocode'
 import { validateAvatarFile } from '@/lib/constants'
 import type { FamilyProfile, ElderlyMedication } from '@/types/database'
 
@@ -38,30 +38,6 @@ export function useFamilyProfile() {
     enabled: !!user,
     staleTime: 60_000,
   })
-}
-
-// ─── Helper: geocodificar e salvar lat/lng (best-effort) ────────────────────
-
-async function geocodeAndUpdate(
-  userId: string,
-  cep?: string,
-  city?: string,
-  state?: string,
-) {
-  // Tentar CEP primeiro (Google Maps → Nominatim)
-  let geo = cep ? await geocodeAddress({ cep }) : null
-
-  // Fallback: cidade + estado
-  if (!geo && city && state) {
-    geo = await geocodeByCity(city, state)
-  }
-
-  if (geo) {
-    await supabase
-      .from('family_profiles')
-      .update({ lat: geo.lat, lng: geo.lng })
-      .eq('id', userId)
-  }
 }
 
 // ─── Mutation: upload de foto do responsável ─────────────────────────────────
@@ -164,7 +140,9 @@ export function useUpdateFamilyAddress() {
 
       if (error) throw error
 
-      await geocodeAndUpdate(user!.id, payload.cep, payload.city, payload.state)
+      await resolveAndSaveCoords('family_profiles', user!.id, {
+        cep: payload.cep, city: payload.city, state: payload.state,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
@@ -262,7 +240,9 @@ export function useUpdateFamilyProfileFull() {
       if (error) throw error
 
       // 3. Geocodificar endereço (best-effort)
-      await geocodeAndUpdate(user!.id, payload.cep, payload.city, payload.state)
+      await resolveAndSaveCoords('family_profiles', user!.id, {
+        cep: payload.cep, city: payload.city, state: payload.state,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })

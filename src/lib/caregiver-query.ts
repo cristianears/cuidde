@@ -2,9 +2,9 @@ import type { CaregiverPublic } from '@/types/database'
 
 // ─── SELECT compartilhado para queries de cuidadores ────────────────────────
 
-// SEGURANÇA: whatsapp e professional_reg_number removidos da query pública
-// para proteger PII dos cuidadores. Esses dados devem ser expostos apenas
-// em visualizações detalhadas com controle de acesso (assinatura ativa).
+// SEGURANÇA: whatsapp, professional_reg_number, lat e lng removidos da query pública.
+// lat/lng são usados apenas server-side pela RPC search_caregivers_by_proximity.
+// Expor coordenadas permitiria localizar a residência exata do cuidador.
 export const CAREGIVER_SELECT = `
   id,
   photo_url,
@@ -30,8 +30,6 @@ export const CAREGIVER_SELECT = `
   has_references,
   zona,
   cep,
-  lat,
-  lng,
   profiles!inner ( full_name )
 ` as const
 
@@ -62,8 +60,6 @@ export type RawCaregiverRow = {
   has_references: boolean
   zona: string | null
   cep: string | null
-  lat: number | null
-  lng: number | null
   profiles: { full_name: string | null } | null
 }
 
@@ -98,7 +94,5 @@ export function mapCaregiverRow(row: RawCaregiverRow): CaregiverPublic {
     has_references: row.has_references,
     zona: row.zona as CaregiverPublic['zona'],
     cep: row.cep,
-    lat: row.lat,
-    lng: row.lng,
   }
 }

@@ -3,6 +3,7 @@
 // Para CEPs: resolve via ViaCEP → endereço completo → Nominatim (structured query)
 
 import { fetchAddressByCep } from './viacep'
+import { supabase } from './supabase'
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GMAPS_GEOCODE_KEY
 
@@ -86,6 +87,29 @@ export async function geocodeByCity(city: string, state: string): Promise<Geocod
     }
   } catch {
     return null
+  }
+}
+
+/**
+ * Resolve coordenadas (CEP ou cidade+estado) e salva lat/lng na tabela.
+ * Usado por hooks de perfil de família e cuidador para eliminar duplicação.
+ * Best-effort: falha silenciosa não impede o save do perfil.
+ */
+export async function resolveAndSaveCoords(
+  table: 'family_profiles' | 'caregiver_profiles',
+  userId: string,
+  opts: { cep?: string; city?: string; state?: string },
+): Promise<void> {
+  try {
+    let geo = opts.cep ? await geocodeAddress({ cep: opts.cep }) : null
+    if (!geo && opts.city && opts.state) {
+      geo = await geocodeByCity(opts.city, opts.state)
+    }
+    if (geo) {
+      await supabase.from(table).update({ lat: geo.lat, lng: geo.lng }).eq('id', userId)
+    }
+  } catch {
+    // Best-effort — não bloqueia o save
   }
 }
 

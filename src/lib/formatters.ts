@@ -13,16 +13,18 @@ export function formatPhone(value: string): string {
 }
 
 /**
- * Remove caracteres não-numéricos de um CEP
+ * Remove caracteres não-numéricos de um CEP e valida o comprimento (8 dígitos)
  */
 export function cleanCep(value: string): string {
-  return value.replace(/\D/g, '')
+  const digits = value.replace(/\D/g, '')
+  return digits.slice(0, 8)
 }
 
 /**
  * Formata valor em Real brasileiro (R$ 1.234,56)
  */
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return 'R$ 0,00'
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',

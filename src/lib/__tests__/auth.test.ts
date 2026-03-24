@@ -104,6 +104,7 @@ describe('Auth functions', () => {
         provider: 'google',
         options: {
           redirectTo: expect.stringContaining('/auth/callback'),
+          queryParams: { prompt: 'select_account' },
         },
       })
     })
