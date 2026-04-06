@@ -287,10 +287,10 @@ import PageHeader from "@/components/shared/PageHeader"
 3. Se família não tem coordenadas → fallback para filtros cidade/bairro (ilike)
 
 **Arquivos-chave:**
-- `src/lib/geocode.ts` — client-side Google Maps Geocoding (env: `VITE_GMAPS_GEOCODE_KEY`)
+- `src/lib/geocode.ts` — client-side Google Maps Geocoding (env: `VITE_GMAPS_GEOCODE_KEY`); helper `resolveAndSaveCoords()` compartilhado entre hooks
 - `src/hooks/useSearchCaregivers.ts` — lógica de proximidade + fallback
-- `src/hooks/useFamilyProfile.ts` — helper `geocodeAndUpdate()` chamado nas mutations
-- `src/hooks/useCaregiverProfile.ts` — geocodifica CEP ao salvar endereço
+- `src/hooks/useFamilyProfile.ts` — chama `resolveAndSaveCoords()` nas mutations de endereço
+- `src/hooks/useCaregiverProfile.ts` — chama `resolveAndSaveCoords()` ao salvar endereço
 
 **Regras:**
 - Geocodificação é best-effort (não bloqueia o save)

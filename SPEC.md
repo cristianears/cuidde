@@ -849,14 +849,14 @@ TanStack Query v5 para mutations.
 - `supabase_sprint3x_security.sql` — `SET search_path = public` em ambas as funções, role check (apenas famílias podem buscar por proximidade)
 
 **Arquivos criados/modificados:**
-- `src/lib/geocode.ts` — pipeline: Google Maps API → ViaCEP (resolve CEP → endereço) → Nominatim structured query (rua+cidade) → Nominatim free-text → fallback cidade+estado
-- `src/hooks/useCaregiverProfile.ts` — geocodifica CEP ao salvar endereço do cuidador (best-effort, com fallback `geocodeByCity`); hook `useAutoGeocodeCaregiver` para backfill automático
-- `src/hooks/useFamilyProfile.ts` — geocodifica CEP ao salvar endereço/perfil da família (best-effort, helper `geocodeAndUpdate`)
+- `src/lib/geocode.ts` — pipeline: Google Maps API → ViaCEP (resolve CEP → endereço) → Nominatim structured query (rua+cidade) → Nominatim free-text → fallback cidade+estado; helper `resolveAndSaveCoords(table, userId, opts)` compartilhado entre hooks (elimina duplicação)
+- `src/hooks/useCaregiverProfile.ts` — chama `resolveAndSaveCoords` ao salvar endereço (best-effort); hook `useAutoGeocodeCaregiver` para backfill automático
+- `src/hooks/useFamilyProfile.ts` — chama `resolveAndSaveCoords` nas mutations de endereço/perfil (best-effort)
 - `src/hooks/useSearchCaregivers.ts` — se família tem lat/lng, chama RPC `search_caregivers_by_proximity` e ordena por distância; se RPC retorna 0 resultados, retorna lista vazia (respeita o raio); senão, fallback para filtros cidade/bairro
 - `src/pages/family/SearchCaregivers.tsx` — seletor de raio (5/10/20/50 km), só visível quando família tem coordenadas; auto-geocode com dependências estáveis (primitivas)
 - `src/pages/caregiver/CaregiverDashboard.tsx` — chama `useAutoGeocodeCaregiver` para backfill de lat/lng
-- `src/lib/caregiver-query.ts` — `CAREGIVER_SELECT` inclui `cep`, `lat`, `lng`; `mapCaregiverRow` mapeia valores reais (não mais hardcoded null)
-- `src/types/database.ts` — `lat`/`lng` e `cep` em `CaregiverPublic`; tipos das RPCs
+- `src/lib/caregiver-query.ts` — `CAREGIVER_SELECT` inclui `cep` (lat/lng removidos — ficam apenas server-side na RPC); `mapCaregiverRow` mapeia valores reais
+- `src/types/database.ts` — `cep` em `CaregiverPublic`; `lat`/`lng` presentes apenas nos tipos de resposta das RPCs (não em `CaregiverPublic`)
 - `src/lib/constants.ts` — `DEFAULT_RADIUS_KM = 20`, `MAX_PRICE_PER_HOUR = 200`
 - `index.html` — CSP `connect-src` inclui `https://nominatim.openstreetmap.org`
 
