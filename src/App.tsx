@@ -36,11 +36,19 @@ import FamilyInvoices from './pages/family/FamilyInvoices'
 import FamilyInvoiceDetails from './pages/family/FamilyInvoiceDetails'
 import FamilySupport from './pages/family/FamilySupport'
 import CaregiverPublicProfile from './pages/family/CaregiverPublicProfile'
+import CareHistoryReport from './pages/family/CareHistoryReport'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ApprovalQueue from './pages/admin/ApprovalQueue'
 import Finance from './pages/admin/Finance'
 import Security from './pages/admin/Security'
 import AppointmentChat from './pages/chat/AppointmentChat'
+import { usePendingAddress } from '@/hooks/usePendingAddress'
+
+// Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
+const AppInit = () => {
+  usePendingAddress()
+  return null
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -49,6 +57,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AppInit />
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
@@ -81,6 +90,7 @@ const App = () => (
             <Route path="/family/favorites" element={<ProtectedRoute role="family"><Favorites /></ProtectedRoute>} />
             <Route path="/family/appointments" element={<ProtectedRoute role="family"><FamilyAppointments /></ProtectedRoute>} />
             <Route path="/family/appointments/:id" element={<ProtectedRoute role="family"><FamilyAppointmentDetails /></ProtectedRoute>} />
+            <Route path="/family/appointments/:id/history" element={<ProtectedRoute role="family"><CareHistoryReport /></ProtectedRoute>} />
             <Route path="/family/invoices" element={<ProtectedRoute role="family"><FamilyInvoices /></ProtectedRoute>} />
             <Route path="/family/invoices/:id" element={<ProtectedRoute role="family"><FamilyInvoiceDetails /></ProtectedRoute>} />
             <Route path="/family/support" element={<ProtectedRoute role="family"><FamilySupport /></ProtectedRoute>} />

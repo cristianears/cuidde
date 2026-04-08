@@ -19,11 +19,21 @@ import { geocodeAddress, geocodeByCity } from '@/lib/geocode'
 import { fetchAddressByCep } from '@/lib/viacep'
 const mockViaCep = vi.mocked(fetchAddressByCep)
 
+// Helper: cria mock de Response com ok: true
+function mockOkResponse(body: unknown) {
+  return { ok: true, json: () => Promise.resolve(body) }
+}
+
 // Helper: mock Google Maps retornando REQUEST_DENIED (simula key com restrição)
 function mockGoogleDenied() {
-  mockFetch.mockResolvedValueOnce({
-    json: () => Promise.resolve({ status: 'REQUEST_DENIED', results: [] }),
-  })
+  mockFetch.mockResolvedValueOnce(
+    mockOkResponse({ status: 'REQUEST_DENIED', results: [] }),
+  )
+}
+
+// Helper: mock de resposta com ok: false (simula erro HTTP)
+function mockEmptyNominatim() {
+  mockFetch.mockResolvedValueOnce(mockOkResponse([]))
 }
 
 beforeEach(() => {
@@ -39,7 +49,6 @@ describe('geocodeAddress', () => {
   })
 
   it('resolve CEP via ViaCEP + Nominatim structured query (rua+cidade)', async () => {
-    // Google Maps falha
     mockGoogleDenied()
 
     mockViaCep.mockResolvedValue({
@@ -50,13 +59,11 @@ describe('geocodeAddress', () => {
     })
 
     // Nominatim structured query retorna resultado
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([{
-        lat: '-23.2465',
-        lon: '-45.8954',
-        display_name: 'Rua Ângelo Bravini, São José dos Campos',
-      }]),
-    })
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.2465',
+      lon: '-45.8954',
+      display_name: 'Rua Ângelo Bravini, São José dos Campos',
+    }]))
 
     const result = await geocodeAddress({ cep: '12236-063' })
 
@@ -79,17 +86,13 @@ describe('geocodeAddress', () => {
     })
 
     // Structured query: vazio
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([]),
-    })
+    mockEmptyNominatim()
     // Free-text: retorna resultado
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([{
-        lat: '-23.55',
-        lon: '-46.63',
-        display_name: 'São Paulo, SP, Brasil',
-      }]),
-    })
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.55',
+      lon: '-46.63',
+      display_name: 'São Paulo, SP, Brasil',
+    }]))
 
     const result = await geocodeAddress({ cep: '01310-100' })
 
@@ -111,19 +114,15 @@ describe('geocodeAddress', () => {
     })
 
     // Free-text: vazio (sem street → pula structured)
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([]),
-    })
+    mockEmptyNominatim()
     // geocodeByCity → Google Maps falha
     mockGoogleDenied()
     // geocodeByCity → Nominatim city: retorna resultado
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([{
-        lat: '-22.90',
-        lon: '-47.06',
-        display_name: 'Campinas, SP',
-      }]),
-    })
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-22.90',
+      lon: '-47.06',
+      display_name: 'Campinas, SP',
+    }]))
 
     const result = await geocodeAddress({ cep: '13000-000' })
 
@@ -145,13 +144,11 @@ describe('geocodeAddress', () => {
   it('geocodifica address diretamente via Nominatim free-text', async () => {
     mockGoogleDenied()
 
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([{
-        lat: '-23.56',
-        lon: '-46.65',
-        display_name: 'Av Paulista, São Paulo',
-      }]),
-    })
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.56',
+      lon: '-46.65',
+      display_name: 'Av Paulista, São Paulo',
+    }]))
 
     const result = await geocodeAddress({ address: 'Av Paulista, São Paulo, SP' })
 
@@ -173,13 +170,11 @@ describe('geocodeAddress', () => {
       state: 'SP',
     })
 
-    mockFetch.mockResolvedValue({
-      json: () => Promise.resolve([{
-        lat: '-23.55',
-        lon: '-46.63',
-        display_name: 'São Paulo',
-      }]),
-    })
+    mockFetch.mockResolvedValue(mockOkResponse([{
+      lat: '-23.55',
+      lon: '-46.63',
+      display_name: 'São Paulo',
+    }]))
 
     await geocodeAddress({ cep: '01310-100' })
 
@@ -200,13 +195,11 @@ describe('geocodeByCity', () => {
   it('retorna coordenadas via Nominatim structured query', async () => {
     mockGoogleDenied()
 
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([{
-        lat: '-23.1867',
-        lon: '-45.8854',
-        display_name: 'São José dos Campos, SP, Brasil',
-      }]),
-    })
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.1867',
+      lon: '-45.8854',
+      display_name: 'São José dos Campos, SP, Brasil',
+    }]))
 
     const result = await geocodeByCity('São José dos Campos', 'SP')
 
@@ -229,10 +222,7 @@ describe('geocodeByCity', () => {
 
   it('retorna null quando Nominatim não encontra a cidade', async () => {
     mockGoogleDenied()
-
-    mockFetch.mockResolvedValueOnce({
-      json: () => Promise.resolve([]),
-    })
+    mockEmptyNominatim()
 
     const result = await geocodeByCity('Cidade Inexistente', 'XX')
     expect(result).toBeNull()

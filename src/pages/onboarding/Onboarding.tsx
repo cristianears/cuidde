@@ -175,7 +175,6 @@ const Onboarding = () => {
       localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
         type: formData.profileType,
         cep: formData.cep,
-        phone: formData.phone,
       }))
       const { error } = await signInWithGoogle()
       if (error) {
@@ -294,8 +293,10 @@ const Onboarding = () => {
             phone: formData.phone,
           }, { onConflict: 'id' })
 
+          // O upsert do endereço abaixo pode falhar silenciosamente se o RLS
+          // do Supabase bloquear o acesso (sessão ainda não confirmada por email).
+          // Como fallback, persistir no localStorage para ser gravado após login.
           const addressData = {
-            id: data.user.id,
             cep: formData.cep,
             street: formData.street,
             number: formData.number,
@@ -306,10 +307,17 @@ const Onboarding = () => {
           }
 
           const table2 = formData.profileType === 'caregiver' ? 'caregiver_profiles' : 'family_profiles'
-          await supabase.from(table2).upsert(addressData)
+          const { error: upsertErr } = await supabase.from(table2).upsert({ id: data.user.id, ...addressData })
 
-          // Geocodificar CEP — aguardar para garantir lat/lng
-          if (formData.cep) {
+          if (upsertErr) {
+            // RLS bloqueou — salvar para aplicar após verificação de e-mail
+            localStorage.setItem('cuidde_pending_address', JSON.stringify({
+              userId: data.user.id,
+              profileType: formData.profileType,
+              table: table2,
+              address: addressData,
+            }))
+          } else if (formData.cep) {
             try {
               const geo = await geocodeAddress({ cep: formData.cep })
               if (geo) {

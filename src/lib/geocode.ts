@@ -75,6 +75,7 @@ export async function geocodeByCity(city: string, state: string): Promise<Geocod
     const response = await fetch(url, {
       headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'Cuidde/1.0' },
     })
+    if (!response.ok) return null
     const data = await response.json()
 
     if (!Array.isArray(data) || data.length === 0) return null
@@ -119,6 +120,7 @@ async function geocodeWithGoogle(query: string): Promise<GeocodeResult | null> {
 
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}&region=br&language=pt-BR`
     const response = await fetch(url)
+    if (!response.ok) return null
     const data = await response.json()
 
     if (data.status !== 'OK' || !data.results?.length) return null
@@ -152,6 +154,7 @@ async function geocodeNominatimStructured(params: {
     const response = await fetch(url, {
       headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'Cuidde/1.0' },
     })
+    if (!response.ok) return null
     const data = await response.json()
 
     if (!Array.isArray(data) || data.length === 0) return null
@@ -173,6 +176,7 @@ async function geocodeWithNominatim(query: string): Promise<GeocodeResult | null
     const response = await fetch(url, {
       headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'Cuidde/1.0' },
     })
+    if (!response.ok) return null
     const data = await response.json()
 
     if (!Array.isArray(data) || data.length === 0) return null

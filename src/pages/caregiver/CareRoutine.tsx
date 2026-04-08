@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
+  Activity,
   CalendarIcon,
   Sun,
   Sunset,
@@ -44,7 +45,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { CareShift, CareType, MedicationItem, FeedingStatus, MoodStatus, ElderlyMedication } from "@/types/database";
+import VitalSigns from "@/components/shared/VitalSigns";
+import type { CareShift, CareType, MedicationItem, FeedingStatus, HydrationLevel, MoodStatus, ElderlyMedication, VitalSignsData } from "@/types/database";
 
 const shifts = [
   { id: "morning", label: "Manhã", icon: Sun, time: "06h - 12h" },
@@ -55,7 +57,7 @@ const shifts = [
 const careTypes = [
   { id: "hygiene", label: "Higiene pessoal", icon: Droplets },
   { id: "medication", label: "Administração de medicamentos", icon: Pill },
-  { id: "feeding", label: "Alimentação", icon: UtensilsCrossed },
+  { id: "feeding", label: "Alimentação e Hidratação", icon: UtensilsCrossed },
   { id: "mobility", label: "Mobilização / troca de posição", icon: Move },
   { id: "appointments", label: "Acompanhamento em consultas", icon: Stethoscope },
   { id: "monitoring", label: "Monitoramento geral", icon: Eye },
@@ -68,10 +70,20 @@ const feedingOptions: { value: FeedingStatus; label: string; color: string; bgCo
   { value: "refused", label: "Recusou", color: "text-red-700 dark:text-red-400", bgColor: "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700" },
 ];
 
+const hydrationOptions: { value: HydrationLevel; label: string }[] = [
+  { value: "under200", label: "< 200ml" },
+  { value: "200to500", label: "200–500ml" },
+  { value: "500to1000", label: "500ml–1L" },
+  { value: "over1000", label: "> 1L" },
+];
+
 const moodOptions: { value: MoodStatus; label: string; emoji: string }[] = [
   { value: "agitated", label: "Agitado", emoji: "😟" },
   { value: "calm", label: "Calmo", emoji: "😊" },
   { value: "sleepy", label: "Sonolento", emoji: "😴" },
+  { value: "anxious", label: "Ansioso", emoji: "😰" },
+  { value: "communicative", label: "Comunicativo", emoji: "🗣️" },
+  { value: "cheerful", label: "Bem-disposto", emoji: "😄" },
 ];
 
 const commonRunningLowItems = [
@@ -137,9 +149,11 @@ const CareRoutine = () => {
       setHasOccurrence(data.has_occurrence ?? false);
       setOccurrenceDescription(data.occurrence_description ?? "");
       setFeedingStatus(data.feeding_status ?? null);
+      setHydration((data as Record<string, unknown>).hydration as HydrationLevel | null ?? null);
       setHygieneDone(data.hygiene_done ?? null);
       setMood(data.mood ?? null);
       setItemsRunningLow(data.items_running_low ?? []);
+      if (data.vital_signs) setVitalSigns(data.vital_signs as VitalSignsData);
       if (data.medication_items && data.medication_items.length > 0) {
         setMedicationItems(data.medication_items);
       }
@@ -154,7 +168,7 @@ const CareRoutine = () => {
     const loadFamilyData = async () => {
       const { data } = await supabase
         .from("family_profiles")
-        .select("elderly_medications, elderly_name")
+        .select("elderly_medications, elderly_name, elderly_conditions")
         .eq("id", appointment.family_id)
         .single();
       // Only set medications from family profile if NOT editing (edit loads its own)
@@ -165,16 +179,25 @@ const CareRoutine = () => {
         );
       }
       if (data?.elderly_name) setElderlyName(data.elderly_name);
+      if (data?.elderly_conditions) {
+        const conditions = data.elderly_conditions as string[];
+        setIsDiabetic(conditions.some((c) => c.toLowerCase().includes("diabetes")));
+      }
     };
     loadFamilyData();
   }, [appointment, isEditMode]);
 
-  // Feeding status
+  // Feeding status & hydration
   const [feedingStatus, setFeedingStatus] = useState<FeedingStatus | null>(null);
+  const [hydration, setHydration] = useState<HydrationLevel | null>(null);
 
   // Well-being diary
   const [hygieneDone, setHygieneDone] = useState<boolean | null>(null);
   const [mood, setMood] = useState<MoodStatus | null>(null);
+
+  // Vital signs
+  const [vitalSigns, setVitalSigns] = useState<VitalSignsData>({});
+  const [isDiabetic, setIsDiabetic] = useState(false);
 
   // Items running low
   const [itemsRunningLow, setItemsRunningLow] = useState<string[]>([]);
@@ -244,6 +267,19 @@ const CareRoutine = () => {
       observations.trim() || null,
     ].filter(Boolean).join("\n") || null;
 
+    // Build vital_signs: omit keys with undefined/NaN values
+    const vs: VitalSignsData = {};
+    if (vitalSigns.bloodPressure?.systolic != null && !isNaN(vitalSigns.bloodPressure.systolic)
+      && vitalSigns.bloodPressure?.diastolic != null && !isNaN(vitalSigns.bloodPressure.diastolic)) {
+      vs.bloodPressure = vitalSigns.bloodPressure;
+    }
+    if (vitalSigns.temperature != null && !isNaN(vitalSigns.temperature)) vs.temperature = vitalSigns.temperature;
+    if (vitalSigns.glucose != null && !isNaN(vitalSigns.glucose)) vs.glucose = vitalSigns.glucose;
+    if (vitalSigns.heartRate != null && !isNaN(vitalSigns.heartRate)) vs.heartRate = vitalSigns.heartRate;
+    if (vitalSigns.oxygenSaturation != null && !isNaN(vitalSigns.oxygenSaturation)) vs.oxygenSaturation = vitalSigns.oxygenSaturation;
+    const hasVitals = Object.keys(vs).length > 0;
+    if (hasVitals) vs.recordedAt = new Date().toISOString();
+
     const payload = {
       appointment_id: id,
       date: format(date, "yyyy-MM-dd"),
@@ -254,8 +290,10 @@ const CareRoutine = () => {
       occurrence_description: hasOccurrence ? occurrenceDescription.trim() || null : null,
       medication_items: isMedicationSelected ? medicationItems : [],
       feeding_status: isFeedingSelected ? feedingStatus : null,
+      hydration: isFeedingSelected ? hydration : null,
       hygiene_done: hygieneDone,
       mood,
+      vital_signs: hasVitals ? vs : null,
       items_running_low: itemsRunningLow,
     };
 
@@ -514,16 +552,16 @@ const CareRoutine = () => {
               </Card>
             )}
 
-            {/* Feeding Status — visible when "feeding" is selected */}
+            {/* Feeding & Hydration — visible when "feeding" is selected */}
             {isFeedingSelected && (
               <Card className="border-primary/30">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <UtensilsCrossed className="h-5 w-5 text-primary" />
-                    Status da Alimentação
+                    Alimentação e Hidratação
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="grid grid-cols-3 gap-3">
                     {feedingOptions.map((option) => {
                       const isSelected = feedingStatus === option.value;
@@ -547,6 +585,33 @@ const CareRoutine = () => {
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* Hydration */}
+                  <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <Label className="text-sm font-medium flex items-center gap-2 mb-3">
+                      <Droplets className="w-4 h-4 text-blue-500" />
+                      Água ingerida
+                    </Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {hydrationOptions.map((option) => {
+                        const isSelected = hydration === option.value;
+                        return (
+                          <button
+                            key={option.value}
+                            onClick={() => setHydration(isSelected ? null : option.value)}
+                            className={cn(
+                              "py-2 px-3 rounded-full border-2 text-[13px] font-medium transition-all",
+                              isSelected
+                                ? "border-blue-400 dark:border-blue-600 bg-blue-500 text-white"
+                                : "border-border hover:border-blue-300 hover:bg-muted/50 text-foreground"
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -625,6 +690,26 @@ const CareRoutine = () => {
                     })}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Vital Signs */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Sinais Vitais
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Registre apenas os sinais que foram medidos. Todos os campos são opcionais.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <VitalSigns
+                  isDiabetic={isDiabetic}
+                  value={vitalSigns}
+                  onChange={setVitalSigns}
+                />
               </CardContent>
             </Card>
 

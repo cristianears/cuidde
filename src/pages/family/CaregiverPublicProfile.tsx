@@ -597,49 +597,93 @@ const CaregiverPublicProfile = () => {
                   <MessageSquare className="w-4 h-4" />
                   Avaliações ({caregiver.reviews.length})
                 </h2>
-                <div className="space-y-4">
-                  {caregiver.reviews.map((review) => (
-                    <div key={review.id} className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8">
-                          {review.family_photo ? (
-                            <AvatarImage src={review.family_photo} />
-                          ) : null}
-                          <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                            {getInitials(review.family_name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium">{review.family_name ?? "Família"}</p>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }, (_, i) => (
-                              <Star
-                                key={i}
-                                className={cn(
-                                  "w-3.5 h-3.5",
-                                  i < Math.round(review.rating)
-                                    ? "fill-amber-400 text-amber-400"
-                                    : "text-muted-foreground/30"
-                                )}
-                              />
-                            ))}
-                            <span className="text-xs text-muted-foreground ml-1">
-                              {new Date(review.created_at).toLocaleDateString("pt-BR", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </span>
+                <div className="space-y-5">
+                  {caregiver.reviews.map((review, idx) => {
+                    const criteria = [
+                      { key: "rating_pontualidade", label: "Pontualidade" },
+                      { key: "rating_competencia",  label: "Competência" },
+                      { key: "rating_comunicacao",  label: "Comunicação" },
+                      { key: "rating_trato",        label: "Trato com o idoso" },
+                      { key: "rating_confianca",    label: "Confiança" },
+                    ] as const
+                    const hasCriteria = criteria.some(
+                      (c) => (review[c.key] ?? 0) > 0
+                    )
+                    return (
+                      <div key={review.id}>
+                        {idx > 0 && <Separator className="mb-5" />}
+                        {/* Header: avatar + nome + nota geral + data */}
+                        <div className="flex items-center gap-3 mb-2">
+                          <Avatar className="w-8 h-8">
+                            {review.family_photo ? (
+                              <AvatarImage src={review.family_photo} />
+                            ) : null}
+                            <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                              {getInitials(review.family_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{review.family_name ?? "Família"}</p>
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <Star
+                                  key={i}
+                                  className={cn(
+                                    "w-3.5 h-3.5",
+                                    i < Math.round(review.rating)
+                                      ? "fill-amber-400 text-amber-400"
+                                      : "text-muted-foreground/30"
+                                  )}
+                                />
+                              ))}
+                              <span className="text-xs font-semibold ml-0.5">{Number(review.rating).toFixed(1)}</span>
+                              <span className="text-xs text-muted-foreground ml-1">
+                                {new Date(review.created_at).toLocaleDateString("pt-BR", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </div>
                           </div>
                         </div>
+                        {/* Critérios detalhados */}
+                        {hasCriteria && (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 pl-11 mb-2">
+                            {criteria.map((c) => {
+                              const val = review[c.key] ?? 0
+                              if (!val) return null
+                              return (
+                                <div key={c.key} className="flex items-center justify-between gap-2">
+                                  <span className="text-xs text-muted-foreground truncate">{c.label}</span>
+                                  <span className="flex items-center gap-0.5 shrink-0">
+                                    {Array.from({ length: 5 }, (_, i) => (
+                                      <Star
+                                        key={i}
+                                        className={cn(
+                                          "w-2.5 h-2.5",
+                                          i < Math.round(val)
+                                            ? "fill-amber-400 text-amber-400"
+                                            : "text-muted-foreground/30"
+                                        )}
+                                      />
+                                    ))}
+                                    <span className="text-xs text-muted-foreground ml-0.5">{Number(val).toFixed(1)}</span>
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                        {/* Comentário */}
+                        {review.comment && (
+                          <p className="text-sm text-muted-foreground pl-11 whitespace-pre-line">
+                            {review.comment}
+                          </p>
+                        )}
                       </div>
-                      {review.comment && (
-                        <p className="text-sm text-muted-foreground pl-11 whitespace-pre-line">
-                          {review.comment}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </CardContent>
             </Card>

@@ -2,16 +2,13 @@ import { useState, useEffect } from "react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
   Circle,
-  MapPin,
   Briefcase,
   MessageSquare,
   ArrowLeft,
@@ -28,17 +25,6 @@ const journeyTypes = [
   { id: "longo-periodo", label: "Longo período", desc: "Atendimentos contínuos e prolongados" },
 ];
 
-const areaOptions = [
-  { value: "bairro", label: "Somente meu bairro" },
-  { value: "cidade", label: "Minha cidade" },
-  { value: "proximas", label: "Cidades próximas" },
-];
-
-const radiusOptions = [
-  { value: "5", label: "Até 5 km" },
-  { value: "10", label: "Até 10 km" },
-  { value: "20", label: "Até 20 km" },
-];
 
 const CaregiverAvailability = () => {
   const navigate = useNavigate();
@@ -48,8 +34,6 @@ const CaregiverAvailability = () => {
 
   const [isAvailable, setIsAvailable] = useState(true);
   const [selectedJourneyTypes, setSelectedJourneyTypes] = useState<string[]>(["diarias"]);
-  const [areaType, setAreaType] = useState<"bairro" | "cidade" | "proximas">("cidade");
-  const [radius, setRadius] = useState("10");
   const [observations, setObservations] = useState("");
 
   // Sincronizar com dados reais quando carregarem
@@ -59,8 +43,6 @@ const CaregiverAvailability = () => {
       setSelectedJourneyTypes(
         profileData.journey_types?.length ? profileData.journey_types : ["diarias"]
       )
-      setAreaType((profileData.area_type ?? "cidade") as typeof areaType)
-      setRadius(profileData.area_radius ?? "10")
       setObservations(profileData.availability_notes ?? "")
     }
   }, [profileData])
@@ -75,8 +57,6 @@ const CaregiverAvailability = () => {
     updateAvailability.mutate({
       is_available_for_new: isAvailable,
       journey_types: selectedJourneyTypes,
-      area_type: areaType,
-      area_radius: areaType === "proximas" ? radius : null,
       availability_notes: observations,
     })
   };
@@ -216,63 +196,7 @@ const CaregiverAvailability = () => {
             </CardContent>
           </Card>
 
-          {/* Seção 3 - Área de Atendimento */}
-          <Card>
-            <CardHeader className="pb-3 md:pb-6">
-              <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                Área de atendimento
-              </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
-                Indique seu alcance com base no endereço cadastrado. Você pode combinar detalhes de deslocamento diretamente com a família.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 md:space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm">Alcance</Label>
-                <div className="flex flex-wrap gap-2">
-                  {areaOptions.map((option) => (
-                    <button
-                      type="button"
-                      key={option.value}
-                      onClick={() => setAreaType(option.value as typeof areaType)}
-                      className={cn(
-                        "px-3 md:px-4 py-1.5 md:py-2 rounded-full border-2 text-xs md:text-sm font-medium transition-all",
-                        areaType === option.value
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-muted-foreground/30 text-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {areaType === "proximas" && (
-                <div className="space-y-2">
-                  <Label className="text-xs md:text-sm">Raio aproximado</Label>
-                  <Select value={radius} onValueChange={setRadius}>
-                    <SelectTrigger className="w-full sm:w-48 text-sm">
-                      <SelectValue placeholder="Selecione o raio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {radiusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Dica: raio maior pode aumentar solicitações — ajuste conforme sua rotina.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Seção 4 - Observações */}
+          {/* Seção 3 - Observações */}
           <Card>
             <CardHeader className="pb-3 md:pb-6">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">

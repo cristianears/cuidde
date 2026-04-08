@@ -216,7 +216,14 @@ export function useUpdateAppointmentStatus() {
 
       const updateData: Record<string, unknown> = {
         status: payload.status,
-        updated_at: new Date().toISOString(),
+        // updated_at é gerenciado por trigger do banco — não usar relógio do cliente
+      }
+
+      if (payload.status === 'finalizado') {
+        // Garante que end_date seja preenchido na finalização (data local, não UTC)
+        const d = new Date()
+        const localDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+        updateData.end_date = localDate
       }
 
       if (payload.status === 'cancelado') {
@@ -228,14 +235,13 @@ export function useUpdateAppointmentStatus() {
         .from('appointments')
         .update(updateData)
         .eq('id', payload.id)
+        .or(`family_id.eq.${user.id},caregiver_id.eq.${user.id}`)
 
       if (error) throw error
     },
     onSuccess: (_, payload) => {
       qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll })
       qc.invalidateQueries({ queryKey: queryKeys.appointmentDetail(payload.id) })
-      // Forçar refetch imediato para atualizar contagens em todas as telas
-      qc.refetchQueries({ queryKey: queryKeys.appointmentsAll })
 
       const messages: Record<AppointmentStatus, string> = {
         ativo: 'Atendimento aceito!',

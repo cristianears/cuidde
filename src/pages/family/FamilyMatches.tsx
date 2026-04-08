@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { markMatchesSeen } from "@/hooks/useUnreadCounts";
 import {
   Calendar, Search, Clock, CheckCircle, XCircle, UserCheck, Loader2,
   FileText, MapPin, Briefcase, MessageCircle,
@@ -24,8 +26,16 @@ const TYPE_LABELS: Record<string, string> = {
 
 const FamilyMatches = () => {
   const { user } = useAuth();
+  const qc = useQueryClient();
   const { data: familyProfileData } = useFamilyProfile();
   const { data: appointments, isLoading } = useAppointments("family");
+
+  // Marcar solicitações como vistas ao entrar na página
+  useEffect(() => {
+    if (!user) return;
+    markMatchesSeen(user.id);
+    qc.invalidateQueries({ queryKey: ['unread_counts', user.id] });
+  }, [user, qc]);
 
   const { pending, accepted, rejected } = useMemo(() => {
     const list = appointments ?? [];
@@ -75,7 +85,8 @@ const FamilyMatches = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
+    const d = dateString.length === 10 ? dateString + "T00:00:00" : dateString;
+    return new Date(d).toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
       year: "numeric",

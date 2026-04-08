@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import type { CaregiverProfile, ProfessionalReference } from '@/types/database'
 import { resolveAndSaveCoords } from '@/lib/geocode'
-import { validateAvatarFile } from '@/lib/constants'
+import { uploadAvatar } from '@/lib/upload-avatar'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -58,8 +58,6 @@ export interface UpdateReferencesPayload {
 export interface UpdateAvailabilityPayload {
   is_available_for_new: boolean
   journey_types: string[]
-  area_type: string
-  area_radius: string | null
   availability_notes: string
 }
 
@@ -92,6 +90,8 @@ export function useCaregiverProfile() {
       return data as CaregiverProfileFull
     },
     enabled: !!user,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -151,31 +151,34 @@ export function useUpdateCaregiverBasic() {
 
   return useMutation({
     mutationFn: async (payload: UpdateBasicPayload) => {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ full_name: payload.full_name, phone: payload.phone })
-        .eq('id', user!.id)
+      // Ambas as tabelas são independentes — paralelizar para reduzir latência
+      const [{ data: profileData, error: profileError }, { error: caregiverError }] = await Promise.all([
+        supabase
+          .from('profiles')
+          .update({ full_name: payload.full_name, phone: payload.phone })
+          .eq('id', user!.id)
+          .select('id'),
+        supabase
+          .from('caregiver_profiles')
+          .upsert({
+            id: user!.id,
+            whatsapp: payload.whatsapp,
+            cep: payload.cep,
+            street: payload.street,
+            number: payload.number,
+            complement: payload.complement || null,
+            neighborhood: payload.neighborhood,
+            city: payload.city,
+            state: payload.state,
+            zona: payload.zona ?? null,
+            possui_cnh: payload.possui_cnh,
+            categoria_cnh: payload.possui_cnh ? payload.categoria_cnh : null,
+          }, { onConflict: 'id' }),
+      ])
 
       if (profileError) throw profileError
-
-      const { error } = await supabase
-        .from('caregiver_profiles')
-        .update({
-          whatsapp: payload.whatsapp,
-          cep: payload.cep,
-          street: payload.street,
-          number: payload.number,
-          complement: payload.complement || null,
-          neighborhood: payload.neighborhood,
-          city: payload.city,
-          state: payload.state,
-          zona: payload.zona,
-          possui_cnh: payload.possui_cnh,
-          categoria_cnh: payload.possui_cnh ? payload.categoria_cnh : null,
-        })
-        .eq('id', user!.id)
-
-      if (error) throw error
+      if (!profileData || profileData.length === 0) throw new Error('0 linhas atualizadas em profiles.')
+      if (caregiverError) throw caregiverError
 
       // Geocodificar endereço (best-effort — não bloqueia o save)
       await resolveAndSaveCoords('caregiver_profiles', user!.id, {
@@ -200,20 +203,18 @@ export function useUpdateCaregiverBio() {
 
   return useMutation({
     mutationFn: async (payload: UpdateBioPayload) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('caregiver_profiles')
-        .update({
+        .upsert({
+          id: user!.id,
           bio: payload.bio || null,
           profissao_formacao: payload.profissao_formacao || null,
           formacao_complementar: payload.formacao_complementar || null,
           idiomas: payload.idiomas,
           has_insurance: payload.has_insurance,
-        })
-        .eq('id', user!.id)
-        .select('id')
+        }, { onConflict: 'id' })
 
       if (error) throw error
-      if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS ou se a linha existe.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
@@ -233,19 +234,17 @@ export function useUpdateCaregiverSpecialties() {
 
   return useMutation({
     mutationFn: async (payload: UpdateSpecialtiesPayload) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('caregiver_profiles')
-        .update({
+        .upsert({
+          id: user!.id,
           specialties: payload.specialties,
           modalities: payload.modalities,
           experience_years: payload.experience_years,
           emergency_available: payload.emergency_available,
-        })
-        .eq('id', user!.id)
-        .select('id')
+        }, { onConflict: 'id' })
 
       if (error) throw error
-      if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS ou se a linha existe.')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
@@ -265,42 +264,24 @@ export function useUpdateCaregiverReferences() {
 
   return useMutation({
     mutationFn: async (payload: UpdateReferencesPayload) => {
-      // Deleta todas as referências existentes e reinserindo as novas
-      const { error: deleteError } = await supabase
-        .from('professional_references')
-        .delete()
-        .eq('caregiver_id', user!.id)
+      // RPC atômica: delete + insert + update de prefs em uma única transação
+      // (evita perda de referências se o insert falhar após o delete)
+      const { error } = await supabase.rpc('replace_professional_references', {
+        p_caregiver_id: user!.id,
+        p_refs: payload.references.map((ref) => ({
+          name: ref.name,
+          phone: ref.phone,
+          workplace: ref.workplace,
+          position: ref.position,
+          work_duration: ref.work_duration,
+          notes: ref.notes,
+        })),
+        p_show_refs_to_subscribers: payload.show_refs_to_subscribers,
+        p_mask_reference_phones: payload.mask_reference_phones,
+        p_show_reference_full_names: payload.show_reference_full_names,
+      })
 
-      if (deleteError) throw deleteError
-
-      if (payload.references.length > 0) {
-        const { error: insertError } = await supabase
-          .from('professional_references')
-          .insert(
-            payload.references.map((ref) => ({
-              caregiver_id: user!.id,
-              name: ref.name,
-              phone: ref.phone,
-              workplace: ref.workplace,
-              position: ref.position,
-              work_duration: ref.work_duration,
-              notes: ref.notes,
-            }))
-          )
-
-        if (insertError) throw insertError
-      }
-
-      const { error: prefError } = await supabase
-        .from('caregiver_profiles')
-        .update({
-          show_refs_to_subscribers: payload.show_refs_to_subscribers,
-          mask_reference_phones: payload.mask_reference_phones,
-          show_reference_full_names: payload.show_reference_full_names,
-        })
-        .eq('id', user!.id)
-
-      if (prefError) throw prefError
+      if (error) throw error
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: REFS_KEY(user!.id) })
@@ -319,27 +300,7 @@ export function useUploadCaregiverPhoto() {
 
   return useMutation({
     mutationFn: async (file: File) => {
-      const ext = validateAvatarFile(file)
-      const path = `${user!.id}/avatar.${ext}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { upsert: true })
-
-      if (uploadError) throw uploadError
-
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(path)
-
-      const { error: updateError } = await supabase
-        .from('caregiver_profiles')
-        .update({ photo_url: urlData.publicUrl })
-        .eq('id', user!.id)
-
-      if (updateError) throw updateError
-
-      return urlData.publicUrl
+      return uploadAvatar(file, user!.id, 'caregiver_profiles')
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
@@ -359,14 +320,12 @@ export function useUpdateAvailability() {
     mutationFn: async (payload: UpdateAvailabilityPayload) => {
       const { error } = await supabase
         .from('caregiver_profiles')
-        .update({
+        .upsert({
+          id: user!.id,
           is_available_for_new: payload.is_available_for_new,
           journey_types: payload.journey_types,
-          area_type: payload.area_type,
-          area_radius: payload.area_radius,
           availability_notes: payload.availability_notes || null,
-        })
-        .eq('id', user!.id)
+        }, { onConflict: 'id' })
 
       if (error) throw error
     },
@@ -388,12 +347,12 @@ export function useUpdatePricing() {
     mutationFn: async (payload: UpdatePricingPayload) => {
       const { error } = await supabase
         .from('caregiver_profiles')
-        .update({
+        .upsert({
+          id: user!.id,
           price_per_hour: payload.price_per_hour,
           price_per_day: payload.price_per_day,
           pricing_note: payload.pricing_note || null,
-        })
-        .eq('id', user!.id)
+        }, { onConflict: 'id' })
 
       if (error) throw error
     },
@@ -413,12 +372,14 @@ export function useToggleVisibility() {
 
   return useMutation({
     mutationFn: async (isVisible: boolean) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('caregiver_profiles')
         .update({ is_visible: isVisible })
         .eq('id', user!.id)
+        .select('id')
 
       if (error) throw error
+      if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS ou se a linha existe.')
     },
     onSuccess: (_, isVisible) => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })

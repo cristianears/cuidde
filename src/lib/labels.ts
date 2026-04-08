@@ -21,7 +21,7 @@ import type {
 export const careTypeLabels: Record<CareType, { label: string; icon: typeof FileText }> = {
   hygiene: { label: 'Higiene pessoal', icon: Droplets },
   medication: { label: 'Medicamentos', icon: Pill },
-  feeding: { label: 'Alimentação', icon: UtensilsCrossed },
+  feeding: { label: 'Alimentação e Hidratação', icon: UtensilsCrossed },
   mobility: { label: 'Mobilização', icon: Activity },
   appointments: { label: 'Consultas', icon: Stethoscope },
   monitoring: { label: 'Monitoramento', icon: Eye },
@@ -44,12 +44,24 @@ export const feedingLabels: Record<FeedingStatus, { text: string; color: string 
   refused: { text: 'Recusou', color: 'text-red-600 dark:text-red-400' },
 }
 
+// ─── Hidratação ──────────────────────────────────────────────────────────────
+
+export const hydrationLabels: Record<string, string> = {
+  under200: '< 200ml',
+  '200to500': '200–500ml',
+  '500to1000': '500ml–1L',
+  over1000: '> 1L',
+}
+
 // ─── Humor ────────────────────────────────────────────────────────────────────
 
 export const moodLabels: Record<MoodStatus, { text: string; emoji: string }> = {
   agitated: { text: 'Agitado', emoji: '😟' },
   calm: { text: 'Calmo', emoji: '😊' },
   sleepy: { text: 'Sonolento', emoji: '😴' },
+  anxious: { text: 'Ansioso', emoji: '😰' },
+  communicative: { text: 'Comunicativo', emoji: '🗣️' },
+  cheerful: { text: 'Bem-disposto', emoji: '😄' },
 }
 
 // ─── Status de agendamento ────────────────────────────────────────────────────

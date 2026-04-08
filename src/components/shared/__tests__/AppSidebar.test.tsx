@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppSidebar from '../AppSidebar'
 
 const mockNavigate = vi.fn()
@@ -14,14 +15,37 @@ vi.mock('react-router-dom', async () => {
 })
 
 vi.mock('@/lib/auth', () => ({
-  signOut: vi.fn().mockResolvedValue(undefined),
+  signOut: vi.fn().mockResolvedValue({ error: null }),
 }))
 
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({ user: null }),
+}))
+
+vi.mock('@/lib/supabase', () => ({
+  supabase: {
+    channel: () => ({
+      on: function () { return this },
+      subscribe: () => ({ unsubscribe: vi.fn() }),
+      unsubscribe: vi.fn(),
+    }),
+  },
+}))
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  })
+}
+
 function renderSidebar(props?: Partial<Parameters<typeof AppSidebar>[0]>, initialRoute = '/caregiver') {
+  const qc = createTestQueryClient()
   return render(
-    <MemoryRouter initialEntries={[initialRoute]}>
-      <AppSidebar role="caregiver" userName="Maria Silva" {...props} />
-    </MemoryRouter>
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <AppSidebar role="caregiver" userName="Maria Silva" {...props} />
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 

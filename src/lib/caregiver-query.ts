@@ -30,6 +30,7 @@ export const CAREGIVER_SELECT = `
   has_references,
   zona,
   cep,
+  is_available_for_new,
   profiles!inner ( full_name )
 ` as const
 
@@ -60,6 +61,7 @@ export type RawCaregiverRow = {
   has_references: boolean
   zona: string | null
   cep: string | null
+  is_available_for_new: boolean
   profiles: { full_name: string | null } | null
 }
 
@@ -94,5 +96,6 @@ export function mapCaregiverRow(row: RawCaregiverRow): CaregiverPublic {
     has_references: row.has_references,
     zona: row.zona as CaregiverPublic['zona'],
     cep: row.cep,
+    is_available_for_new: row.is_available_for_new,
   }
 }

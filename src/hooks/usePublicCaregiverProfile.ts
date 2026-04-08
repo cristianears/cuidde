@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
+import { maskPhoneBrazilian, abbreviateName } from '@/lib/privacy-masks'
 import type { CaregiverPublic, CaregiverProfile, ProfessionalReference, CaregiverDocument, Review, ProfessionalRegType } from '@/types/database'
 
 // ─── Tipo estendido para página de detalhe ──────────────────────────────────
@@ -109,7 +110,7 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         throw profileError
       }
 
-      const row = profileData as unknown as RawDetailRow
+      const row = profileData as RawDetailRow
       const base = mapCaregiverRow(row)
 
       // Verificar se a família tem assinatura ativa para acessar dados restritos
@@ -126,7 +127,7 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
       // 2) Referências profissionais — apenas para assinantes
       //    aplicando mascaramento conforme flags de privacidade do cuidador
       let references: ProfessionalReference[] = []
-      if (row.has_references && isSubscriber) {
+      if (row.has_references && isSubscriber && row.show_refs_to_subscribers) {
         const { data: refsData } = await supabase
           .from('professional_references')
           .select('*')
@@ -136,12 +137,8 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         if (refsData) {
           references = (refsData as ProfessionalReference[]).map((ref) => ({
             ...ref,
-            phone: row.mask_reference_phones
-              ? ref.phone.replace(/(\d{2})\d{4,5}(\d{4})/, '$1*****$2')
-              : ref.phone,
-            name: row.show_reference_full_names
-              ? ref.name
-              : ref.name.split(' ')[0] + (ref.name.includes(' ') ? ' ' + ref.name.split(' ').slice(1).map((n: string) => n[0] + '.').join(' ') : ''),
+            phone: row.mask_reference_phones ? maskPhoneBrazilian(ref.phone) : ref.phone,
+            name: row.show_reference_full_names ? ref.name : abbreviateName(ref.name),
           }))
         }
       }

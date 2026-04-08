@@ -1,4 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { markSolicitationsSeen } from "@/hooks/useUnreadCounts";
 import {
   Calendar, Clock, User, FileText, MapPin, Loader2, CheckCircle, XCircle,
   ClipboardList, MessageSquare, Briefcase, MessageCircle,
@@ -38,9 +40,17 @@ const TYPE_LABELS: Record<string, string> = {
 const CaregiverSolicitations = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const qc = useQueryClient();
   const { data: profileData } = useCaregiverProfile();
   const { data: appointments, isLoading } = useAppointments("caregiver");
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateAppointmentStatus();
+
+  // Marcar solicitações como vistas ao entrar na página
+  useEffect(() => {
+    if (!user) return;
+    markSolicitationsSeen(user.id);
+    qc.invalidateQueries({ queryKey: ['unread_counts', user.id] });
+  }, [user, qc]);
 
   const { pending, accepted, rejected } = useMemo(() => {
     const list = appointments ?? [];
@@ -62,7 +72,8 @@ const CaregiverSolicitations = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
+    const d = dateString.length === 10 ? dateString + "T00:00:00" : dateString;
+    return new Date(d).toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
       year: "numeric",

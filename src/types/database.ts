@@ -54,7 +54,9 @@ export type CareType =
 
 export type FeedingStatus = 'full' | 'partial' | 'refused'
 
-export type MoodStatus = 'agitated' | 'calm' | 'sleepy'
+export type HydrationLevel = 'under200' | '200to500' | '500to1000' | 'over1000'
+
+export type MoodStatus = 'agitated' | 'calm' | 'sleepy' | 'anxious' | 'communicative' | 'cheerful'
 
 export interface MedicationItem {
   name: string
@@ -66,6 +68,15 @@ export interface MedicationItem {
 export interface ElderlyMedication {
   name: string
   time: string  // formato 'HH:MM'
+}
+
+export interface VitalSignsData {
+  bloodPressure?: { systolic: number; diastolic: number }
+  temperature?: number
+  glucose?: number
+  heartRate?: number
+  oxygenSaturation?: number
+  recordedAt?: string  // ISO timestamp
 }
 
 export type InvoiceStatus = 'paid' | 'pending' | 'open' | 'overdue'
@@ -290,8 +301,11 @@ export interface CareRoutine {
   medication_items: MedicationItem[]
   // Diário de bem-estar
   feeding_status: FeedingStatus | null
+  hydration: HydrationLevel | null
   hygiene_done: boolean | null
   mood: MoodStatus | null
+  // Sinais vitais
+  vital_signs: VitalSignsData | null
   // Itens em falta
   items_running_low: string[]
   recorded_at: string
@@ -317,8 +331,17 @@ export interface Review {
   caregiver_id: string
   family_name: string | null
   family_photo: string | null
-  rating: number    // 1.0 a 5.0, permite decimal (ex: 4.5)
+  rating: number    // 1.0 a 5.0 — média dos 5 critérios (calculada antes do INSERT)
+  // Critérios granulares (Sprint 5.1) — permite meia estrela (ex: 4.5)
+  rating_pontualidade: number | null
+  rating_competencia: number | null
+  rating_comunicacao: number | null
+  rating_trato: number | null
+  rating_confianca: number | null
   comment: string | null
+  // Resposta do cuidador (UI futura — coluna criada, sem UI por ora)
+  caregiver_reply: string | null
+  replied_at: string | null
   created_at: string
 }
 
@@ -407,6 +430,8 @@ export interface CaregiverPublic {
   has_antecedentes: boolean
   has_certificado: boolean
   has_references: boolean
+  // Disponibilidade
+  is_available_for_new: boolean
 }
 
 // ─── Tipo Database (usado para tipar o cliente Supabase) ─────────────────────
@@ -467,7 +492,7 @@ export interface Database {
       }
       reviews: {
         Row: Review
-        Insert: Omit<Review, 'id' | 'created_at'>
+        Insert: Omit<Review, 'id' | 'created_at' | 'caregiver_reply' | 'replied_at'>
         Update: Partial<Omit<Review, 'id' | 'created_at'>>
       }
       favorites: {

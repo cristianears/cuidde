@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, User, Clock, FileText, Loader2, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import type { AppointmentStatus, AppointmentType } from "@/types/database";
 import { appointmentStatusConfig } from "@/lib/labels";
 
@@ -18,6 +20,7 @@ const CaregiverAppointments = () => {
   const { user } = useAuth();
   const { data: profileData } = useCaregiverProfile();
   const { data: appointments, isLoading } = useAppointments("caregiver");
+  const { data: unread } = useUnreadCounts("caregiver");
   const [activeTab, setActiveTab] = useState<"ativos" | "finalizados">("ativos");
 
   const appointmentsByTab = useMemo(() => {
@@ -41,7 +44,7 @@ const CaregiverAppointments = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
+    return new Date(dateString + "T00:00:00").toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -50,8 +53,9 @@ const CaregiverAppointments = () => {
 
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const statusBadge = getStatusBadge(appointment.status);
+    const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className={cn("hover:shadow-md transition-shadow", unreadCount > 0 && "border-l-4 border-l-primary bg-primary/[0.02]")}>
         <CardContent className="p-4 md:p-5">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 md:gap-4">
             <div className="flex-1 space-y-2.5 md:space-y-3">
@@ -110,11 +114,16 @@ const CaregiverAppointments = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs md:text-sm gap-1.5"
+                  className="text-xs md:text-sm gap-1.5 relative"
                   onClick={() => navigate(`/chat/${appointment.id}`)}
                 >
                   <MessageCircle className="w-4 h-4" />
                   Chat
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </Button>
               )}
               <Button

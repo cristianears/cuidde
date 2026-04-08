@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import { queryClient } from "@/lib/query-client";
+import { toast } from "sonner";
 import {
   Heart,
   User,
@@ -25,6 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useUnreadCounts, useUnreadRealtime } from "@/hooks/useUnreadCounts";
 
 import type { UserRole } from '@/types/database';
 
@@ -83,10 +86,41 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
   const navigate = useNavigate();
   const items = sidebarItems[role];
 
+  // Notificações — apenas caregiver/family (admin não precisa)
+  const enableNotifications = role === 'caregiver' || role === 'family';
+  const { data: unread } = useUnreadCounts(enableNotifications ? role : undefined);
+  useUnreadRealtime();
+
+  // Mapa href → contagem de badge
+  const badgeCounts: Record<string, number> = {};
+  if (unread) {
+    if (role === 'caregiver') {
+      if (unread.newSolicitations > 0)
+        badgeCounts['/caregiver/solicitations'] = unread.newSolicitations;
+      if (unread.totalUnreadMessages > 0)
+        badgeCounts['/caregiver/appointments'] = unread.totalUnreadMessages;
+    }
+    if (role === 'family') {
+      if (unread.updatedSolicitations > 0)
+        badgeCounts['/family/matches'] = unread.updatedSolicitations;
+      if (unread.totalUnreadMessages > 0)
+        badgeCounts['/family/appointments'] = unread.totalUnreadMessages;
+    }
+  }
+
   async function handleLogout() {
-    await signOut()
+    const { error } = await signOut()
+
+    if (error) {
+      // Global sign-out failed (network/server). Fall back to local-only sign-out so
+      // the session token is cleared from localStorage even if the server could not be reached.
+      await supabase.auth.signOut({ scope: 'local' })
+      toast.warning('Erro ao encerrar sessão no servidor. Sessão local removida.')
+    }
+
     queryClient.clear()
     localStorage.removeItem('cuidde_pending_signup')
+    localStorage.removeItem('cuidde_pending_address')
     sessionStorage.clear()
     navigate('/login', { replace: true })
   }
@@ -138,19 +172,34 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
         {items.map((item) => {
           const isActive = location.pathname === item.href;
+          const badgeCount = badgeCounts[item.href] ?? 0;
           return (
             <Link
               key={item.href}
               to={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors relative",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <item.icon className={cn("w-5 h-5 flex-shrink-0", isActive && "text-primary")} />
-              {!collapsed && <span className="text-sm">{item.label}</span>}
+              <div className="relative flex-shrink-0">
+                <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
+                {badgeCount > 0 && collapsed && (
+                  <span className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-destructive ring-2 ring-card" />
+                )}
+              </div>
+              {!collapsed && (
+                <>
+                  <span className="text-sm flex-1">{item.label}</span>
+                  {badgeCount > 0 && (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
+                      {badgeCount > 99 ? '99+' : badgeCount}
+                    </span>
+                  )}
+                </>
+              )}
             </Link>
           );
         })}

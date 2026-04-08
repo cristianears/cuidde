@@ -3,28 +3,22 @@
 // Usado quando o appointment está em status "pendente" (antes do aceite).
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Patterns sem /g — usados em hasContactInfo (.test() é stateful com /g)
-const PHONE_PATTERN =
-  /(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,3}\)?[\s.-]?)?\d{4,5}[\s.-]?\d{4}/
-const EMAIL_PATTERN =
-  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/
-const URL_PATTERN =
-  /https?:\/\/[^\s]+|www\.[^\s]+/i
+// Padrões base (sem flags) — usados para derivar versões com e sem /g
+const PHONE_SRC = String.raw`(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,3}\)?[\s.-]?)?\d{4,5}[\s.-]?\d{4}`
+const EMAIL_SRC = String.raw`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`
+const URL_SRC = String.raw`https?:\/\/[^\s]+|www\.[^\s]+`
 
-// Patterns com /g — usados em filterContactInfo (.replace() precisa de /g)
-const PHONE_REGEX =
-  /(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,3}\)?[\s.-]?)?\d{4,5}[\s.-]?\d{4}/g
-const EMAIL_REGEX =
-  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g
-const URL_REGEX =
-  /https?:\/\/[^\s]+|www\.[^\s]+/gi
+// Sem /g — para .test() (evita bug de lastIndex stateful)
+const PHONE_PATTERN = new RegExp(PHONE_SRC)
+const EMAIL_PATTERN = new RegExp(EMAIL_SRC)
+const URL_PATTERN = new RegExp(URL_SRC, 'i')
 
 const CONTACT_PLACEHOLDER = '[contato removido]'
 
 export const CONTACT_WARNING_MESSAGE =
   'Para sua segurança, informações de contato são compartilhadas após a confirmação do atendimento.'
 
-const MAX_MESSAGE_LENGTH = 2000
+export const MAX_MESSAGE_LENGTH = 2000
 
 /**
  * Remove informações de contato (telefone, email, links) de uma mensagem.
@@ -32,9 +26,9 @@ const MAX_MESSAGE_LENGTH = 2000
  */
 export function filterContactInfo(text: string): string {
   return text
-    .replace(URL_REGEX, CONTACT_PLACEHOLDER)
-    .replace(EMAIL_REGEX, CONTACT_PLACEHOLDER)
-    .replace(PHONE_REGEX, CONTACT_PLACEHOLDER)
+    .replace(new RegExp(URL_SRC, 'gi'), CONTACT_PLACEHOLDER)
+    .replace(new RegExp(EMAIL_SRC, 'g'), CONTACT_PLACEHOLDER)
+    .replace(new RegExp(PHONE_SRC, 'g'), CONTACT_PLACEHOLDER)
 }
 
 /**
@@ -52,5 +46,3 @@ export function truncateMessage(text: string): string {
   if (text.length <= MAX_MESSAGE_LENGTH) return text
   return text.slice(0, MAX_MESSAGE_LENGTH)
 }
-
-export { MAX_MESSAGE_LENGTH }

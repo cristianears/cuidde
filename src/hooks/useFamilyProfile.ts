@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { resolveAndSaveCoords } from '@/lib/geocode'
-import { validateAvatarFile } from '@/lib/constants'
+import { uploadAvatar } from '@/lib/upload-avatar'
 import type { FamilyProfile, ElderlyMedication } from '@/types/database'
 
 export type FamilyProfileFull = FamilyProfile & {
@@ -48,29 +48,7 @@ export function useUploadFamilyPhoto() {
 
   return useMutation({
     mutationFn: async (file: File) => {
-      const ext = validateAvatarFile(file)
-      const path = `${user!.id}/avatar.${ext}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { upsert: true })
-
-      if (uploadError) throw uploadError
-
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(path)
-
-      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`
-
-      const { error: updateError } = await supabase
-        .from('family_profiles')
-        .update({ photo_url: publicUrl })
-        .eq('id', user!.id)
-
-      if (updateError) throw updateError
-
-      return publicUrl
+      return uploadAvatar(file, user!.id, 'family_profiles', { cacheBust: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
@@ -126,7 +104,7 @@ export function useUpdateFamilyAddress() {
 
   return useMutation({
     mutationFn: async (payload: UpdateFamilyAddressPayload) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('family_profiles')
         .update({
           cep: payload.cep,
@@ -137,8 +115,10 @@ export function useUpdateFamilyAddress() {
           state: payload.state,
         })
         .eq('id', user!.id)
+        .select('id')
 
       if (error) throw error
+      if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS ou se a linha existe.')
 
       await resolveAndSaveCoords('family_profiles', user!.id, {
         cep: payload.cep, city: payload.city, state: payload.state,
@@ -198,48 +178,54 @@ export function useUpdateFamilyProfileFull() {
 
   return useMutation({
     mutationFn: async (payload: UpdateFamilyProfilePayload) => {
-      // 1. Atualizar tabela profiles (nome e telefone)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ full_name: payload.full_name, phone: payload.phone })
-        .eq('id', user!.id)
+      // Ambas as tabelas são independentes — paralelizar para reduzir latência
+      const [
+        { data: profileData, error: profileError },
+        { data: familyData, error: familyError },
+      ] = await Promise.all([
+        supabase
+          .from('profiles')
+          .update({ full_name: payload.full_name, phone: payload.phone })
+          .eq('id', user!.id)
+          .select('id'),
+        supabase
+          .from('family_profiles')
+          .update({
+            relationship: payload.relationship,
+            cep: payload.cep,
+            street: payload.street,
+            number: payload.number,
+            neighborhood: payload.neighborhood,
+            city: payload.city,
+            state: payload.state,
+            elderly_name: payload.elderly_name,
+            elderly_age: payload.elderly_age,
+            elderly_conditions: payload.elderly_conditions,
+            blood_type: payload.blood_type,
+            pre_existing_conditions: payload.pre_existing_conditions || null,
+            allergies: payload.allergies || null,
+            continuous_medications: payload.continuous_medications || null,
+            responsible_doctor: payload.responsible_doctor || null,
+            health_insurance: payload.health_insurance || null,
+            care_needs: payload.care_needs || null,
+            elderly_medications: payload.elderly_medications ?? [],
+            service_formats: payload.service_formats,
+            hourly_range_min: payload.hourly_range_min,
+            hourly_range_max: payload.hourly_range_max,
+            daily_range_min: payload.daily_range_min,
+            daily_range_max: payload.daily_range_max,
+            distance_preference: payload.distance_preference || null,
+          })
+          .eq('id', user!.id)
+          .select('id'),
+      ])
 
       if (profileError) throw profileError
+      if (!profileData || profileData.length === 0) throw new Error('0 linhas atualizadas em profiles.')
+      if (familyError) throw familyError
+      if (!familyData || familyData.length === 0) throw new Error('0 linhas atualizadas em family_profiles.')
 
-      // 2. Atualizar tabela family_profiles
-      const { error } = await supabase
-        .from('family_profiles')
-        .update({
-          relationship: payload.relationship,
-          cep: payload.cep,
-          street: payload.street,
-          number: payload.number,
-          neighborhood: payload.neighborhood,
-          city: payload.city,
-          state: payload.state,
-          elderly_name: payload.elderly_name,
-          elderly_age: payload.elderly_age,
-          elderly_conditions: payload.elderly_conditions,
-          blood_type: payload.blood_type,
-          pre_existing_conditions: payload.pre_existing_conditions || null,
-          allergies: payload.allergies || null,
-          continuous_medications: payload.continuous_medications || null,
-          responsible_doctor: payload.responsible_doctor || null,
-          health_insurance: payload.health_insurance || null,
-          care_needs: payload.care_needs || null,
-          elderly_medications: payload.elderly_medications ?? [],
-          service_formats: payload.service_formats,
-          hourly_range_min: payload.hourly_range_min,
-          hourly_range_max: payload.hourly_range_max,
-          daily_range_min: payload.daily_range_min,
-          daily_range_max: payload.daily_range_max,
-          distance_preference: payload.distance_preference || null,
-        })
-        .eq('id', user!.id)
-
-      if (error) throw error
-
-      // 3. Geocodificar endereço (best-effort)
+      // Geocodificar endereço (best-effort)
       await resolveAndSaveCoords('family_profiles', user!.id, {
         cep: payload.cep, city: payload.city, state: payload.state,
       })

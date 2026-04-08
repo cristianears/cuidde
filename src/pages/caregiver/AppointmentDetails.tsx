@@ -5,8 +5,10 @@ import AppSidebar from "@/components/shared/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useAppointmentDetail, useUpdateAppointmentStatus } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import { useCareRoutines, useDeleteCareRoutine } from "@/hooks/useCareRoutine";
 import { supabase } from "@/lib/supabase";
+import { useAppointmentHasReview } from "@/hooks/useReviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +24,6 @@ import {
   Sun,
   Moon,
   Sunset,
-  Circle,
   MessageSquare,
   MapPin,
   Pill,
@@ -42,12 +43,17 @@ import {
   Activity,
   ClipboardList,
   MessageCircle,
+  Thermometer,
+  Droplets,
+  Wind,
+  Star,
 } from "lucide-react";
-import type { AppointmentStatus, CareRoutine, CareType, ElderlyMedication, FamilyProfile } from "@/types/database";
+import type { AppointmentStatus, CareRoutine, CareType, ElderlyMedication, FamilyProfile, VitalSignsData } from "@/types/database";
 import {
   appointmentStatusConfig,
   careTypeLabels,
   feedingLabels,
+  hydrationLabels,
   moodLabels,
   shiftLabels,
   parseObservations,
@@ -84,7 +90,10 @@ const AppointmentDetails = () => {
   const { data: appointment, isLoading } = useAppointmentDetail(id);
   const { data: careRoutines, isLoading: isLoadingRoutines } = useCareRoutines(id);
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateAppointmentStatus();
+  const { data: unread } = useUnreadCounts("caregiver");
+  const chatUnread = id ? (unread?.unreadByAppointment[id] ?? 0) : 0;
   const { mutate: deleteRoutine, isPending: isDeleting } = useDeleteCareRoutine();
+  const { data: hasReview } = useAppointmentHasReview(appointment?.id);
 
   // Elderly profile from family
   const [familyProfile, setFamilyProfile] = useState<Partial<FamilyProfile> | null>(null);
@@ -247,12 +256,18 @@ const AppointmentDetails = () => {
         )}
 
         {/* Well-being indicators */}
-        {(care.feeding_status || care.hygiene_done !== null || care.mood) && (
+        {(care.feeding_status || care.hydration || care.hygiene_done !== null || care.mood) && (
           <div className="pl-14 flex flex-wrap gap-3 text-xs">
             {care.feeding_status && (
               <span className={cn("flex items-center gap-1", feedingLabels[care.feeding_status]?.color)}>
                 <UtensilsCrossed className="w-3.5 h-3.5" />
                 {feedingLabels[care.feeding_status]?.text}
+              </span>
+            )}
+            {care.hydration && (
+              <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                <Droplets className="w-3.5 h-3.5" />
+                Água: {hydrationLabels[care.hydration] ?? care.hydration}
               </span>
             )}
             {care.hygiene_done !== null && (
@@ -271,6 +286,51 @@ const AppointmentDetails = () => {
             )}
           </div>
         )}
+
+        {/* Vital signs */}
+        {care.vital_signs && Object.keys(care.vital_signs).filter(k => k !== 'recordedAt').length > 0 && (() => {
+          const vs = care.vital_signs as VitalSignsData;
+          return (
+            <div className="pl-14 space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Activity className="w-3.5 h-3.5" />
+                Sinais Vitais
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {vs.bloodPressure && (
+                  <Badge variant="secondary" className="text-xs gap-1 font-normal">
+                    <Activity className="w-3 h-3 text-blue-500" />
+                    PA: {vs.bloodPressure.systolic}/{vs.bloodPressure.diastolic} mmHg
+                  </Badge>
+                )}
+                {vs.temperature != null && (
+                  <Badge variant="secondary" className="text-xs gap-1 font-normal">
+                    <Thermometer className="w-3 h-3 text-orange-500" />
+                    {vs.temperature} °C
+                  </Badge>
+                )}
+                {vs.heartRate != null && (
+                  <Badge variant="secondary" className="text-xs gap-1 font-normal">
+                    <Heart className="w-3 h-3 text-red-500" />
+                    {vs.heartRate} bpm
+                  </Badge>
+                )}
+                {vs.oxygenSaturation != null && (
+                  <Badge variant="secondary" className="text-xs gap-1 font-normal">
+                    <Wind className="w-3 h-3 text-sky-500" />
+                    SpO₂: {vs.oxygenSaturation}%
+                  </Badge>
+                )}
+                {vs.glucose != null && (
+                  <Badge variant="secondary" className="text-xs gap-1 font-normal">
+                    <Droplets className="w-3 h-3 text-purple-500" />
+                    Glicemia: {vs.glucose} mg/dL
+                  </Badge>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Items running low */}
         {care.items_running_low && care.items_running_low.length > 0 && (
@@ -322,12 +382,13 @@ const AppointmentDetails = () => {
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar role="caregiver" userName={profileData?.profiles.full_name ?? user?.email ?? ""} userPhoto={profileData?.photo_url ?? undefined} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+          <div className="max-w-3xl space-y-4">
           {/* Back Button */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate("/caregiver/appointments")}
-            className="mb-4 -ml-2"
+            className="mb-0 -ml-2"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar aos atendimentos
@@ -360,7 +421,7 @@ const AppointmentDetails = () => {
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4" />
-                      Início: {new Date(appointment.start_date).toLocaleDateString("pt-BR")}
+                      Início: {new Date(appointment.start_date + "T00:00:00").toLocaleDateString("pt-BR")}
                     </span>
                     {appointment.modality && (
                       <span className="flex items-center gap-1.5">
@@ -369,6 +430,17 @@ const AppointmentDetails = () => {
                       </span>
                     )}
                   </div>
+                  {appointment.description && (
+                    <p className="text-sm text-muted-foreground leading-relaxed border-t pt-3 mt-1">
+                      {appointment.description}
+                    </p>
+                  )}
+                  {appointment.family_notes && (
+                    <div className="bg-muted/50 rounded-lg px-3 py-2 text-sm">
+                      <span className="font-medium text-foreground">Obs. da família: </span>
+                      <span className="text-muted-foreground">{appointment.family_notes}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Action buttons based on status */}
@@ -387,9 +459,14 @@ const AppointmentDetails = () => {
                   )}
                   {isActive && (
                     <>
-                      <Button size="sm" variant="outline" onClick={() => navigate(`/chat/${appointment.id}`)} className="gap-2">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/chat/${appointment.id}`)} className="gap-2 relative">
                         <MessageCircle className="w-4 h-4" />
                         Conversar com família
+                        {chatUnread > 0 && (
+                          <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                            {chatUnread > 9 ? '9+' : chatUnread}
+                          </span>
+                        )}
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleFinalize} disabled={isUpdating}>
                         <History className="w-4 h-4 mr-2" />
@@ -402,9 +479,24 @@ const AppointmentDetails = () => {
             </CardContent>
           </Card>
 
+          {/* Banner: aguardando avaliação da família */}
+          {appointment.status === "finalizado" && !hasReview && (
+            <div className="flex gap-3 items-start p-4 rounded-xl bg-blue-50 border border-blue-200 dark:bg-blue-950/20 dark:border-blue-900">
+              <Star className="w-5 h-5 text-blue-500 fill-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                  Aguardando avaliação da família
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-0.5">
+                  Atendimento finalizado! Incentive a família a avaliar — avaliações aumentam sua visibilidade para novas famílias.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Tabs — enhanced styling */}
           <Tabs defaultValue="rotina" className="space-y-6">
-            <TabsList className="h-auto p-1 bg-muted/70 border border-border rounded-xl grid w-full grid-cols-2 lg:grid-cols-4 gap-1">
+            <TabsList className="h-auto p-1 bg-muted/70 border border-border rounded-xl grid w-full grid-cols-2 gap-1">
               <TabsTrigger
                 value="perfil"
                 className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium transition-all gap-2"
@@ -412,13 +504,6 @@ const AppointmentDetails = () => {
                 <Heart className="w-4 h-4" />
                 <span className="hidden sm:inline">Perfil do Idoso</span>
                 <span className="sm:hidden">Idoso</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="resumo"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium transition-all gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Resumo
               </TabsTrigger>
               <TabsTrigger
                 value="rotina"
@@ -432,13 +517,6 @@ const AppointmentDetails = () => {
                     {careRoutines.length}
                   </span>
                 )}
-              </TabsTrigger>
-              <TabsTrigger
-                value="historico"
-                className="data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm rounded-lg py-2.5 px-3 text-sm font-medium transition-all gap-2"
-              >
-                <History className="w-4 h-4" />
-                Histórico
               </TabsTrigger>
             </TabsList>
 
@@ -593,63 +671,6 @@ const AppointmentDetails = () => {
               )}
             </TabsContent>
 
-            {/* Tab: Resumo */}
-            <TabsContent value="resumo" className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Descrição do atendimento
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {appointment.description || "Sem descrição."}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <MapPin className="w-4 h-4" />
-                      Informações gerais
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Responsável na família</p>
-                      <p className="font-medium text-foreground">{appointment.family_name ?? "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Início do atendimento</p>
-                      <p className="font-medium text-foreground">
-                        {new Date(appointment.start_date).toLocaleDateString("pt-BR")}
-                      </p>
-                    </div>
-                    {appointment.modality && (
-                      <div>
-                        <p className="text-muted-foreground">Modalidade</p>
-                        <p className="font-medium text-foreground">{appointment.modality}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                {appointment.family_notes && (
-                  <Card className="md:col-span-2">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4" />
-                        Observações da família
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{appointment.family_notes}</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
 
             {/* Tab: Registro de cuidados */}
             <TabsContent value="rotina" className="space-y-4">
@@ -691,56 +712,8 @@ const AppointmentDetails = () => {
               )}
             </TabsContent>
 
-            {/* Tab: Histórico */}
-            <TabsContent value="historico" className="space-y-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="relative">
-                    <div className="absolute left-4 top-0 bottom-0 w-px bg-border" />
-                    <div className="space-y-6">
-                      <div className="relative pl-10">
-                        <div className="absolute left-0 w-8 h-8 rounded-full bg-background border-2 border-primary flex items-center justify-center">
-                          <Circle className="w-3 h-3 text-primary fill-primary" />
-                        </div>
-                        <Card>
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-sm">Atendimento criado</span>
-                              <span className="text-xs text-muted-foreground">
-                                {new Date(appointment.created_at).toLocaleDateString("pt-BR")}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              Status: {appointment.status}
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      {careRoutines && careRoutines.length > 0 && (
-                        <div className="relative pl-10">
-                          <div className="absolute left-0 w-8 h-8 rounded-full bg-background border-2 border-emerald-500 flex items-center justify-center">
-                            <ClipboardList className="w-3.5 h-3.5 text-emerald-500" />
-                          </div>
-                          <Card>
-                            <CardContent className="p-4">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-sm">
-                                  {careRoutines.length} registro(s) de cuidado
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                Último: {new Date(careRoutines[0].date + "T00:00:00").toLocaleDateString("pt-BR")}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </Tabs>
+          </div>
         </main>
       </div>
     </SidebarProvider>

@@ -1,22 +1,27 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, User, Search, Briefcase, Loader2 } from "lucide-react";
+import { Calendar, Clock, User, Search, Briefcase, Loader2, MessageCircle, Star } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
+import { useFamilyReviewedAppointments } from "@/hooks/useReviews";
 import { appointmentStatusConfig } from "@/lib/labels";
 
 const FamilyAppointments = () => {
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
   const { data: appointments, isLoading } = useAppointments("family");
+  const { data: unread } = useUnreadCounts("family");
+  const { data: reviewedIds } = useFamilyReviewedAppointments();
 
   const { active, finished } = useMemo(() => {
     const list = appointments ?? [];
@@ -30,9 +35,15 @@ const FamilyAppointments = () => {
 
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const status = appointmentStatusConfig[appointment.status] ?? appointmentStatusConfig.pendente;
+    const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
+    const needsReview = appointment.status === "finalizado" && reviewedIds != null && !reviewedIds.has(appointment.id);
     return (
       <Link to={`/family/appointments/${appointment.id}`}>
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <Card className={cn(
+          "hover:shadow-md transition-shadow cursor-pointer",
+          unreadCount > 0 && "border-l-4 border-l-primary bg-primary/[0.02]",
+          needsReview && "border-l-4 border-l-amber-400",
+        )}>
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
@@ -46,20 +57,28 @@ const FamilyAppointments = () => {
                   <p className="text-sm text-muted-foreground">{appointment.type}</p>
                 </div>
               </div>
-              <Badge variant="outline" className={status.className}>
-                {status.label}
-              </Badge>
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <span className="flex h-5 items-center gap-1 rounded-full bg-destructive px-2 text-[10px] font-semibold text-destructive-foreground">
+                    <MessageCircle className="w-3 h-3" />
+                    {unreadCount}
+                  </span>
+                )}
+                <Badge variant="outline" className={status.className}>
+                  {status.label}
+                </Badge>
+              </div>
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                <span>Início: {new Date(appointment.start_date).toLocaleDateString("pt-BR")}</span>
+                <span>Início: {new Date(appointment.start_date + "T00:00:00").toLocaleDateString("pt-BR")}</span>
               </div>
               {appointment.end_date && (
                 <div className="flex items-center gap-1.5">
                   <Clock className="w-4 h-4" />
-                  <span>Fim: {new Date(appointment.end_date).toLocaleDateString("pt-BR")}</span>
+                  <span>Fim: {new Date(appointment.end_date + "T00:00:00").toLocaleDateString("pt-BR")}</span>
                 </div>
               )}
             </div>
@@ -68,6 +87,16 @@ const FamilyAppointments = () => {
               <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
                 {appointment.description}
               </p>
+            )}
+
+            {needsReview && (
+              <div className="flex gap-2 items-center mt-3 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-900 text-xs">
+                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
+                <span className="text-amber-800 dark:text-amber-200">
+                  <span className="font-semibold">Avalie este atendimento!</span>{" "}
+                  Leva menos de 2 minutos e faz toda a diferença para outras famílias.
+                </span>
+              </div>
             )}
           </CardContent>
         </Card>
