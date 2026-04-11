@@ -4,56 +4,12 @@ import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
+import { computeRankScore } from '@/lib/caregiver-rank'
 import type { CaregiverPublic } from '@/types/database'
 
 // Escapa caracteres especiais do operador LIKE para evitar wildcard injection
 function escapeLike(s: string): string {
   return s.replace(/%/g, '\\%').replace(/_/g, '\\_')
-}
-
-// ─── Score de ranking composto (0–100) ───────────────────────────────────────
-// Calculado client-side após o fetch para evitar SQL complexo.
-// Pesos ajustáveis sem migração.
-
-const GLOBAL_MEAN_RATING = 4.0  // média global assumida para Bayesian
-const BAYESIAN_K = 5            // peso da média global (equivale a 5 avaliações "fantasma")
-
-// Score composto máximo teórico: qualidade (~114 pts) + distância (10 pts) = ~124 pts
-// A distância vale no máximo ~8% do score total — qualidade domina.
-function computeRankScore(c: CaregiverPublicWithDistance, radiusKm: number): number {
-  // 1. Qualidade da avaliação — Bayesian average escalado para 0–20
-  const bayesian =
-    (BAYESIAN_K * GLOBAL_MEAN_RATING + c.review_count * c.average_rating) /
-    (BAYESIAN_K + c.review_count)
-  const ratingScore = (bayesian / 5) * 20
-
-  // 2. Completude do perfil — 0–46 pts
-  let completeness = 0
-  if (c.photo_url)                         completeness += 15
-  if (c.bio && c.bio.length >= 100)        completeness += 10
-  if (c.specialties.length >= 2)           completeness += 8
-  if (c.profissao_formacao)                completeness += 5
-  if (c.modalities.length >= 1)            completeness += 4
-  if (c.price_per_hour != null)            completeness += 4
-
-  // 3. Confiança / documentação — 0–45 pts
-  let trust = 0
-  if (c.has_references)   trust += 20
-  if (c.has_antecedentes) trust += 10
-  if (c.has_certificado)  trust += 7
-  if (c.has_insurance)    trust += 5
-  if (c.has_rg_cnh)       trust += 3
-
-  // 4. Disponibilidade — 0–3 pts
-  const availability = c.emergency_available ? 3 : 0
-
-  // 5. Proximidade — 0–10 pts (contínuo, não bucket)
-  // Cuidador a 0km = +10 pts; a 20km (raio) = +0 pts; sem coordenada = +0 pts
-  const distanceBonus = c.distance_km != null
-    ? Math.max(0, (1 - c.distance_km / radiusKm) * 10)
-    : 0
-
-  return ratingScore + completeness + trust + availability + distanceBonus
 }
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────

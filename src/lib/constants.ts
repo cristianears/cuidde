@@ -32,3 +32,10 @@ export function validateAvatarFile(file: File): string {
 // Busca por proximidade
 export const DEFAULT_RADIUS_KM = 20
 export const MAX_PRICE_PER_HOUR = 200
+
+// Stripe — price IDs (configurar no .env: VITE_STRIPE_PRICE_MONTHLY, etc.)
+export const STRIPE_PRICE_IDS = {
+  monthly: import.meta.env.VITE_STRIPE_PRICE_MONTHLY as string ?? '',
+  quarterly: import.meta.env.VITE_STRIPE_PRICE_QUARTERLY as string ?? '',
+  annual: import.meta.env.VITE_STRIPE_PRICE_ANNUAL as string ?? '',
+} as const

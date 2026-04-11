@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import type { Appointment, AppointmentStatus } from '@/types/database'
+import { trackCaregiverInterest } from '@/hooks/useTrackCaregiverEvent'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -192,6 +193,10 @@ export function useCreateAppointment() {
         .single()
 
       if (error) throw error
+
+      // Tracking de interesse (best-effort)
+      trackCaregiverInterest(payload.caregiver_id)
+
       return data
     },
     onSuccess: () => {

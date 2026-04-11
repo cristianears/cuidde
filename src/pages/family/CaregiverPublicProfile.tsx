@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { trackCaregiverView } from "@/hooks/useTrackCaregiverEvent"
 import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, MapPin, Briefcase, Star, Clock, CalendarClock, Shield, Car,
@@ -92,6 +93,13 @@ const CaregiverPublicProfile = () => {
   const { data: favoriteIdsList = [] } = useFavoriteIds()
   const { mutate: addFavorite } = useAddFavorite()
   const { mutate: removeFavorite } = useRemoveFavorite()
+
+  // Tracking de view do perfil público (best-effort, dedup por dia no banco)
+  useEffect(() => {
+    if (id && user && id !== user.id) {
+      trackCaregiverView(id)
+    }
+  }, [id, user])
 
   const [requestDialogOpen, setRequestDialogOpen] = useState(false)
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string; isPdf: boolean } | null>(null)

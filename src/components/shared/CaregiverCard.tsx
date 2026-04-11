@@ -202,7 +202,7 @@ const CaregiverCard = ({
 
             {/* Linha 4: Bio */}
             {caregiver.bio && (
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed overflow-hidden">
+              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed overflow-hidden break-words">
                 {caregiver.bio}
               </p>
             )}

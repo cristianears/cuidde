@@ -9,7 +9,7 @@ describe('queryKeys', () => {
 
   it('familyProfile retorna key com userId', () => {
     const key = queryKeys.familyProfile('user-456')
-    expect(key).toEqual(['family_profile', 'user-456'])
+    expect(key).toEqual(['familyProfile', 'user-456'])
   })
 
   it('searchCaregivers retorna key com filtros serializados', () => {
@@ -55,7 +55,7 @@ describe('queryKeys', () => {
 
   it('careRoutines retorna key com appointmentId', () => {
     const key = queryKeys.careRoutines('appt-002')
-    expect(key).toEqual(['care_routines', 'appt-002'])
+    expect(key).toEqual(['careRoutines', 'appt-002'])
   })
 
   it('professionalRefs retorna key com userId', () => {
@@ -70,7 +70,7 @@ describe('queryKeys', () => {
 
   it('favoriteIds retorna key com userId', () => {
     const key = queryKeys.favoriteIds('user-ghi')
-    expect(key).toEqual(['favorite_ids', 'user-ghi'])
+    expect(key).toEqual(['favoriteIds', 'user-ghi'])
   })
 
   it('publicCaregiverProfile retorna key com caregiverId', () => {
@@ -80,6 +80,6 @@ describe('queryKeys', () => {
 
   it('familyMatches retorna key com userId e limit', () => {
     const key = queryKeys.familyMatches('user-xyz', 5)
-    expect(key).toEqual(['family_matches', 'user-xyz', 5])
+    expect(key).toEqual(['familyMatches', 'user-xyz', 5])
   })
 })

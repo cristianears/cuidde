@@ -261,6 +261,8 @@ export interface FamilyProfile {
   plan: SubscriptionPlan | null
   subscription_status: SubscriptionStatus
   stripe_subscription_id: string | null
+  cancel_at_period_end: boolean
+  current_period_end: string | null
   created_at: string
   updated_at: string
 }

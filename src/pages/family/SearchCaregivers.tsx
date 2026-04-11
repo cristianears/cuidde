@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { modalitiesList, idiomasList } from "@/data/mockData";
 import { useSearchCaregivers, type SearchFilters, type CaregiverPublicWithDistance } from "@/hooks/useSearchCaregivers";
+import { trackSearchAppearances } from "@/hooks/useTrackCaregiverEvent";
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
@@ -134,6 +135,15 @@ const SearchCaregivers = () => {
   }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly, radiusKm, familyHasLocation, familyProfileData?.lat, familyProfileData?.lng]);
 
   const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
+
+  // Tracking de aparições em busca: dispara uma vez por conjunto de IDs renderizados.
+  // O dedup por (família, cuidador, dia) é feito no banco — chamadas extras são no-op.
+  useEffect(() => {
+    if (!isLoading && caregivers.length > 0) {
+      trackSearchAppearances(caregivers.map((c) => c.id));
+    }
+  }, [isLoading, caregivers]);
+
   const { data: favoriteIdsList = [] } = useFavoriteIds();
   const favoriteIds = new Set(favoriteIdsList);
   const { mutate: addFavorite } = useAddFavorite();

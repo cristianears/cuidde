@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useFamilyMatches } from "@/hooks/useFamilyMatches";
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { useAppointments } from "@/hooks/useAppointments";
 import { useAuth } from "@/contexts/AuthContext";
 
 const FamilyDashboard = () => {
@@ -16,6 +17,8 @@ const FamilyDashboard = () => {
   const { user } = useAuth();
   const { data: familyProfile } = useFamilyProfile();
   const { data: matchedCaregivers = [], isLoading: loadingMatches } = useFamilyMatches(3);
+  const { data: appointments = [] } = useAppointments('family');
+  const activeAppointments = appointments.filter((a) => a.status === 'ativo' || a.status === 'pendente').length;
   const { data: favoriteIdsList = [] } = useFavoriteIds();
   const favoriteIds = new Set(favoriteIdsList);
   const { mutate: addFavorite } = useAddFavorite();
@@ -66,7 +69,7 @@ const FamilyDashboard = () => {
           />
           <MetricCard
             title="Solicitações ativas"
-            value={2}
+            value={activeAppointments}
             icon={<Clock className="w-4 h-4" />}
             compact
           />

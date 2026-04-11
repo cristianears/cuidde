@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { DEFAULT_RADIUS_KM } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
+import { computeRankScore } from '@/lib/caregiver-rank'
 import type { CaregiverPublic } from '@/types/database'
 
 export type CaregiverMatchWithDistance = CaregiverPublic & {
@@ -69,7 +70,6 @@ export function useFamilyMatches(limit = 3) {
           .from('caregiver_profiles')
           .select(CAREGIVER_SELECT)
           .eq('profile_complete', true)
-          .order('average_rating', { ascending: false })
 
         if (attempt.useProximity && proximityMap) {
           q = q.in('id', Array.from(proximityMap.keys()))
@@ -78,13 +78,11 @@ export function useFamilyMatches(limit = 3) {
           q = q.overlaps('specialties', conditions)
         }
 
-        q = q.limit(limit)
-
         const { data, error } = await q
         if (error) throw error
 
         if (data && data.length > 0) {
-          let results: CaregiverMatchWithDistance[] = data.map((row) => {
+          const results: CaregiverMatchWithDistance[] = data.map((row) => {
             const mapped = mapCaregiverRow(row)
             const distance = proximityMap?.get(mapped.id)
             return {
@@ -93,11 +91,9 @@ export function useFamilyMatches(limit = 3) {
             }
           })
 
-          if (attempt.useProximity && proximityMap) {
-            results.sort((a, b) => (a.distance_km ?? Infinity) - (b.distance_km ?? Infinity))
-          }
+          results.sort((a, b) => computeRankScore(b, DEFAULT_RADIUS_KM) - computeRankScore(a, DEFAULT_RADIUS_KM))
 
-          return results
+          return results.slice(0, limit)
         }
       }
 

@@ -1,76 +1,40 @@
-import { ArrowLeft, Download, Calendar, CreditCard, User, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, CreditCard, User, FileText, Loader2 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/shared/AppSidebar";
-import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { mockFamilies } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
-import type { Invoice } from "./FamilyInvoices";
+import { useInvoice } from "@/hooks/useInvoices";
+import type { InvoiceStatus } from "@/types/database";
 
-// Mock invoices data (same as FamilyInvoices)
-const mockInvoices: Invoice[] = [
-  {
-    id: 'INV-2026-003',
-    period: 'Março 2026',
-    plan: 'Essencial',
-    amount: 129.00,
-    dueDate: '2026-03-10',
-    paidDate: null,
-    status: 'pending',
-  },
-  {
-    id: 'INV-2026-002',
-    period: 'Fevereiro 2026',
-    plan: 'Essencial',
-    amount: 129.00,
-    dueDate: '2026-02-10',
-    paidDate: '2026-02-08',
-    status: 'paid',
-  },
-  {
-    id: 'INV-2026-001',
-    period: 'Janeiro 2026',
-    plan: 'Essencial',
-    amount: 129.00,
-    dueDate: '2026-01-10',
-    paidDate: '2026-01-09',
-    status: 'paid',
-  },
-  {
-    id: 'INV-2025-012',
-    period: 'Dezembro 2025',
-    plan: 'Match',
-    amount: 397.00,
-    dueDate: '2025-12-15',
-    paidDate: '2025-12-14',
-    status: 'paid',
-  },
-];
-
-const statusConfig: Record<Invoice['status'], { label: string; className: string }> = {
-  paid: { label: 'Paga', className: 'bg-emerald-100 text-emerald-700' },
-  pending: { label: 'Pendente', className: 'bg-amber-100 text-amber-700' },
-  open: { label: 'Em aberto', className: 'bg-muted text-muted-foreground' },
+const statusConfig: Record<InvoiceStatus, { label: string; className: string }> = {
+  paid:    { label: "Paga",       className: "bg-emerald-100 text-emerald-700" },
+  pending: { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
+  open:    { label: "Em aberto",  className: "bg-muted text-muted-foreground" },
+  overdue: { label: "Vencida",    className: "bg-red-100 text-red-700" },
 };
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(value);
+const planNames: Record<string, string> = {
+  monthly: "Mensal",
+  quarterly: "Trimestral",
+  annual: "Anual",
 };
+
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
+  // date-only (YYYY-MM-DD) — evita shift de timezone
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [y, m, d] = dateString.split("-");
+    return `${d}/${m}/${y}`;
+  }
+  return new Date(dateString).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 };
 
@@ -79,18 +43,29 @@ const FamilyInvoiceDetails = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
-  const currentUser = mockFamilies[0];
+  const { data: invoice, isLoading } = useInvoice(id ?? "");
 
-  const invoice = mockInvoices.find(inv => inv.id === id);
-
-  const handleDownloadReceipt = () => {
-    toast.success("Recibo baixado com sucesso (mock)");
+  const sidebarProps = {
+    role: "family" as const,
+    userName: familyProfileData?.profiles?.full_name ?? user?.email ?? "",
+    userPhoto: familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture,
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-background">
+        <AppSidebar {...sidebarProps} />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+      </div>
+    );
+  }
 
   if (!invoice) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
+        <AppSidebar {...sidebarProps} />
         <main className="flex-1 p-6 lg:p-8">
           <div className="flex flex-col items-center justify-center h-full text-center">
             <FileText className="w-16 h-16 text-muted-foreground mb-4" />
@@ -107,36 +82,35 @@ const FamilyInvoiceDetails = () => {
     );
   }
 
+  const status = statusConfig[invoice.status];
+
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar
-        role="family"
-        userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""}
-      />
+      <AppSidebar {...sidebarProps} />
 
       <main className="flex-1 p-6 lg:p-8">
         <div className="mb-6">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/family/invoices')}
+            onClick={() => navigate("/family/invoices")}
             className="mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Voltar para Faturas
           </Button>
-          
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                Fatura {invoice.id}
+                Fatura {invoice.invoice_ref ?? invoice.id.slice(0, 8).toUpperCase()}
               </h1>
               <p className="text-muted-foreground mt-1">
-                Detalhes da cobrança referente a {invoice.period}
+                {invoice.period ? `Detalhes da cobrança referente a ${invoice.period}` : "Detalhes da fatura"}
               </p>
             </div>
-            <Badge className={`${statusConfig[invoice.status].className} text-sm px-3 py-1`}>
-              {statusConfig[invoice.status].label}
+            <Badge className={`${status.className} text-sm px-3 py-1`}>
+              {status.label}
             </Badge>
           </div>
         </div>
@@ -150,27 +124,23 @@ const FamilyInvoiceDetails = () => {
                 Detalhes da Fatura
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Plano contratado</p>
-                  <p className="font-medium">{invoice.plan}</p>
+                  <p className="font-medium">{invoice.plan ? (planNames[invoice.plan] ?? invoice.plan) : "—"}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Período</p>
-                  <p className="font-medium">{invoice.period}</p>
+                  <p className="font-medium">{invoice.period ?? "—"}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Valor</p>
-                  <p className="text-xl font-bold text-primary">
-                    {formatCurrency(invoice.amount)}
-                  </p>
+                  <p className="text-xl font-bold text-primary">{formatCurrency(invoice.amount)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={statusConfig[invoice.status].className}>
-                    {statusConfig[invoice.status].label}
-                  </Badge>
+                  <Badge className={status.className}>{status.label}</Badge>
                 </div>
               </div>
             </CardContent>
@@ -188,12 +158,14 @@ const FamilyInvoiceDetails = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Data de vencimento</p>
-                  <p className="font-medium">{formatDate(invoice.dueDate)}</p>
+                  <p className="font-medium">
+                    {invoice.due_date ? formatDate(invoice.due_date) : "—"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Data de pagamento</p>
                   <p className="font-medium">
-                    {invoice.paidDate ? formatDate(invoice.paidDate) : 'Aguardando pagamento'}
+                    {invoice.paid_at ? formatDate(invoice.paid_at) : "Aguardando pagamento"}
                   </p>
                 </div>
               </div>
@@ -212,31 +184,25 @@ const FamilyInvoiceDetails = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Nome</p>
-                  <p className="font-medium">{currentUser.name}</p>
+                  <p className="font-medium">
+                    {familyProfileData?.profiles?.full_name ?? "—"}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">E-mail</p>
-                  <p className="font-medium">{currentUser.email}</p>
+                  <p className="font-medium">{user?.email ?? "—"}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Ação: Baixar Recibo */}
-          {invoice.status === 'paid' && (
-            <Card className="bg-emerald-50/50 border-emerald-200">
+          {/* Link Stripe */}
+          {invoice.stripe_invoice_id && (
+            <Card className="bg-muted/30 border-dashed">
               <CardContent className="pt-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <h3 className="font-semibold text-foreground">Recibo disponível</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Esta fatura foi paga. Você pode baixar o comprovante.
-                    </p>
-                  </div>
-                  <Button onClick={handleDownloadReceipt}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar recibo
-                  </Button>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CreditCard className="w-4 h-4" />
+                  <span>ID Stripe: <span className="font-mono">{invoice.stripe_invoice_id}</span></span>
                 </div>
               </CardContent>
             </Card>

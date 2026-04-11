@@ -193,7 +193,6 @@ const CareHistoryReport = () => {
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Erro ao gerar PDF:", err);
       toast.error("Erro ao gerar o PDF. Tente novamente.");
     } finally {
       setIsExporting(false);
