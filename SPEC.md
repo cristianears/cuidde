@@ -51,7 +51,7 @@ appointments → care_routines (1:N) | messages (1:N) | reviews (1:1)
 **Endereço:** `cep` `street` `number` `complement` `neighborhood` `city` `state` · `lat FLOAT8` · `lng FLOAT8`
 **Idoso:** `elderly_name` · `elderly_age` · `elderly_conditions[]` · `blood_type` · `pre_existing_conditions` · `allergies` · `continuous_medications` · `responsible_doctor` · `health_insurance` · `care_needs`
 **Preferências:** `service_formats[]` · `hourly_range_min/max` · `daily_range_min/max` · `distance_preference`
-**Stripe:** `stripe_customer_id` · `plan` (monthly|quarterly|annual) · `subscription_status` (free|active|past_due|canceled|incomplete) · `stripe_subscription_id`
+**Stripe:** `stripe_customer_id` · `plan` (monthly|quarterly|annual) · `subscription_status` (free|active|past_due|canceled|incomplete) · `stripe_subscription_id` · `cancel_at_period_end` BOOL · `current_period_end` TIMESTAMPTZ
 
 ### `professional_references`
 `id` · `caregiver_id`→caregiver_profiles · `name` · `phone` · `workplace` · `position` · `work_duration` · `notes`
@@ -171,6 +171,9 @@ CREATE POLICY "documents: família assinante lê"
 | 3.2 | `usePublicCaregiverProfile`, CaregiverPublicProfile completo, visualizador de docs (blob URL, sem download) |
 | 4.1 | `useAppointments`, `useCareRoutine`, `RequestAppointmentDialog`, fluxo solicitação→atendimento |
 | 4.2 | `useChat`, AppointmentChat (Realtime), `contact-filter.ts`, read receipts ✓/✓✓ |
+| 5.1 | `useReviews`, CaregiverReviews, FamilyAppointmentDetails (avaliação pós-atendimento) |
+| 6.1 | `useSubscription`, `useInvoices`, Edge Functions `create-checkout` + `stripe-webhook`, FamilyBilling, FamilyInvoices, FamilyInvoiceDetails |
+| 3.cleanup | Dívida técnica: query-keys camelCase, null-safe useInvoices, stripe-webhook helpers modulares, typed optimistic update, CSP, JWT auth em Edge Functions |
 
 ---
 
@@ -201,12 +204,16 @@ Tarefas:
 
 ---
 
-## Sprint 6.1 — Assinaturas Stripe
+## Sprint 6.1 — Assinaturas Stripe ✅ CONCLUÍDO
 
 > Referência: [Stripe Webhooks](https://stripe.com/docs/webhooks)
 
 ```
 Arquivos afetados:
+- src/hooks/useSubscription.ts (novo)
+- src/hooks/useInvoices.ts (novo)
+- supabase/functions/create-checkout/index.ts (novo)
+- supabase/functions/stripe-webhook/index.ts (novo)
 - src/pages/family/FamilyBilling.tsx
 - src/pages/family/FamilyInvoices.tsx
 - src/pages/family/FamilyInvoiceDetails.tsx
@@ -254,10 +261,12 @@ Labels de status de invoice:
 REGRA: Stripe Webhook é a fonte de verdade. Nunca atualizar plan diretamente pelo cliente.
 ```
 
-✅ **Concluído quando:**
+✅ **Concluído:**
 - "Assinar" abre Stripe Checkout real
 - Após pagamento, `plan` e `subscription_status` atualizam via webhook
 - Faturas aparecem em FamilyInvoices com dados reais
+- create-checkout protegida com JWT (caller.id === family_id) + CORS whitelist
+- stripe-webhook valida com `stripe-webhook-secret` antes de processar qualquer evento
 
 ---
 

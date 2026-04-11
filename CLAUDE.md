@@ -49,10 +49,13 @@ O trabalho aqui é **conectar o backend**, não recriar UI.
 
 ```
 src/
-├── lib/              ← clientes e helpers (supabase.ts, auth.ts, viacep.ts, stripe.ts, constants.ts, query-keys.ts, geocode.ts, labels.ts, contact-filter.ts)
+├── lib/              ← supabase.ts, auth.ts, viacep.ts, stripe.ts, constants.ts, query-keys.ts,
+│                        geocode.ts, labels.ts, contact-filter.ts, caregiver-query.ts, caregiver-rank.ts
 ├── types/            ← database.ts com todos os tipos do Supabase
 ├── contexts/         ← AuthContext.tsx
-├── hooks/            ← todos os hooks de dados (useAuth, useCaregiverProfile, useAppointments, useCareRoutine, useChat, etc.)
+├── hooks/            ← useAuth, useCaregiverProfile, useFamilyProfile, useAppointments, useCareRoutine,
+│                        useChat, useSearchCaregivers, useFamilyMatches, useFavorites, useReviews,
+│                        useInvoices, useSubscription, usePublicCaregiverProfile, useTrackCaregiverEvent
 ├── components/
 │   ├── shared/       ← AppSidebar, PageHeader, StatusBadge, StarRating, RequestAppointmentDialog (JÁ EXISTEM)
 │   └── ui/           ← shadcn components (JÁ EXISTEM)
@@ -62,8 +65,9 @@ src/
 └── data/             ← mockData.ts (ainda usado em páginas não conectadas)
 
 supabase/
-├── functions/        ← Edge Functions (create-checkout, stripe-webhook, admin-actions)
-└── migrations/       ← SQL files (já executados manualmente via supabase_setup.sql)
+└── functions/        ← Edge Functions implantadas no Supabase
+    ├── create-checkout/   ← cria Checkout Session, troca de plano, cancel/reactivate (JWT-autenticada)
+    └── stripe-webhook/    ← processa eventos Stripe (fonte de verdade de subscription_status)
 ```
 
 ---
@@ -296,7 +300,6 @@ import PageHeader from "@/components/shared/PageHeader"
 - Geocodificação é best-effort (não bloqueia o save)
 - `lat`/`lng` do cuidador **não são expostos** na busca pública
 - Raio padrão: `DEFAULT_RADIUS_KM = 20` (em `@/lib/constants.ts`)
-- SQL: `supabase_sprint3x.sql` + `supabase_sprint3x_security.sql`
 
 ---
 
@@ -314,7 +317,6 @@ import PageHeader from "@/components/shared/PageHeader"
 - Documentos filtrados por `is_visible=true` e `type != 'rg_cnh'`
 - Requer `subscription_status = 'active'` para acessar documentos e referências (RLS do banco + Storage)
 - CSP em `index.html` inclui `frame-src 'self' blob:` e `img-src blob:` para renderizar documentos
-- SQL de Storage RLS: `supabase_storage_family_read.sql` (deve ser executado no Supabase)
 
 ---
 
@@ -326,7 +328,7 @@ import PageHeader from "@/components/shared/PageHeader"
 | `caregiver_profiles.profile_complete` | `true \| false` | calculado por trigger — controla visibilidade na busca |
 | `appointments.status` | `pendente \| ativo \| finalizado \| cancelado` | português — exibido diretamente na UI |
 | `family_profiles.subscription_status` | `free \| active \| past_due \| canceled \| incomplete` | inglês — espelho do Stripe |
-| `invoices.status` | `paid \| pending \| open` | inglês — espelho do Stripe |
+| `invoices.status` | `paid \| pending \| open \| overdue` | inglês — espelho do Stripe |
 | `caregiver_documents.status` | `pending \| sent \| approved \| rejected` | inglês — fluxo de aprovação |
 | `support_tickets.status` | `enviado \| em_analise \| respondido` | português — exibido na UI |
 
@@ -344,11 +346,14 @@ import PageHeader from "@/components/shared/PageHeader"
 
 ## Referências rápidas
 
-- Schema completo + RLS: `SPEC.md` → seção "Schema do Banco de Dados"
-- Plano de sprints: `SPEC.md` → seção "Plano de Implementação"
+- Schema completo + RLS: `SPEC.md` → seção "Schema"
+- Plano de sprints: `SPEC.md` → seção "Sprints Concluídos"
 - Regras de negócio: `PRD.md` → seção "Regras de Negócio"
-- SQL para rodar no Supabase: `supabase_setup.sql`, `supabase_sprint3x.sql`, `supabase_sprint3x_security.sql`, `supabase_storage_family_read.sql`
+- SQL de ciclo de assinatura: `supabase_subscription_lifecycle.sql`
+- Edge Functions: `supabase/functions/create-checkout/` e `supabase/functions/stripe-webhook/`
 - Geocodificação: `src/lib/geocode.ts` (Google Maps API via `VITE_GMAPS_GEOCODE_KEY`)
+- Busca pública compartilhada: `src/lib/caregiver-query.ts` (`CAREGIVER_SELECT` + `mapCaregiverRow`)
+- Ranking de cuidadores: `src/lib/caregiver-rank.ts` (`computeRankScore`)
 - Docs Supabase Auth Google: https://supabase.com/docs/guides/auth/social-login/auth-google
 - Docs Supabase Storage RLS: https://supabase.com/docs/guides/storage/security/access-control
 - Docs Supabase Realtime: https://supabase.com/docs/guides/realtime/subscribing-to-database-changes
