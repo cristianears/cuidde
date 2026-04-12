@@ -25,7 +25,17 @@ export function useSubscription() {
         },
       })
       if (error) throw error
-      const result = data as { url?: string; updated?: boolean; same_plan?: boolean; error?: string }
+      const result = data as {
+        url?: string
+        updated?: boolean
+        same_plan?: boolean
+        scheduled?: boolean
+        pending_plan?: string
+        effective_at?: string | null
+        plan?: string
+        current_period_end?: string | null
+        error?: string
+      }
       if (result.error) throw new Error(result.error)
       return result
     },
@@ -34,7 +44,27 @@ export function useSubscription() {
         window.location.href = result.url
         return
       }
+
+      // Downgrade agendado via Subscription Schedule
+      if (result.scheduled) {
+        queryClient.setQueryData(queryKeys.familyProfile(user!.id), (old: FamilyProfileWithRelations | undefined) => {
+          if (!old) return old
+          return { ...old, pending_plan: result.pending_plan ?? null }
+        })
+        queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
+        toast.success('Plano alterado. Você mantém o acesso atual até o fim do período já pago.')
+        return
+      }
+
+      // Upgrade imediato ou reativação de mesmo plano
       if (result.updated) {
+        queryClient.setQueryData(queryKeys.familyProfile(user!.id), (old: FamilyProfileWithRelations | undefined) => {
+          if (!old) return old
+          const patch: Record<string, unknown> = { cancel_at_period_end: false, pending_plan: null }
+          if (result.plan) patch.plan = result.plan
+          if (result.current_period_end) patch.current_period_end = result.current_period_end
+          return { ...old, ...patch }
+        })
         queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
         queryClient.invalidateQueries({ queryKey: queryKeys.invoices(user!.id) })
         toast.success(
@@ -62,11 +92,11 @@ export function useSubscription() {
       if (result.error) throw new Error(result.error)
     },
     onSuccess: () => {
-      // Update otimista — assinatura continua ativa até o fim do período
       queryClient.setQueryData(queryKeys.familyProfile(user!.id), (old: FamilyProfileWithRelations | undefined) => {
         if (!old) return old
         return { ...old, cancel_at_period_end: true }
       })
+      queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
       toast.success('Cancelamento agendado para o fim do período atual.')
     },
     onError: () => {
@@ -91,6 +121,7 @@ export function useSubscription() {
         if (!old) return old
         return { ...old, cancel_at_period_end: false }
       })
+      queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
       toast.success('Assinatura reativada. A renovação automática voltou a valer.')
     },
     onError: () => {
@@ -100,6 +131,7 @@ export function useSubscription() {
 
   return {
     plan: familyProfile?.plan ?? null,
+    pendingPlan: familyProfile?.pending_plan ?? null,
     subscriptionStatus: familyProfile?.subscription_status ?? 'free',
     cancelAtPeriodEnd: familyProfile?.cancel_at_period_end ?? false,
     currentPeriodEnd: familyProfile?.current_period_end ?? null,

@@ -101,6 +101,7 @@ serve(async (req) => {
           current_period_end: sub.current_period_end
             ? new Date(sub.current_period_end * 1000).toISOString()
             : null,
+          pending_plan: null,
         })
         .eq('id', familyId)
       break
@@ -118,6 +119,7 @@ serve(async (req) => {
             plan: null,
             cancel_at_period_end: false,
             current_period_end: null,
+            pending_plan: null,
           })
           .eq('id', familyId)
       }
@@ -129,7 +131,10 @@ serve(async (req) => {
       const familyId = await getFamilyId(supabase, inv.customer as string)
       if (!familyId) break
 
-      const line = inv.lines.data[0]
+      // Proration invoices têm múltiplas linhas: crédito (negativo) do plano
+      // antigo + cobrança (positivo) do plano novo. Pegar a linha do plano novo.
+      const line = inv.lines.data.find(l => l.amount > 0)
+        ?? inv.lines.data[inv.lines.data.length - 1]
       const periodStart = line?.period?.start
       const periodEnd = line?.period?.end
       const periodLabel = periodStart && periodEnd

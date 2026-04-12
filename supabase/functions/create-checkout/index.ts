@@ -105,6 +105,12 @@ serve(async (req) => {
       cancel_at_period_end: true,
     })
 
+    // Atualiza Supabase imediatamente — não espera o webhook chegar
+    await supabase
+      .from('family_profiles')
+      .update({ cancel_at_period_end: true })
+      .eq('id', family_id)
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
@@ -128,6 +134,12 @@ serve(async (req) => {
     await stripe.subscriptions.update(profile.stripe_subscription_id, {
       cancel_at_period_end: false,
     })
+
+    // Atualiza Supabase imediatamente — não espera o webhook chegar
+    await supabase
+      .from('family_profiles')
+      .update({ cancel_at_period_end: false })
+      .eq('id', family_id)
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -155,7 +167,20 @@ serve(async (req) => {
     })
   }
 
-  // Se já existe assinatura ativa → troca via subscriptions.update com proration
+  // ─── Helper: rank do plano (maior = melhor custo-benefício) ────────────────
+  function planRank(interval: string, count: number): number {
+    if (interval === 'year') return 3
+    if (interval === 'month' && count === 3) return 2
+    return 1
+  }
+
+  function derivePlan(interval: string, count: number): 'monthly' | 'quarterly' | 'annual' {
+    if (interval === 'year') return 'annual'
+    if (count === 3) return 'quarterly'
+    return 'monthly'
+  }
+
+  // Se já existe assinatura ativa → troca de plano
   if (
     profile?.stripe_subscription_id &&
     (profile.subscription_status === 'active' || profile.subscription_status === 'past_due')
@@ -163,25 +188,104 @@ serve(async (req) => {
     const existing = await stripe.subscriptions.retrieve(profile.stripe_subscription_id)
     const currentItem = existing.items.data[0]
 
-    // Mesmo plano → nada a fazer (mas se estava cancelando, reativa)
+    // Se a assinatura é gerida por um schedule, libera antes de qualquer alteração
+    if (existing.schedule) {
+      await stripe.subscriptionSchedules.release(existing.schedule as string)
+    }
+
+    // Mesmo plano → cancela downgrade pendente e/ou reativa
     if (currentItem.price.id === price_id) {
       if (existing.cancel_at_period_end) {
         await stripe.subscriptions.update(profile.stripe_subscription_id, {
           cancel_at_period_end: false,
         })
       }
+      await supabase
+        .from('family_profiles')
+        .update({ cancel_at_period_end: false, pending_plan: null })
+        .eq('id', family_id)
       return new Response(JSON.stringify({ updated: true, same_plan: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    await stripe.subscriptions.update(profile.stripe_subscription_id, {
+    // Detectar upgrade vs downgrade
+    const currentRank = planRank(
+      currentItem.price.recurring!.interval,
+      currentItem.price.recurring!.interval_count,
+    )
+    const newPrice = await stripe.prices.retrieve(price_id)
+    const newRank = planRank(
+      newPrice.recurring!.interval,
+      newPrice.recurring!.interval_count,
+    )
+    const newPlan = derivePlan(newPrice.recurring!.interval, newPrice.recurring!.interval_count)
+    const isDowngrade = newRank < currentRank
+
+    if (isDowngrade) {
+      // ── Downgrade: agendar troca para o fim do período via Subscription Schedule
+      const schedule = await stripe.subscriptionSchedules.create({
+        from_subscription: profile.stripe_subscription_id,
+      })
+
+      await stripe.subscriptionSchedules.update(schedule.id, {
+        end_behavior: 'release',
+        phases: [
+          {
+            items: [{ price: currentItem.price.id, quantity: 1 }],
+            start_date: schedule.phases[0].start_date,
+            end_date: schedule.phases[0].end_date,
+          },
+          {
+            items: [{ price: price_id, quantity: 1 }],
+          },
+        ],
+      })
+
+      const effectiveAt = existing.current_period_end
+        ? new Date(existing.current_period_end * 1000).toISOString()
+        : null
+
+      await supabase
+        .from('family_profiles')
+        .update({ pending_plan: newPlan })
+        .eq('id', family_id)
+
+      return new Response(JSON.stringify({
+        scheduled: true,
+        pending_plan: newPlan,
+        effective_at: effectiveAt,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ── Upgrade: troca imediata com cobrança proporcional
+    const updatedSub = await stripe.subscriptions.update(profile.stripe_subscription_id, {
       items: [{ id: currentItem.id, price: price_id }],
       proration_behavior: 'always_invoice',
       cancel_at_period_end: false,
     })
 
-    return new Response(JSON.stringify({ updated: true }), {
+    const newPeriodEnd = updatedSub.current_period_end
+      ? new Date(updatedSub.current_period_end * 1000).toISOString()
+      : null
+
+    await supabase
+      .from('family_profiles')
+      .update({
+        plan: newPlan,
+        cancel_at_period_end: false,
+        current_period_end: newPeriodEnd,
+        pending_plan: null,
+      })
+      .eq('id', family_id)
+
+    return new Response(JSON.stringify({
+      updated: true,
+      plan: newPlan,
+      current_period_end: newPeriodEnd,
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }

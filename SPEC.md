@@ -51,7 +51,7 @@ appointments → care_routines (1:N) | messages (1:N) | reviews (1:1)
 **Endereço:** `cep` `street` `number` `complement` `neighborhood` `city` `state` · `lat FLOAT8` · `lng FLOAT8`
 **Idoso:** `elderly_name` · `elderly_age` · `elderly_conditions[]` · `blood_type` · `pre_existing_conditions` · `allergies` · `continuous_medications` · `responsible_doctor` · `health_insurance` · `care_needs`
 **Preferências:** `service_formats[]` · `hourly_range_min/max` · `daily_range_min/max` · `distance_preference`
-**Stripe:** `stripe_customer_id` · `plan` (monthly|quarterly|annual) · `subscription_status` (free|active|past_due|canceled|incomplete) · `stripe_subscription_id` · `cancel_at_period_end` BOOL · `current_period_end` TIMESTAMPTZ
+**Stripe:** `stripe_customer_id` · `plan` (monthly|quarterly|annual) · `subscription_status` (free|active|past_due|canceled|incomplete) · `stripe_subscription_id` · `cancel_at_period_end` BOOL · `current_period_end` TIMESTAMPTZ · `pending_plan` TEXT (nullable — plano agendado em downgrade)
 
 ### `professional_references`
 `id` · `caregiver_id`→caregiver_profiles · `name` · `phone` · `workplace` · `position` · `work_duration` · `notes`
@@ -259,6 +259,20 @@ Labels de status de invoice:
   paid='Paga' | pending='Pendente' | open='Em aberto' | overdue='Vencida'
 
 REGRA: Stripe Webhook é a fonte de verdade. Nunca atualizar plan diretamente pelo cliente.
+  Edge Functions (server-side com service_role) podem atualizar para evitar race condition com webhook.
+
+Troca de plano (upgrade vs downgrade):
+  - Upgrade (rank sobe: monthly→quarterly→annual): imediato com always_invoice (cobra diferença proporcional no cartão salvo)
+  - Downgrade (rank desce): Subscription Schedule agenda troca para o fim do período já pago
+    - Plano atual mantido até current_period_end
+    - pending_plan salvo em family_profiles para exibir na UI
+    - Nenhuma fatura intermediária gerada
+    - Ao clicar no plano atual novamente: libera o schedule, limpa pending_plan
+  - Webhook customer.subscription.updated limpa pending_plan quando o plano efetivamente transiciona
+
+Proration invoices (invoice.paid):
+  - Faturas de proration podem ter múltiplas linhas (crédito do plano antigo + cobrança do novo)
+  - Webhook pega a linha com amount > 0 (plano novo), não lines.data[0] cegamente
 ```
 
 ✅ **Concluído:**
@@ -267,6 +281,10 @@ REGRA: Stripe Webhook é a fonte de verdade. Nunca atualizar plan diretamente pe
 - Faturas aparecem em FamilyInvoices com dados reais
 - create-checkout protegida com JWT (caller.id === family_id) + CORS whitelist
 - stripe-webhook valida com `stripe-webhook-secret` antes de processar qualquer evento
+- Upgrade imediato com cobrança proporcional automática (sem tela de checkout)
+- Downgrade agendado via Stripe Subscription Schedule (sem fatura R$ 0,00)
+- Edge Functions atualizam Supabase imediatamente (cancel, reactivate, upgrade) para evitar race condition com webhook
+- UI mostra aviso "Seu plano mudará para X em DD/MM/YYYY" quando há downgrade pendente
 
 ---
 

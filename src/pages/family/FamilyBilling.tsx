@@ -106,6 +106,7 @@ const FamilyBilling = () => {
   const { data: familyProfileData } = useFamilyProfile();
   const {
     plan,
+    pendingPlan,
     subscriptionStatus,
     cancelAtPeriodEnd,
     currentPeriodEnd,
@@ -232,6 +233,19 @@ const FamilyBilling = () => {
                 </div>
               )}
 
+              {pendingPlan && subscriptionStatus === "active" && (
+                <div className="flex items-start gap-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm">
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    Seu plano mudará para <strong>{planNames[pendingPlan]}</strong>
+                    {currentPeriodEnd && (
+                      <> a partir de <strong>{new Date(currentPeriodEnd).toLocaleDateString("pt-BR")}</strong></>
+                    )}
+                    . Você mantém o acesso completo do plano atual até lá.
+                  </div>
+                </div>
+              )}
+
               <p className="text-sm text-muted-foreground leading-relaxed">
                 Este plano se refere ao <strong>uso da plataforma</strong> (acesso, filtros e recursos).
                 <br />
@@ -295,6 +309,7 @@ const FamilyBilling = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
               {plans.map((p) => {
                 const isCurrentPlan = p.id === plan && subscriptionStatus === "active";
+                const isPendingPlan = p.id === pendingPlan && subscriptionStatus === "active";
                 const isFeatured = p.id === featuredPlanId;
 
                 const cardClass = [
@@ -327,7 +342,7 @@ const FamilyBilling = () => {
                   <Card key={p.id} className={cardClass}>
                     <CardHeader className={headerClass}>
                       {/* Badges dentro do header, sem posição absoluta */}
-                      {(p.highlight || isCurrentPlan) && (
+                      {(p.highlight || isCurrentPlan || isPendingPlan) && (
                         <div className="flex gap-2 flex-wrap mb-2">
                           {p.highlight && (
                             <Badge className={`${p.highlight.className} text-xs`}>
@@ -338,6 +353,11 @@ const FamilyBilling = () => {
                           {isCurrentPlan && (
                             <Badge variant="outline" className="border-primary text-primary bg-primary/10 text-xs">
                               Plano atual
+                            </Badge>
+                          )}
+                          {isPendingPlan && (
+                            <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-50 text-xs">
+                              Agendado
                             </Badge>
                           )}
                         </div>
@@ -365,14 +385,14 @@ const FamilyBilling = () => {
                       <div className="pt-2 mt-auto">
                         <Button
                           className={`w-full text-sm ${buttonClass}`}
-                          variant={buttonVariant}
-                          disabled={isCurrentPlan || startCheckout.isPending}
+                          variant={isCurrentPlan || isPendingPlan ? "secondary" : buttonVariant}
+                          disabled={isCurrentPlan || isPendingPlan || startCheckout.isPending}
                           onClick={() => handleSelectPlan(p)}
                         >
                           {startCheckout.isPending && selectedPlan?.id === p.id ? (
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
                           ) : null}
-                          {isCurrentPlan ? "Plano atual" : ctaLabel[p.id]}
+                          {isCurrentPlan ? "Plano atual" : isPendingPlan ? "Agendado" : ctaLabel[p.id]}
                         </Button>
                       </div>
                     </CardContent>

@@ -263,6 +263,7 @@ export interface FamilyProfile {
   stripe_subscription_id: string | null
   cancel_at_period_end: boolean
   current_period_end: string | null
+  pending_plan: SubscriptionPlan | null
   created_at: string
   updated_at: string
 }

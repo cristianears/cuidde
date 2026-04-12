@@ -41,7 +41,8 @@ O trabalho aqui é **conectar o backend**, não recriar UI.
    ```
    - **Query keys**: sempre usar `queryKeys` de `@/lib/query-keys` — nunca inline `['key', id]`
 5. **Nunca expor `service_role_key` no cliente** — sempre via Supabase Edge Function
-6. **Stripe Webhook é a fonte de verdade** — nunca atualizar `plan` ou `subscription_status` diretamente pelo cliente
+6. **Stripe Webhook é a fonte de verdade** — nunca atualizar `plan` ou `subscription_status` diretamente pelo cliente. Edge Functions (server-side) podem atualizar para evitar race condition com webhook.
+7. **Upgrade vs Downgrade** — upgrade (`always_invoice`, imediato); downgrade usa Stripe Subscription Schedule (troca no fim do período, `pending_plan` em `family_profiles`)
 
 ---
 
@@ -331,6 +332,7 @@ import PageHeader from "@/components/shared/PageHeader"
 | `invoices.status` | `paid \| pending \| open \| overdue` | inglês — espelho do Stripe |
 | `caregiver_documents.status` | `pending \| sent \| approved \| rejected` | inglês — fluxo de aprovação |
 | `support_tickets.status` | `enviado \| em_analise \| respondido` | português — exibido na UI |
+| `family_profiles.pending_plan` | `monthly \| quarterly \| annual \| null` | downgrade agendado via Subscription Schedule |
 
 ---
 
