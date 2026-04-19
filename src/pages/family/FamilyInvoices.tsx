@@ -27,10 +27,11 @@ const planNames: Record<string, string> = {
 };
 
 const statusConfig: Record<InvoiceStatus, { label: string; className: string }> = {
-  paid:    { label: "Paga",       className: "bg-emerald-100 text-emerald-700" },
-  pending: { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
-  open:    { label: "Em aberto",  className: "bg-muted text-muted-foreground" },
-  overdue: { label: "Vencida",    className: "bg-red-100 text-red-700" },
+  draft:         { label: "Cancelada",  className: "bg-red-100 text-red-700" },
+  open:          { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
+  paid:          { label: "Paga",       className: "bg-emerald-100 text-emerald-700" },
+  void:          { label: "Cancelada",  className: "bg-red-100 text-red-700" },
+  uncollectible: { label: "Cancelada",  className: "bg-red-100 text-red-700" },
 };
 
 const formatCurrency = (value: number) =>

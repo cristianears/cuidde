@@ -1,7 +1,4 @@
-import { useState } from "react";
 import {
-  Check,
-  X,
   Mail,
   Phone,
   GraduationCap,
@@ -9,14 +6,11 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import StatusBadge from "@/components/shared/StatusBadge";
 import DocumentChecklist from "./DocumentChecklist";
-import RejectionDialog from "./RejectionDialog";
-import type { Caregiver, Document } from "@/data/mockData";
+import type { Caregiver } from "@/data/mockData";
+import type { AdminDocumentRow } from "@/hooks/useAdmin";
 
-// Mock professional registration info based on profession
 function getMockRegistration(caregiver: Caregiver) {
   if (!caregiver.hasProfessionalRegistration) return null;
   const registrations: Record<string, { council: string; number: string; uf: string }> = {
@@ -29,139 +23,136 @@ function getMockRegistration(caregiver: Caregiver) {
   return registrations[caregiver.profissaoFormacao] || { council: "Outro", number: "N/A", uf: caregiver.address.state };
 }
 
+function getProfileStatusLabel(
+  caregiverStatus: string,
+  documents: AdminDocumentRow[],
+): { label: string; className: string } {
+  const rgDoc = documents.find((d) => d.type === "rg_cnh" || d.type === "rg");
+
+  // If RG_CNH exists and is not rejected as illegible → "Perfil Ok"
+  if (
+    rgDoc &&
+    rgDoc.file_url &&
+    rgDoc.status !== "rejected" &&
+    (caregiverStatus === "verified" || caregiverStatus === "analyzing")
+  ) {
+    return {
+      label: "Perfil Ok",
+      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    };
+  }
+
+  // If rejected with illegibility reason
+  if (caregiverStatus === "rejected" || rgDoc?.status === "rejected") {
+    return {
+      label: "Documento não legível",
+      className: "bg-red-50 text-red-700 border-red-200",
+    };
+  }
+
+  // Pending
+  return {
+    label: "Pendente",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  };
+}
+
 interface ApprovalDetailPanelProps {
   caregiver: Caregiver;
-  documents: Document[];
+  documents: AdminDocumentRow[];
   readOnly?: boolean;
-  onApprove: (caregiverId: string) => void;
-  onReject: (caregiverId: string, reason: string) => void;
 }
 
 const ApprovalDetailPanel = ({
   caregiver,
   documents,
-  readOnly = false,
-  onApprove,
-  onReject,
 }: ApprovalDetailPanelProps) => {
-  const [rejectionOpen, setRejectionOpen] = useState(false);
   const registration = getMockRegistration(caregiver);
+  const profileStatus = getProfileStatusLabel(caregiver.status, documents);
 
   return (
-    <>
-      <Card className="lg:col-span-2">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            {/* Identity */}
-            <div className="flex items-center gap-4">
-              <img
-                src={caregiver.photo}
-                alt={caregiver.name}
-                className="w-16 h-16 rounded-2xl object-cover"
-              />
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {caregiver.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {caregiver.address.city}/{caregiver.address.state}
-                </p>
-                <StatusBadge status={caregiver.status} className="mt-1.5" />
-              </div>
-            </div>
-
-            {/* Actions */}
-            {!readOnly && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/5"
-                  onClick={() => setRejectionOpen(true)}
-                >
-                  <X className="w-4 h-4" />
-                  Reprovar
-                </Button>
-                <Button
-                  className="gap-2"
-                  onClick={() => onApprove(caregiver.id)}
-                >
-                  <Check className="w-4 h-4" />
-                  Aprovar
-                </Button>
-              </div>
-            )}
+    <Card className="lg:col-span-2">
+      <CardHeader className="pb-4">
+        <div className="flex items-center gap-4">
+          <img
+            src={caregiver.photo}
+            alt={caregiver.name}
+            className="w-16 h-16 rounded-2xl object-cover"
+          />
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">
+              {caregiver.name}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {caregiver.address.city}/{caregiver.address.state}
+            </p>
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border mt-1.5 ${profileStatus.className}`}
+            >
+              {profileStatus.label}
+            </span>
           </div>
-        </CardHeader>
+        </div>
+      </CardHeader>
 
-        <CardContent className="space-y-6">
-          {/* Contact Info */}
-          <section>
-            <h4 className="text-sm font-semibold text-foreground mb-3">
-              Identificação
-            </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <span>{caregiver.email}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <span>{caregiver.phone}</span>
-              </div>
-            </div>
-          </section>
-
-          {/* Profession & Training */}
-          <section>
-            <h4 className="text-sm font-semibold text-foreground mb-3">
-              Profissão / Formação
-            </h4>
+      <CardContent className="space-y-6">
+        {/* Contact Info */}
+        <section>
+          <h4 className="text-sm font-semibold text-foreground mb-3">
+            Identificação
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center gap-2 text-sm">
-              <GraduationCap className="w-4 h-4 text-muted-foreground" />
-              <span>{caregiver.profissaoFormacao || "Não informado"}</span>
+              <Mail className="w-4 h-4 text-muted-foreground" />
+              <span>{caregiver.email}</span>
             </div>
-          </section>
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="w-4 h-4 text-muted-foreground" />
+              <span>{caregiver.phone}</span>
+            </div>
+          </div>
+        </section>
 
-          {/* Professional Registration */}
-          <section>
-            <h4 className="text-sm font-semibold text-foreground mb-3">
-              Registro Profissional
-            </h4>
-            {registration ? (
-              <div className="flex items-center gap-2 text-sm">
-                <Award className="w-4 h-4 text-muted-foreground" />
-                <span>
-                  {registration.council} — {registration.number} ({registration.uf})
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Sem registro profissional informado</span>
-              </div>
-            )}
-          </section>
+        {/* Profession & Training */}
+        <section>
+          <h4 className="text-sm font-semibold text-foreground mb-3">
+            Profissão / Formação
+          </h4>
+          <div className="flex items-center gap-2 text-sm">
+            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+            <span>{caregiver.profissaoFormacao || "Não informado"}</span>
+          </div>
+        </section>
 
-          {/* Document Checklist */}
-          <section>
-            <h4 className="text-sm font-semibold text-foreground mb-3">
-              Documentos para Verificação
-            </h4>
-            <DocumentChecklist documents={documents} />
-          </section>
-        </CardContent>
-      </Card>
+        {/* Professional Registration */}
+        <section>
+          <h4 className="text-sm font-semibold text-foreground mb-3">
+            Registro Profissional
+          </h4>
+          {registration ? (
+            <div className="flex items-center gap-2 text-sm">
+              <Award className="w-4 h-4 text-muted-foreground" />
+              <span>
+                {registration.council} — {registration.number} ({registration.uf})
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ShieldCheck className="w-4 h-4" />
+              <span>Sem registro profissional informado</span>
+            </div>
+          )}
+        </section>
 
-      <RejectionDialog
-        open={rejectionOpen}
-        caregiverName={caregiver.name}
-        onClose={() => setRejectionOpen(false)}
-        onConfirm={(reason) => {
-          setRejectionOpen(false);
-          onReject(caregiver.id, reason);
-        }}
-      />
-    </>
+        {/* Document Checklist */}
+        <section>
+          <h4 className="text-sm font-semibold text-foreground mb-3">
+            Documento a ser revisado
+          </h4>
+          <DocumentChecklist caregiverId={caregiver.id} documents={documents} />
+        </section>
+      </CardContent>
+    </Card>
   );
 };
 

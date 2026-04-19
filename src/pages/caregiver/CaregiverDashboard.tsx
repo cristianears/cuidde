@@ -8,7 +8,6 @@ import {
   Briefcase,
   Eye,
   ArrowRight,
-  Shield,
   Calendar,
   Search,
   MessageCircle,
@@ -76,11 +75,21 @@ function getProfileCompleteness(
       label: "Definir valores de atendimento",
       href: "/caregiver/pricing",
     },
-    {
-      done: docs.some((d) => d.status === "approved" || d.status === "sent"),
-      label: "Enviar documentos",
-      href: "/caregiver/documents",
-    },
+    (() => {
+      const rgCnh = docs.find((d) => d.type === "rg_cnh");
+      if (rgCnh?.status === "rejected") {
+        return {
+          done: false,
+          label: "Reenviar RG/CNH — documento ilegível",
+          href: "/caregiver/documents",
+        };
+      }
+      return {
+        done: !!rgCnh && (rgCnh.status === "approved" || rgCnh.status === "sent"),
+        label: "Enviar RG ou CNH",
+        href: "/caregiver/documents",
+      };
+    })(),
     {
       done: refs.length >= 1,
       label: "Inserir referências profissionais",
@@ -123,8 +132,12 @@ const TIP_BY_CHECK: Record<string, { body: string; actionTarget: string }> = {
     body: "Famílias filtram por faixa de preço. Defina seus valores para aparecer nesses resultados.",
     actionTarget: "/caregiver/pricing",
   },
-  "Enviar documentos": {
-    body: "Cuidadores com documentos enviados transmitem muito mais segurança. Envie pelo menos um documento.",
+  "Enviar RG ou CNH": {
+    body: "O documento de identificação é obrigatório para habilitar seu perfil. Tire uma foto clara ou faça upload do arquivo.",
+    actionTarget: "/caregiver/documents",
+  },
+  "Reenviar RG/CNH — documento ilegível": {
+    body: "Seu documento foi recusado por estar ilegível. Envie uma nova foto com boa iluminação e sem cortes.",
     actionTarget: "/caregiver/documents",
   },
   "Inserir referências profissionais": {
@@ -180,14 +193,6 @@ const CaregiverDashboard = () => {
     .slice(0, 4)
     .map((c) => ({ label: c.label, href: c.href }));
 
-  // ── Configuração de status do perfil ─────────────────────────────────────
-  const statusConfig: Record<string, { label: string; className: string; icon: React.ElementType }> = {
-    pending:   { label: "Pendente",            className: "bg-amber-100 text-amber-700",   icon: Clock },
-    analyzing: { label: "Em análise",          className: "bg-blue-100 text-blue-700",     icon: Clock },
-    verified:  { label: "Aprovado p/ exibição",className: "bg-emerald-100 text-emerald-700", icon: CheckCircle },
-    rejected:  { label: "Rejeitado",           className: "bg-red-100 text-red-700",       icon: AlertCircle },
-  };
-
   const weeklyTip = getPersonalizedTip(incompleteChecks.map((c) => c.label));
 
   // ── Loading state ────────────────────────────────────────────────────────
@@ -214,7 +219,6 @@ const CaregiverDashboard = () => {
   const profileViews30d  = profileData?.profile_views_30d ?? 0;
   const searchApps30d    = profileData?.search_appearances_30d ?? 0;
   const intFamilies30d   = profileData?.interested_families_30d ?? 0;
-  const profileStatus    = profileData?.status ?? "pending";
 
   // ── Objeto CaregiverPublic para o card (exatamente como a família vê) ────
   const caregiverPublicView: CaregiverPublic | null = profileData
@@ -345,28 +349,6 @@ const CaregiverDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Status do perfil — deixado para depois (sprint Admin) */}
-          <Card className="shadow-sm border-0 bg-card">
-            <CardContent className="p-4 md:p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2 md:p-2.5 rounded-xl bg-primary/10">
-                  <Shield className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                </div>
-              </div>
-              <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Status do perfil</p>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-1 rounded-full text-xs font-semibold",
-                  statusConfig[profileStatus]?.className,
-                )}
-              >
-                {React.createElement(statusConfig[profileStatus]?.icon ?? Clock, {
-                  className: "w-3 h-3 md:w-3.5 md:h-3.5",
-                })}
-                {statusConfig[profileStatus]?.label}
-              </span>
-            </CardContent>
-          </Card>
 
         </div>
 

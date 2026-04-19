@@ -1,6 +1,4 @@
 import { MapPin, Calendar } from "lucide-react";
-import StatusBadge from "@/components/shared/StatusBadge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Caregiver } from "@/data/mockData";
@@ -46,11 +44,12 @@ const ApprovalCaregiverList = ({
           return (
             <div
               key={caregiver.id}
-              className={`flex items-center gap-3 p-3 rounded-xl transition-colors border ${
+              className={`flex items-center gap-3 p-3 rounded-xl transition-colors border cursor-pointer ${
                 isSelected
                   ? "bg-primary/5 border-primary/20"
                   : "bg-muted/30 border-transparent hover:bg-muted/60"
               }`}
+              onClick={() => onSelect(caregiver)}
             >
               <img
                 src={caregiver.photo}
@@ -70,17 +69,6 @@ const ApprovalCaregiverList = ({
                 <p className="text-[11px] text-muted-foreground mt-0.5">
                   Envio: {new Date(caregiver.createdAt).toLocaleDateString("pt-BR")}
                 </p>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <StatusBadge status={caregiver.status} size="sm" showIcon={false} />
-                <Button
-                  size="sm"
-                  variant={isSelected ? "default" : "outline"}
-                  className="text-xs h-7 px-3"
-                  onClick={() => onSelect(caregiver)}
-                >
-                  Revisar
-                </Button>
               </div>
             </div>
           );

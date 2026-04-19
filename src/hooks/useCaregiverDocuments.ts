@@ -96,6 +96,13 @@ export function useUploadDocument() {
 
       if (dbError) throw dbError
       if (!data || data.length === 0) throw new Error('0 linhas atualizadas — verifique RLS.')
+
+      // RG/CNH enviado (ou reenviado após rejeição) → volta para fila de revisão
+      // Usa RPC com SECURITY DEFINER pois RLS impede o cuidador de alterar "status"
+      if (docType === 'rg_cnh') {
+        const { error: rpcError } = await supabase.rpc('reset_caregiver_to_pending', { p_caregiver_id: user!.id })
+        if (rpcError) throw rpcError
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: docQueryKey })

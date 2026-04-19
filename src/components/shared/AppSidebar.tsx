@@ -15,7 +15,6 @@ import {
   LayoutDashboard,
   ClipboardCheck,
   DollarSign,
-  Shield,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -61,9 +60,8 @@ const sidebarItems: Record<UserRole, SidebarItem[]> = {
   ],
   admin: [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
-    { icon: ClipboardCheck, label: 'Aprovações', href: '/admin/approvals' },
+    { icon: ClipboardCheck, label: 'Revisões', href: '/admin/approvals' },
     { icon: DollarSign, label: 'Financeiro', href: '/admin/finance' },
-    { icon: Shield, label: 'Log do sistema', href: '/admin/security' },
   ],
 };
 

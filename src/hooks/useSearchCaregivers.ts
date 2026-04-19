@@ -74,6 +74,7 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         .from('caregiver_profiles')
         .select(CAREGIVER_SELECT)
         .eq('profile_complete', true)
+        .eq('has_rg_cnh', true)
         .eq('is_available_for_new', true)
 
       // Se usando proximidade, filtrar pelos IDs retornados pela RPC

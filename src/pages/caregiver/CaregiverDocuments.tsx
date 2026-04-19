@@ -131,6 +131,11 @@ const CaregiverDocuments = () => {
     });
   };
 
+  // ── RG/CNH ─────────────────────────────────────────────────────────────────
+  const rgCnhDoc = documents.find((d) => d.type === "rg_cnh");
+  const rgCnhMissing  = !rgCnhDoc || rgCnhDoc.status === "pending";
+  const rgCnhRejected = rgCnhDoc?.status === "rejected";
+
   // ── Progresso ──────────────────────────────────────────────────────────────
   const totalDocs      = documents.length;
   const sentOrApproved = documents.filter((d) => d.status === "sent" || d.status === "approved").length;
@@ -213,6 +218,30 @@ const CaregiverDocuments = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
+                {/* Banner RG/CNH ilegível */}
+                {rgCnhRejected && rgCnhDoc?.rejection_reason && (
+                  <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-red-50 border border-red-200">
+                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs md:text-sm font-semibold text-red-800">Ação necessária — RG ou CNH</p>
+                      <p className="text-xs md:text-sm text-red-700 mt-0.5">{rgCnhDoc.rejection_reason}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner RG/CNH ausente */}
+                {rgCnhMissing && !rgCnhRejected && (
+                  <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-orange-50 border border-orange-200">
+                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-600 mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-xs md:text-sm font-semibold text-orange-800">RG ou CNH obrigatório</p>
+                      <p className="text-xs md:text-sm text-orange-700 mt-0.5">
+                        Envie seu documento de identificação para habilitar seu perfil na plataforma.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-xs md:text-sm text-muted-foreground pb-1">
                   Apenas o documento de identificação é necessário para cadastro. Os demais são opcionais e podem aumentar a confiança das famílias no seu perfil.
                 </p>

@@ -36,4 +36,12 @@ export const queryKeys = {
   familyReviewedAppointments: (userId: string) => ['family_reviewed_appointments', userId] as const,
   invoices: (userId: string) => ['invoices', userId] as const,
   invoice: (id: string) => ['invoice', id] as const,
+  // ─── Admin ────────────────────────────────────────────────────────────────
+  adminCaregivers: (status: string) => ['admin', 'caregivers', status] as const,
+  adminCaregiverDetail: (id: string) => ['admin', 'caregiver', id] as const,
+  adminCaregiverDocuments: (id: string) => ['admin', 'documents', id] as const,
+  adminCaregiverCounts: ['admin', 'counts'] as const,
+  adminMetrics: ['admin', 'metrics'] as const,
+  adminSubscriptions: ['admin', 'subscriptions'] as const,
+  adminInvoices: ['admin', 'invoices'] as const,
 } as const

@@ -1,79 +1,84 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
+import { Clock } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
-import ApprovalCaregiverList from "@/components/admin/ApprovalCaregiverList";
-import ApprovalDetailPanel, {
-  DetailPanelSkeleton,
-} from "@/components/admin/ApprovalDetailPanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ApprovalCaregiverList, { ApprovalListSkeleton } from "@/components/admin/ApprovalCaregiverList";
+import ApprovalDetailPanel, { DetailPanelSkeleton } from "@/components/admin/ApprovalDetailPanel";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { mockCaregivers as initialCaregivers, mockDocuments } from "@/data/mockData";
+import {
+  useAdminCaregivers,
+  useAdminCaregiverDetail,
+  useAdminCaregiverDocuments,
+  useAdminCaregiverCounts,
+} from "@/hooks/useAdmin";
+import type { AdminCaregiverRow, AdminCaregiverDetail } from "@/hooks/useAdmin";
 import type { Caregiver } from "@/data/mockData";
+import type { CaregiverStatus } from "@/types/database";
 
-type ApprovalTab = "pending" | "analyzing" | "verified" | "rejected";
+type ApprovalTab = "pending";
 
-const TAB_CONFIG: { value: ApprovalTab; label: string; readOnly: boolean }[] = [
-  { value: "pending", label: "Pendentes", readOnly: false },
-  { value: "analyzing", label: "Em análise", readOnly: false },
-  { value: "verified", label: "Verificados", readOnly: true },
-  { value: "rejected", label: "Reprovados", readOnly: true },
-];
+const PROFISSAO_LABEL: Record<string, string> = {
+  cuidador: "Cuidador",
+  tecnico_enfermagem: "Técnica em Enfermagem",
+  auxiliar_enfermagem: "Auxiliar de Enfermagem",
+  enfermeiro: "Enfermeiro",
+  fisioterapeuta: "Fisioterapeuta",
+  terapeuta_ocupacional: "Terapeuta Ocupacional",
+  outro: "Outro",
+};
+
+function toMockCaregiver(row: AdminCaregiverRow, detail?: AdminCaregiverDetail): Caregiver {
+  return {
+    id: row.id,
+    name: row.full_name ?? "Sem nome",
+    email: detail?.email ?? "",
+    phone: row.phone ?? "",
+    whatsapp: detail?.whatsapp ?? row.phone ?? "",
+    photo: row.photo_url ?? "/placeholder.svg",
+    bio: detail?.bio ?? "",
+    address: {
+      cep: "",
+      street: "",
+      number: "",
+      neighborhood: "",
+      city: row.city ?? "",
+      state: row.state ?? "",
+    },
+    specialties: detail?.specialties ?? [],
+    modalities: detail?.modalities ?? [],
+    pricePerHour: detail?.price_per_hour ?? 0,
+    pricePerDay: detail?.price_per_day ?? 0,
+    emergencyAvailable: detail?.emergency_available ?? false,
+    hasInsurance: detail?.has_insurance ?? false,
+    status: row.status,
+    rating: 0,
+    reviewCount: 0,
+    createdAt: row.created_at,
+    documentsComplete: false,
+    profileComplete: false,
+    profissaoFormacao: PROFISSAO_LABEL[row.profissao_formacao ?? ""] ?? row.profissao_formacao ?? "",
+    totalAtendimentos: 0,
+    hasProfessionalRegistration: !!row.professional_reg_number,
+    hasCNH: detail?.possui_cnh ?? false,
+    idiomas: detail?.idiomas ?? [],
+    experienceYears: detail?.experience_years,
+  };
+}
 
 const ApprovalQueue = () => {
-  const { toast } = useToast();
-  const [caregivers, setCaregivers] = useState<Caregiver[]>([...initialCaregivers]);
-  const [activeTab, setActiveTab] = useState<ApprovalTab>("pending");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const filteredCaregivers = useMemo(
-    () => caregivers.filter((c) => c.status === activeTab),
-    [caregivers, activeTab]
-  );
+  const { data: caregivers = [], isLoading: loadingList } = useAdminCaregivers("pending" as CaregiverStatus);
+  const { data: detail, isLoading: loadingDetail } = useAdminCaregiverDetail(selectedId);
+  const { data: documents = [], isLoading: loadingDocs } = useAdminCaregiverDocuments(selectedId);
+  const { data: counts } = useAdminCaregiverCounts();
 
-  const selectedCaregiver = useMemo(
-    () => caregivers.find((c) => c.id === selectedId) || null,
-    [caregivers, selectedId]
-  );
+  const selectedRow = caregivers.find((c) => c.id === selectedId) ?? null;
+  const selectedCaregiver = selectedRow ? toMockCaregiver(selectedRow, detail) : null;
+  const mockCaregivers: Caregiver[] = caregivers.map((c) => toMockCaregiver(c));
 
-  const selectedDocuments = useMemo(
-    () => (selectedId ? mockDocuments.filter((d) => d.caregiverId === selectedId) : []),
-    [selectedId]
-  );
-
-  const currentTabConfig = TAB_CONFIG.find((t) => t.value === activeTab)!;
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab as ApprovalTab);
-    setSelectedId(null);
-  };
-
-  const handleApprove = (caregiverId: string) => {
-    setCaregivers((prev) =>
-      prev.map((c) =>
-        c.id === caregiverId ? { ...c, status: "verified" as const } : c
-      )
-    );
-    setSelectedId(null);
-    toast({
-      title: "Cuidador aprovado",
-      description: `${selectedCaregiver?.name} foi verificado com sucesso.`,
-    });
-  };
-
-  const handleReject = (caregiverId: string, reason: string) => {
-    setCaregivers((prev) =>
-      prev.map((c) =>
-        c.id === caregiverId ? { ...c, status: "rejected" as const } : c
-      )
-    );
-    setSelectedId(null);
-    toast({
-      title: "Cuidador reprovado",
-      description: `${selectedCaregiver?.name} foi reprovado. Motivo: ${reason}`,
-      variant: "destructive",
-    });
-  };
+  const pendingCount   = counts?.["pending"]   ?? caregivers.length;
+  const analyzingCount = counts?.["analyzing"] ?? 0;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -81,65 +86,59 @@ const ApprovalQueue = () => {
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader
-          title="Aprovações"
-          description="Revisão de documentos e verificação de cuidadores"
+          title="Revisões"
+          description="Revisão de documentos de identificação dos cuidadores"
         />
 
-        <Tabs
-          value={activeTab}
-          onValueChange={handleTabChange}
-          className="mt-6"
-        >
-          <TabsList className="mb-6">
-            {TAB_CONFIG.map((tab) => {
-              const count = caregivers.filter(
-                (c) => c.status === tab.value
-              ).length;
-              return (
-                <TabsTrigger key={tab.value} value={tab.value}>
-                  {tab.label}
-                  {count > 0 && (
-                    <span className="ml-1.5 text-[11px] bg-muted px-1.5 py-0.5 rounded-full">
-                      {count}
-                    </span>
-                  )}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Pendentes</span>
+              {pendingCount > 0 && (
+                <span className="text-[11px] bg-muted px-1.5 py-0.5 rounded-full">
+                  {pendingCount}
+                </span>
+              )}
+            </div>
 
-          {TAB_CONFIG.map((tab) => (
-            <TabsContent key={tab.value} value={tab.value}>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* List */}
-                <ApprovalCaregiverList
-                  caregivers={filteredCaregivers}
-                  selectedId={selectedId}
-                  onSelect={(c) => setSelectedId(c.id)}
-                  tabLabel={tab.label}
-                />
-
-                {/* Detail Panel */}
-                {selectedCaregiver &&
-                selectedCaregiver.status === tab.value ? (
-                  <ApprovalDetailPanel
-                    caregiver={selectedCaregiver}
-                    documents={selectedDocuments}
-                    readOnly={tab.readOnly}
-                    onApprove={handleApprove}
-                    onReject={handleReject}
-                  />
-                ) : (
-                  <Card className="lg:col-span-2 flex items-center justify-center min-h-[400px]">
-                    <p className="text-sm text-muted-foreground">
-                      Selecione um cuidador para ver detalhes
-                    </p>
-                  </Card>
-                )}
+            {analyzingCount > 0 && (
+              <div className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
+                <Clock className="w-3.5 h-3.5" />
+                {analyzingCount === 1
+                  ? "1 cuidador aguardando reenvio de documento"
+                  : `${analyzingCount} cuidadores aguardando reenvio de documento`}
               </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {loadingList ? (
+              <ApprovalListSkeleton />
+            ) : (
+              <ApprovalCaregiverList
+                caregivers={mockCaregivers}
+                selectedId={selectedId}
+                onSelect={(c) => setSelectedId(c.id)}
+                tabLabel="Pendentes"
+              />
+            )}
+
+            {selectedId && (loadingDetail || loadingDocs) ? (
+              <DetailPanelSkeleton />
+            ) : selectedCaregiver ? (
+              <ApprovalDetailPanel
+                caregiver={selectedCaregiver}
+                documents={documents}
+              />
+            ) : (
+              <Card className="lg:col-span-2 flex items-center justify-center min-h-[400px]">
+                <p className="text-sm text-muted-foreground">
+                  Selecione um cuidador para ver detalhes
+                </p>
+              </Card>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );

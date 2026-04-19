@@ -190,6 +190,18 @@ const CaregiverProfile = () => {
 
   const handleSave = () => {
     if (currentStep === 1) {
+      if (!formData.name.trim()) {
+        toast.error("Nome completo é obrigatório.")
+        return
+      }
+      if (!formData.whatsapp.trim() && !formData.phone.trim()) {
+        toast.error("Informe pelo menos um número de contato (telefone ou WhatsApp).")
+        return
+      }
+      if (!formData.cep.trim() || !formData.street.trim() || !formData.number.trim() || !formData.neighborhood.trim() || !formData.city.trim() || !formData.state.trim()) {
+        toast.error("CEP, rua, número, bairro, cidade e estado são obrigatórios.")
+        return
+      }
       updateBasic.mutate({
         full_name: formData.name,
         phone: formData.phone,
@@ -205,7 +217,11 @@ const CaregiverProfile = () => {
         categoria_cnh: formData.possuiCNH ? formData.categoriaCNH || null : null,
       })
     } else if (currentStep === 2) {
-      if (formData.bio.trim().length > 0 && formData.bio.trim().length < 150) {
+      if (!formData.bio.trim()) {
+        toast.error("A biografia é obrigatória.")
+        return
+      }
+      if (formData.bio.trim().length < 150) {
         toast.error("A biografia deve ter pelo menos 150 caracteres.")
         return
       }

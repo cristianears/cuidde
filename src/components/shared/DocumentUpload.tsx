@@ -1,4 +1,4 @@
-import { Upload, FileText, Check, X, AlertCircle, Clock } from "lucide-react";
+import { Upload, FileText, Check, X, AlertCircle, Clock, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CaregiverDocument } from "@/types/database";
@@ -40,6 +40,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
     },
   };
 
+  const isRgCnh = document.type === 'rg_cnh';
   const config = statusConfig[document.status];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +82,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
               {config.icon}
               {document.status === 'pending' && 'Pendente'}
               {document.status === 'sent' && 'Enviado'}
-              {document.status === 'approved' && 'Aprovado'}
+              {document.status === 'approved' && (isRgCnh ? 'Legível' : 'Aprovado')}
               {document.status === 'rejected' && 'Rejeitado'}
             </span>
           </div>
@@ -108,40 +109,48 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
           )}
         </div>
 
-        <div className="flex-shrink-0">
-          {document.status === 'pending' && (
-            <label>
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileSelect}
-              />
-              <Button variant="outline" size="sm" className="cursor-pointer" asChild>
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Enviar
-                </span>
-              </Button>
-            </label>
-          )}
-
-          {document.status === 'rejected' && (
-            <label>
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileSelect}
-              />
-              <Button variant="outline" size="sm" className="cursor-pointer border-red-200 text-red-700 hover:bg-red-50" asChild>
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Reenviar
-                </span>
-              </Button>
-            </label>
-          )}
+        <div className="flex-shrink-0 flex flex-col gap-1.5">
+          {(document.status === 'pending' || document.status === 'rejected') && (() => {
+            const isRejected = document.status === 'rejected';
+            const btnClass = isRejected
+              ? "cursor-pointer border-red-200 text-red-700 hover:bg-red-50"
+              : "cursor-pointer";
+            return (
+              <>
+                {/* Escolher arquivo */}
+                <label>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileSelect}
+                  />
+                  <Button variant="outline" size="sm" className={btnClass} asChild>
+                    <span>
+                      <Upload className="w-4 h-4 mr-2" />
+                      {isRejected ? "Reenviar" : "Arquivo"}
+                    </span>
+                  </Button>
+                </label>
+                {/* Tirar foto — abre câmera traseira em mobile */}
+                <label>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/jpeg,image/png"
+                    capture="environment"
+                    onChange={handleFileSelect}
+                  />
+                  <Button variant="outline" size="sm" className={btnClass} asChild>
+                    <span>
+                      <Camera className="w-4 h-4 mr-2" />
+                      Câmera
+                    </span>
+                  </Button>
+                </label>
+              </>
+            );
+          })()}
 
           {(document.status === 'sent' || document.status === 'approved') && (
             <Button
