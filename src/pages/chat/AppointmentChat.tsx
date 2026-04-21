@@ -9,6 +9,7 @@ import StatusBadge from "@/components/shared/StatusBadge";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppointmentDetail } from "@/hooks/useAppointments";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useChatMessages, useSendMessage, useChatRealtime, useMarkMessagesAsRead } from "@/hooks/useChat";
 import { filterContactInfo, hasContactInfo, CONTACT_WARNING_MESSAGE } from "@/lib/contact-filter";
 import type { AppointmentStatus } from "@/types/database";
@@ -18,6 +19,12 @@ const AppointmentChat = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const userRole = profile?.role === "caregiver" ? "caregiver" : "family";
+  const { data: familyProfile } = useFamilyProfile();
+  // Cuidadores nunca são bloqueados; famílias precisam de assinatura ativa
+  const canSendMessages =
+    userRole === "caregiver" ||
+    familyProfile?.subscription_status === "active" ||
+    familyProfile?.subscription_status === "past_due";
 
   const { data: appointment, isLoading: isLoadingAppointment } = useAppointmentDetail(id, { refetchInterval: 15_000 });
   const { data: messages = [], isLoading: isLoadingMessages } = useChatMessages(id);
@@ -291,28 +298,39 @@ const AppointmentChat = () => {
       <footer className="sticky bottom-0 bg-card border-t border-border px-4 py-3">
         <div className="max-w-3xl mx-auto">
           {isWritable ? (
-            <div className="flex items-end gap-2">
-              <Textarea
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Digite sua mensagem..."
-                className="min-h-[44px] max-h-32 resize-none"
-                rows={1}
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim() || isSending}
-                size="icon"
-                className="flex-shrink-0 h-11 w-11"
-              >
-                {isSending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </Button>
-            </div>
+            canSendMessages ? (
+              <div className="flex items-end gap-2">
+                <Textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Digite sua mensagem..."
+                  className="min-h-[44px] max-h-32 resize-none"
+                  rows={1}
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || isSending}
+                  size="icon"
+                  className="flex-shrink-0 h-11 w-11"
+                >
+                  {isSending ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-2 space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Assine um plano para enviar mensagens.
+                </p>
+                <Button size="sm" onClick={() => navigate("/family/billing")}>
+                  Ver planos
+                </Button>
+              </div>
+            )
           ) : (
             <div className="text-center py-2">
               <p className="text-sm text-muted-foreground">
