@@ -52,9 +52,9 @@ const Benefits = () => {
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
-          {benefits.map((benefit, index) => (
+          {benefits.map((benefit) => (
             <div
-              key={index}
+              key={benefit.title}
               className="group bg-card p-4 rounded-xl shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 border border-border/30 hover:border-primary/20"
             >
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">

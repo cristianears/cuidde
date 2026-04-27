@@ -53,7 +53,7 @@ const FAQ = () => {
           <Accordion type="single" collapsible className="space-y-2.5">
             {faqs.map((faq, index) => (
               <AccordionItem
-                key={index}
+                key={faq.question}
                 value={`item-${index}`}
                 className="bg-card rounded-xl px-5 border border-border/30 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/30 data-[state=open]:shadow-card-hover data-[state=open]:border-primary/40 transition-all duration-300"
               >

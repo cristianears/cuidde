@@ -24,8 +24,6 @@ export default function BrandMark({
       <img
         src="/logo.png"
         alt="ditti"
-        width={size}
-        height={size}
         className="shrink-0 object-contain"
         style={{ width: size, height: size }}
       />

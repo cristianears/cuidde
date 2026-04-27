@@ -60,9 +60,22 @@ export function usePendingAddress() {
     }
 
     ;(async () => {
+      // Extrair apenas campos de endereço conhecidos — nunca passar o objeto raw
+      // do localStorage, pois campos extras (ex: subscription_status) seriam incluídos no UPDATE.
+      const raw = pending.address as Record<string, unknown>
+      const safeAddress = {
+        cep:          raw['cep']          ?? null,
+        street:       raw['street']       ?? null,
+        number:       raw['number']       ?? null,
+        complement:   raw['complement']   ?? null,
+        neighborhood: raw['neighborhood'] ?? null,
+        city:         raw['city']         ?? null,
+        state:        raw['state']        ?? null,
+      }
+
       const { error } = await supabase
         .from(pending.table)
-        .update(pending.address)
+        .update(safeAddress)
         .eq('id', user.id)
 
       if (!error) {

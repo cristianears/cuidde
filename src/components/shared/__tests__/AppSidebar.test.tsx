@@ -54,9 +54,9 @@ describe('AppSidebar', () => {
     vi.clearAllMocks()
   })
 
-  it('renderiza o logo CuidaBem', () => {
+  it('renderiza o logo ditti', () => {
     renderSidebar()
-    expect(screen.getByText('CuidaBem')).toBeInTheDocument()
+    expect(screen.getByText('ditti')).toBeInTheDocument()
   })
 
   it('exibe o nome do usuário', () => {
@@ -94,9 +94,8 @@ describe('AppSidebar', () => {
   it('renderiza itens de menu do admin', () => {
     renderSidebar({ role: 'admin' }, '/admin')
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Aprovações')).toBeInTheDocument()
+    expect(screen.getByText('Revisões')).toBeInTheDocument()
     expect(screen.getByText('Financeiro')).toBeInTheDocument()
-    expect(screen.getByText('Log do sistema')).toBeInTheDocument()
   })
 
   it('colapsa sidebar ao clicar no botão de toggle', () => {
@@ -104,9 +103,9 @@ describe('AppSidebar', () => {
     const toggleButton = screen.getByLabelText('Recolher menu')
     fireEvent.click(toggleButton)
 
-    // Após colapsar, nome do usuário e labels devem sumir
+    // Após colapsar, nome do usuário e wordmark devem sumir
     expect(screen.queryByText('Maria Silva')).not.toBeInTheDocument()
-    expect(screen.queryByText('CuidaBem')).not.toBeInTheDocument()
+    expect(screen.queryByText('ditti')).not.toBeInTheDocument()
   })
 
   it('expande sidebar ao clicar no botão de toggle quando colapsada', () => {
@@ -118,7 +117,7 @@ describe('AppSidebar', () => {
     fireEvent.click(expandButton) // expande
 
     expect(screen.getByText('Maria Silva')).toBeInTheDocument()
-    expect(screen.getByText('CuidaBem')).toBeInTheDocument()
+    expect(screen.getByText('ditti')).toBeInTheDocument()
   })
 
   it('chama signOut e navega para /login ao clicar em Sair', async () => {
@@ -143,6 +142,7 @@ describe('AppSidebar', () => {
 
   it('exibe ícone placeholder quando userPhoto não é fornecido', () => {
     renderSidebar({ userPhoto: undefined })
-    expect(screen.queryByRole('img')).not.toBeInTheDocument()
+    // Sem foto, não deve haver img com alt igual ao nome do usuário (só o logo existe)
+    expect(screen.queryByAltText('Maria Silva')).not.toBeInTheDocument()
   })
 })

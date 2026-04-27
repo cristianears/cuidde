@@ -4,7 +4,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Padrões base (sem flags) — usados para derivar versões com e sem /g
-const PHONE_SRC = String.raw`(?:\+?\d{1,3}[\s.-]?)?(?:\(?\d{2,3}\)?[\s.-]?)?\d{4,5}[\s.-]?\d{4}`
+// Telefone: exige DDD de 2 dígitos (obrigatório), evitando falsos positivos em preços e datas
+const PHONE_SRC = String.raw`\(?\d{2}\)?[\s.-]?\d{4,5}[\s.-]?\d{4}`
 const EMAIL_SRC = String.raw`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`
 const URL_SRC = String.raw`https?:\/\/[^\s]+|www\.[^\s]+`
 

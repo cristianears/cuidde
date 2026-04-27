@@ -325,6 +325,13 @@ serve(async (req) => {
   if (action === 'get_document_signed_url') {
     const { file_url } = body
     if (!file_url) return json({ error: 'file_url required' }, 400, cors)
+
+    // Validar formato: {uuid}/{tipo}.{ext} — rejeita path traversal e buckets arbitrários
+    const PATH_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[a-z_]+\.(pdf|jpg|jpeg|png|webp)$/i
+    if (!PATH_PATTERN.test(file_url)) {
+      return json({ error: 'Caminho de arquivo inválido' }, 400, cors)
+    }
+
     const { data, error } = await supabase.storage
       .from('documents')
       .createSignedUrl(file_url, 120)

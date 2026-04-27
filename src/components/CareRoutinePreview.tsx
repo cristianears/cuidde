@@ -51,9 +51,9 @@ const CareRoutinePreview = () => {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4 max-w-5xl mx-auto mb-4">
-          {items.map((item, index) => (
+          {items.map((item) => (
             <div
-              key={index}
+              key={item.title}
               className="group bg-card p-4 rounded-xl shadow-card border border-border/30 hover:shadow-card-hover hover:-translate-y-1 hover:border-primary/30 transition-all duration-300"
             >
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:from-primary/20 transition-all duration-300">

@@ -3,6 +3,21 @@ import { Button } from "./ui/button";
 import familiesImage from "@/assets/families-card-image.jpg";
 import caregiversImage from "@/assets/caregivers-card-image.jpg";
 import { useNavigate } from "react-router-dom";
+
+const familyFeatures = [
+  "Veja certificações, cursos e referências enviados pelo profissional",
+  "Leia avaliações de famílias que já contrataram",
+  "Compare perfis com calma, sem pressão",
+  "Tenha acesso a registro de cuidados realizados e ocorrências em tempo real informados pelo cuidador",
+];
+
+const caregiverFeatures = [
+  "Perfil completo com suas certificações, cursos e referências",
+  "Avaliações de famílias que fortalecem sua reputação ao longo do tempo",
+  "Atendimentos por plantão, diária, meio período ou contrato contínuo",
+  "Você define sua disponibilidade, região e forma de trabalho",
+];
+
 const TwoPaths = () => {
   const navigate = useNavigate();
   return (
@@ -30,22 +45,12 @@ const TwoPaths = () => {
                   Encontre o profissional certo com informações organizadas para tomar a melhor decisão.
                 </p>
                 <ul className="space-y-2 flex-grow text-xs md:text-sm">
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Veja certificações, cursos e referências enviados pelo profissional</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Leia avaliações de famílias que já contrataram</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Compare perfis com calma, sem pressão</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Tenha acesso a registro de cuidados realizados e ocorrências em tempo real informados pelo cuidador</span>
-                  </li>
+                  {familyFeatures.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-foreground">
+                      <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
                 </ul>
                 <p className="text-xs md:text-sm text-muted-foreground mt-3 leading-relaxed">
                   A contratação e o pagamento do serviço são combinados diretamente entre você e o profissional escolhido.
@@ -88,22 +93,12 @@ const TwoPaths = () => {
                   Mostre seu valor, construa sua reputação e seja encontrado por quem precisa de você.
                 </p>
                 <ul className="space-y-2 flex-grow text-xs md:text-sm">
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Perfil completo com suas certificações, cursos e referências</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Avaliações de famílias que fortalecem sua reputação ao longo do tempo</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Atendimentos por plantão, diária, meio período ou contrato contínuo</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-foreground">
-                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
-                    <span>Você define sua disponibilidade, região e forma de trabalho</span>
-                  </li>
+                  {caregiverFeatures.map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-foreground">
+                      <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
                 </ul>
                 <p className="text-xs md:text-sm text-muted-foreground mt-3 leading-relaxed">
                   Cadastro gratuito. Você negocia diretamente com a família — sem intermediação e sem comissão sobre seus ganhos.

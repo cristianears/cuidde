@@ -21,6 +21,14 @@ export function cleanCep(value: string): string {
 }
 
 /**
+ * Formata dígitos de CEP como XXXXX-XXX
+ */
+export function formatCep(digits: string): string {
+  if (digits.length <= 5) return digits
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`
+}
+
+/**
  * Formata valor em Real brasileiro (R$ 1.234,56)
  */
 export function formatCurrency(value: number | null | undefined): string {

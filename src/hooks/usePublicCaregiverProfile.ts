@@ -86,8 +86,6 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
     queryFn: async (): Promise<CaregiverPublicDetail | null> => {
       if (!caregiverId) return null
 
-      // 1) Perfil principal via RPC com gating server-side.
-      //    full_name e professional_reg_number só vêm preenchidos para assinantes/admin.
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         'get_caregiver_public_detail',
         { p_caregiver_id: caregiverId },
@@ -130,31 +128,25 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         is_available_for_new: row.is_available_for_new,
       }
 
-      // 2) Referências profissionais — apenas para assinantes
-      //    aplicando mascaramento conforme flags de privacidade do cuidador
+      // Reviews are independent of subscriber-gated data — run in parallel
+      const reviewsQuery = supabase
+        .from('reviews')
+        .select('*')
+        .eq('caregiver_id', caregiverId)
+        .order('created_at', { ascending: false })
+
       let references: ProfessionalReference[] = []
       let referenceCount = 0
-      if (row.has_references && isSubscriber && row.show_refs_to_subscribers) {
-        const { data: refsData } = await supabase
-          .from('professional_references')
-          .select('*')
-          .eq('caregiver_id', caregiverId)
-          .order('created_at', { ascending: true })
-
-        if (refsData) {
-          references = (refsData as ProfessionalReference[]).map((ref) => ({
-            ...ref,
-            phone: row.mask_reference_phones ? maskPhoneBrazilian(ref.phone) : ref.phone,
-            name: row.show_reference_full_names ? ref.name : abbreviateName(ref.name),
-          }))
-          referenceCount = references.length
-        }
-      }
-
-      // 3) Documentos visíveis (excluindo rg_cnh por privacidade) — apenas para assinantes
       let documents: Pick<CaregiverDocument, 'id' | 'type' | 'file_name' | 'file_url' | 'status'>[] = []
+      let reviews: Review[] = []
+
       if (isSubscriber) {
-        const { data: docsData } = await supabase
+        // Refs and docs hit different tables — fetch both in parallel with reviews
+        const refsQuery = (row.has_references && row.show_refs_to_subscribers)
+          ? supabase.from('professional_references').select('*').eq('caregiver_id', caregiverId).order('created_at', { ascending: true })
+          : Promise.resolve({ data: null as ProfessionalReference[] | null })
+
+        const docsQuery = supabase
           .from('caregiver_documents')
           .select('id, type, file_name, file_url, status')
           .eq('caregiver_id', caregiverId)
@@ -162,15 +154,26 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
           .neq('type', 'rg_cnh')
           .order('created_at', { ascending: true })
 
-        if (docsData) {
-          documents = docsData as typeof documents
+        const [refsResult, docsResult, reviewsResult] = await Promise.all([refsQuery, docsQuery, reviewsQuery])
+
+        if (refsResult.data) {
+          references = refsResult.data.map((ref) => ({
+            ...ref,
+            phone: row.mask_reference_phones ? maskPhoneBrazilian(ref.phone) : ref.phone,
+            name: row.show_reference_full_names ? ref.name : abbreviateName(ref.name),
+          }))
+          referenceCount = references.length
         }
+        if (docsResult.data) documents = docsResult.data as typeof documents
+        reviews = (reviewsResult.data as Review[]) ?? []
       } else {
-        // Preview gated para não-assinantes (RPC SECURITY DEFINER, sem file_url)
-        const { data: previewData } = await supabase.rpc('get_caregiver_gated_preview', {
-          p_caregiver_id: caregiverId,
-        })
-        const preview = (previewData ?? {}) as {
+        // Non-subscriber: gated preview via SECURITY DEFINER RPC (no file_url exposed)
+        const [previewResult, reviewsResult] = await Promise.all([
+          supabase.rpc('get_caregiver_gated_preview', { p_caregiver_id: caregiverId }),
+          reviewsQuery,
+        ])
+
+        const preview = (previewResult.data ?? {}) as {
           documents?: Array<{ id: string; type: string; file_name: string | null; status: string }>
           reference_count?: number
         }
@@ -182,26 +185,11 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
           status: d.status as CaregiverDocument['status'],
         }))
         referenceCount = preview.reference_count ?? 0
-      }
-
-      // 4) Avaliações
-      let reviews: Review[] = []
-      const { data: reviewsData } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('caregiver_id', caregiverId)
-        .order('created_at', { ascending: false })
-
-      if (reviewsData) {
-        reviews = reviewsData as Review[]
+        reviews = (reviewsResult.data as Review[]) ?? []
       }
 
       return {
         ...base,
-        // base.full_name já vem null do servidor para não-assinantes;
-        // para assinantes mantemos o valor original (sem abreviação adicional).
-        full_name: base.full_name,
-        professional_reg_number: base.professional_reg_number,
         isSubscriber,
         formacao_complementar: row.formacao_complementar ?? null,
         pricing_note: row.pricing_note ?? null,
@@ -223,6 +211,5 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
       }
     },
     enabled: !!user && !!caregiverId,
-    staleTime: 0,
   })
 }

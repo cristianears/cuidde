@@ -1,32 +1,20 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
+import { cleanCep, formatCep } from "@/lib/formatters";
 import heroBg from "@/assets/hero-bg.jpg";
-function normalizeCep(input: string) {
-  return input.replace(/\D/g, "").slice(0, 8);
-}
-function formatCep(digits: string) {
-  if (digits.length <= 5) return digits;
-  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
 const Hero = () => {
   const navigate = useNavigate();
   const [cepRaw, setCepRaw] = useState("");
   const [touched, setTouched] = useState(false);
-  const cepDigits = useMemo(() => normalizeCep(cepRaw), [cepRaw]);
-  const cepFormatted = useMemo(() => formatCep(cepDigits), [cepDigits]);
+  const cepDigits = cleanCep(cepRaw);
+  const cepFormatted = formatCep(cepDigits);
   const isCepValid = cepDigits.length === 8;
   const goFamilyFlow = () => {
     setTouched(true);
     if (!isCepValid) return;
     navigate(`/onboarding?type=family&cep=${encodeURIComponent(cepDigits)}`);
-  };
-  const goCaregiverFlow = () => {
-    navigate(`/onboarding?type=caregiver`);
-  };
-  const goLogin = () => {
-    navigate('/login');
   };
   return (
     <section className="relative h-[100dvh] flex flex-col pt-16">
@@ -93,7 +81,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-3">
               <Button
                 variant="outline"
-                onClick={goCaregiverFlow}
+                onClick={() => navigate("/onboarding?type=caregiver")}
                 className="group w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border-white/50 font-semibold px-5 py-3 text-sm rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg shadow-md"
               >
                 Sou Profissional — Criar Perfil Grátis
@@ -105,7 +93,7 @@ const Hero = () => {
               Já tem conta?{" "}
               <button
                 type="button"
-                onClick={goLogin}
+                onClick={() => navigate("/login")}
                 className="font-semibold text-primary-foreground/90 underline underline-offset-4 hover:no-underline transition-all"
               >
                 Entrar

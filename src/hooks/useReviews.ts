@@ -128,12 +128,13 @@ export function useSubmitReview() {
       // This also validates that the family_id on the appointment matches the caller.
       const { data: appt, error: apptError } = await supabase
         .from('appointments')
-        .select('caregiver_id, family_id')
+        .select('caregiver_id, family_id, status')
         .eq('id', payload.appointment_id)
         .single()
 
       if (apptError || !appt) throw new Error('Atendimento não encontrado.')
       if (appt.family_id !== user.id) throw new Error('Não autorizado.')
+      if (appt.status !== 'finalizado') throw new Error('Só é possível avaliar atendimentos finalizados.')
 
       const caregiverId: string = appt.caregiver_id
 

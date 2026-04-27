@@ -22,5 +22,7 @@ BEGIN
 END;
 $$;
 
--- Permite que qualquer usuário autenticado chame a função
+-- Revogar acesso da role public (padrão do PostgreSQL concede EXECUTE a todos)
+-- e restringir apenas a usuários autenticados, igual às demais RPCs SECURITY DEFINER.
+REVOKE ALL ON FUNCTION public.reset_caregiver_to_pending(uuid) FROM public;
 GRANT EXECUTE ON FUNCTION public.reset_caregiver_to_pending(uuid) TO authenticated;
