@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { Heart, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -141,11 +142,8 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background flex flex-col">
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
-          <Link to="/" className="flex items-center gap-3 w-fit">
-            <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-              <Heart className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground tracking-tight">cuidde</span>
+          <Link to="/" className="w-fit">
+            <BrandMark size={40} />
           </Link>
         </div>
       </header>
@@ -157,7 +155,7 @@ export default function Login() {
           {view === 'email' && (
             <div className="space-y-6 animate-fade-in">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na cuidde</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na ditti</h1>
                 <p className="text-muted-foreground mt-2 text-sm">Acesse sua conta</p>
               </div>
 
@@ -235,7 +233,7 @@ export default function Login() {
           {view === 'password' && (
             <div className="space-y-6 animate-fade-in">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na cuidde</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na ditti</h1>
                 <p className="mt-2 text-sm text-muted-foreground truncate max-w-xs mx-auto">{email}</p>
               </div>
 

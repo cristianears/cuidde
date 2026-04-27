@@ -18,7 +18,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useSubscription } from "@/hooks/useSubscription";
-import type { InvoiceStatus } from "@/types/database";
 
 const planNames: Record<string, string> = {
   monthly: "Mensal",
@@ -26,13 +25,17 @@ const planNames: Record<string, string> = {
   annual: "Anual",
 };
 
-const statusConfig: Record<InvoiceStatus, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; className: string }> = {
   draft:         { label: "Cancelada",  className: "bg-red-100 text-red-700" },
   open:          { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
   paid:          { label: "Paga",       className: "bg-emerald-100 text-emerald-700" },
   void:          { label: "Cancelada",  className: "bg-red-100 text-red-700" },
   uncollectible: { label: "Cancelada",  className: "bg-red-100 text-red-700" },
+  pending:       { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
+  overdue:       { label: "Vencida",    className: "bg-red-100 text-red-700" },
 };
+
+const fallbackStatus = { label: "—", className: "bg-gray-100 text-gray-500" };
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -65,7 +68,7 @@ const FamilyInvoices = () => {
       />
 
       <main className="flex-1 p-6 lg:p-8">
-        <PageHeader title="Faturas" description="Histórico de cobranças da sua assinatura na Cuidde">
+        <PageHeader title="Faturas" description="Histórico de cobranças da sua assinatura na ditti">
           <Button variant="outline" asChild>
             <Link to="/family/billing">Ver planos</Link>
           </Button>
@@ -138,8 +141,8 @@ const FamilyInvoices = () => {
                           {invoice.paid_at ? formatDate(invoice.paid_at) : "—"}
                         </TableCell>
                         <TableCell>
-                          <Badge className={statusConfig[invoice.status].className}>
-                            {statusConfig[invoice.status].label}
+                          <Badge className={(statusConfig[invoice.status] ?? fallbackStatus).className}>
+                            {(statusConfig[invoice.status] ?? fallbackStatus).label}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">

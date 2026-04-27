@@ -1,4 +1,4 @@
-import { ShieldCheck, Heart, FileText, Clock, Star, MessageCircle } from "lucide-react";
+import { ShieldCheck, Heart, FileText, Clock, Star, MessageCircle, Activity } from "lucide-react";
 const benefits = [
   {
     icon: ShieldCheck,
@@ -31,10 +31,10 @@ const benefits = [
       "Converse com o profissional dentro da plataforma antes de fechar qualquer acordo. Você decide quando avançar.",
   },
   {
-    icon: Heart,
-    title: "Reputação construída com o tempo",
+    icon: Activity,
+    title: "Acompanhe a rotina do seu familiar de perto",
     description:
-      "Profissionais que valorizam sua reputação e constroem confiança a cada novo atendimento.",
+      "Alimentação, hidratação, diário de bem-estar e sinais vitais registrados pelo cuidador — para você ter paz, mesmo trabalhando ou morando longe.",
   },
 ];
 const Benefits = () => {
@@ -45,7 +45,7 @@ const Benefits = () => {
       <div className="container mx-auto px-6 md:px-10 relative">
         <div className="text-center mb-8">
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
-            Por que escolher a Cuidde?
+            Por que escolher a ditti?
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-3xl mx-auto">
             Mais informação e mais transparência para você tomar a decisão certa — com calma e autonomia.
@@ -55,7 +55,7 @@ const Benefits = () => {
           {benefits.map((benefit, index) => (
             <div
               key={index}
-              className="group bg-card p-4 rounded-xl shadow-card hover:shadow-card-hover transition-all duration-500 border border-border/30 hover:border-primary/20"
+              className="group bg-card p-4 rounded-xl shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 border border-border/30 hover:border-primary/20"
             >
               <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
                 <benefit.icon className="w-4 h-4 text-primary" />

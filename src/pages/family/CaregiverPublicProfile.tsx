@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, MapPin, Briefcase, Star, Clock, CalendarClock, Shield, Car,
   Award, FileCheck, FileText, User, BadgeCheck, Zap, Globe, Heart, Send,
-  GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2,
+  GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock,
 } from "lucide-react"
 import AppSidebar from "@/components/shared/AppSidebar"
 import { Card, CardContent } from "@/components/ui/card"
@@ -103,6 +103,16 @@ const CaregiverPublicProfile = () => {
 
   const [requestDialogOpen, setRequestDialogOpen] = useState(false)
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string; isPdf: boolean } | null>(null)
+
+  const isSubscriber = caregiver?.isSubscriber ?? false
+
+  const handleRequestAppointment = () => {
+    if (!isSubscriber) {
+      navigate('/family/billing')
+      return
+    }
+    setRequestDialogOpen(true)
+  }
   const [loadingDocId, setLoadingDocId] = useState<string | null>(null)
 
   const handleViewDocument = async (docId: string, fileUrl: string | null, fileName: string | null) => {
@@ -319,11 +329,11 @@ const CaregiverPublicProfile = () => {
                   {/* CTAs */}
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button
-                      onClick={() => setRequestDialogOpen(true)}
+                      onClick={handleRequestAppointment}
                       className="gap-2"
                     >
-                      <Send className="w-4 h-4" />
-                      Solicitar Atendimento
+                      {isSubscriber ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                      {isSubscriber ? "Solicitar Atendimento" : "Assine para contato"}
                     </Button>
                     <Button
                       variant="outline"
@@ -530,7 +540,7 @@ const CaregiverPublicProfile = () => {
                           <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium", statusInfo.cls)}>
                             {statusInfo.label}
                           </span>
-                          {doc.file_url && (
+                          {isSubscriber && doc.file_url && (
                             <Button
                               variant="ghost"
                               size="sm"
@@ -546,6 +556,17 @@ const CaregiverPublicProfile = () => {
                               Visualizar
                             </Button>
                           )}
+                          {!isSubscriber && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs gap-1 text-primary hover:text-primary"
+                              onClick={() => navigate('/family/billing')}
+                            >
+                              <Lock className="w-3.5 h-3.5" />
+                              Assine para visualizar
+                            </Button>
+                          )}
                         </div>
                       </div>
                     )
@@ -556,7 +577,7 @@ const CaregiverPublicProfile = () => {
           )}
 
           {/* Referências Profissionais */}
-          {caregiver.references?.length > 0 && (
+          {(caregiver.references?.length > 0 || (!isSubscriber && caregiver.reference_count > 0)) && (
             <Card className="mb-4">
               <CardContent className="p-4 sm:p-6">
                 <h2 className="text-base font-semibold mb-3 flex items-center gap-1.5">
@@ -564,34 +585,57 @@ const CaregiverPublicProfile = () => {
                   Referências Profissionais
                 </h2>
                 <div className="space-y-3">
-                  {caregiver.references.map((ref) => (
-                    <div key={ref.id} className="rounded-lg border p-3 space-y-1">
-                      <p className="text-sm font-medium">{ref.name}</p>
-                      {ref.position && (
-                        <p className="text-xs text-muted-foreground">{ref.position}</p>
-                      )}
-                      {ref.workplace && (
-                        <p className="text-xs text-muted-foreground">
-                          Local: {ref.workplace}
-                        </p>
-                      )}
-                      {ref.work_duration && (
-                        <p className="text-xs text-muted-foreground">
-                          Tempo de trabalho: {ref.work_duration}
-                        </p>
-                      )}
-                      {ref.phone && (
-                        <p className="text-xs text-muted-foreground">
-                          Telefone: {ref.phone}
-                        </p>
-                      )}
-                      {ref.notes && (
-                        <p className="text-xs text-muted-foreground italic mt-1">
-                          {ref.notes}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {isSubscriber
+                    ? caregiver.references.map((ref) => (
+                        <div key={ref.id} className="rounded-lg border p-3 space-y-1">
+                          <p className="text-sm font-medium">{ref.name}</p>
+                          {ref.position && (
+                            <p className="text-xs text-muted-foreground">{ref.position}</p>
+                          )}
+                          {ref.workplace && (
+                            <p className="text-xs text-muted-foreground">
+                              Local: {ref.workplace}
+                            </p>
+                          )}
+                          {ref.work_duration && (
+                            <p className="text-xs text-muted-foreground">
+                              Tempo de trabalho: {ref.work_duration}
+                            </p>
+                          )}
+                          {ref.phone && (
+                            <p className="text-xs text-muted-foreground">
+                              Telefone: {ref.phone}
+                            </p>
+                          )}
+                          {ref.notes && (
+                            <p className="text-xs text-muted-foreground italic mt-1">
+                              {ref.notes}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    : Array.from({ length: caregiver.reference_count }).map((_, idx) => (
+                        <div
+                          key={idx}
+                          className="rounded-lg border p-3 flex items-center justify-between gap-3"
+                        >
+                          <div className="space-y-1.5 flex-1 min-w-0">
+                            <div className="h-3 w-32 rounded bg-muted" />
+                            <div className="h-2.5 w-24 rounded bg-muted/70" />
+                            <div className="h-2.5 w-40 rounded bg-muted/70" />
+                            <div className="h-2.5 w-28 rounded bg-muted/70" />
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 shrink-0"
+                            onClick={() => navigate('/family/billing')}
+                          >
+                            <Lock className="w-3.5 h-3.5" />
+                            Assine para visualizar
+                          </Button>
+                        </div>
+                      ))}
                 </div>
               </CardContent>
             </Card>
@@ -700,12 +744,12 @@ const CaregiverPublicProfile = () => {
           {/* CTA fixo mobile */}
           <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-50">
             <Button
-              onClick={() => setRequestDialogOpen(true)}
+              onClick={handleRequestAppointment}
               className="w-full gap-2"
               size="lg"
             >
-              <Send className="w-4 h-4" />
-              Solicitar Atendimento
+              {isSubscriber ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              {isSubscriber ? "Solicitar Atendimento" : "Assine para contato"}
             </Button>
           </div>
 

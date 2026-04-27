@@ -1,4 +1,4 @@
-import { ArrowRight, Heart, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 const CaregiverCTA = () => {
@@ -9,8 +9,8 @@ const CaregiverCTA = () => {
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
       <div className="container mx-auto px-6 md:px-10 relative">
         <div className="max-w-2xl mx-auto text-center text-primary-foreground">
-          <div className="w-14 h-14 rounded-full bg-primary-foreground/10 flex items-center justify-center mx-auto mb-5 backdrop-blur-sm">
-            <Heart className="w-7 h-7" />
+          <div className="w-16 h-16 rounded-full bg-primary-foreground/10 flex items-center justify-center mx-auto mb-5 backdrop-blur-sm animate-float-up">
+            <img src="/logo.png" alt="ditti" className="w-10 h-10 object-contain" />
           </div>
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 tracking-tight max-w-lg mx-auto leading-snug">
             É cuidador? Conecte-se a famílias que valorizam seu trabalho

@@ -30,7 +30,7 @@ const MetricCard = ({
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <p className={cn("font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>{title}</p>
-            <p className={cn("font-bold text-foreground", compact ? "text-xl mt-0.5" : "text-2xl mt-1")}>{value}</p>
+            <p className={cn("font-bold text-foreground whitespace-nowrap", compact ? "text-base mt-0.5" : "text-lg mt-1")}>{value}</p>
             {change !== undefined && (
               <div className="flex items-center gap-1 mt-2">
                 {isPositive && <TrendingUp className="w-4 h-4 text-emerald-600" />}

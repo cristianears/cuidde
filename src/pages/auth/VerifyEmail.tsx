@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, Mail, RefreshCw, CheckCircle2 } from 'lucide-react'
+import { Mail, RefreshCw, CheckCircle2 } from 'lucide-react'
+import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/AuthContext'
 import { resendConfirmationEmail } from '@/lib/auth'
@@ -33,11 +34,8 @@ export default function VerifyEmail() {
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background flex flex-col">
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
-          <Link to="/" className="flex items-center gap-3 w-fit">
-            <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-              <Heart className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground tracking-tight">cuidde</span>
+          <Link to="/" className="w-fit">
+            <BrandMark size={40} />
           </Link>
         </div>
       </header>

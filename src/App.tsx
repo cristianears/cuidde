@@ -40,9 +40,9 @@ import CareHistoryReport from './pages/family/CareHistoryReport'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import ApprovalQueue from './pages/admin/ApprovalQueue'
 import Finance from './pages/admin/Finance'
-import Security from './pages/admin/Security'
 import AppointmentChat from './pages/chat/AppointmentChat'
 import { usePendingAddress } from '@/hooks/usePendingAddress'
+import FreeFamilyBanner from '@/components/shared/FreeFamilyBanner'
 
 // Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
 const AppInit = () => {
@@ -58,6 +58,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AppInit />
+          <FreeFamilyBanner />
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
@@ -99,7 +100,6 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/admin/approvals" element={<ProtectedRoute role="admin"><ApprovalQueue /></ProtectedRoute>} />
             <Route path="/admin/finance" element={<ProtectedRoute role="admin"><Finance /></ProtectedRoute>} />
-            <Route path="/admin/security" element={<ProtectedRoute role="admin"><Security /></ProtectedRoute>} />
 
             {/* Chat — autenticado, qualquer role */}
             <Route path="/chat/:id" element={<ProtectedRoute><AppointmentChat /></ProtectedRoute>} />

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import BrandMark from '@/components/shared/BrandMark'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
@@ -83,9 +83,7 @@ export default function AuthCallback() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-muted/30 to-background gap-6">
-      <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-        <Heart className="w-7 h-7 text-primary-foreground fill-primary-foreground" />
-      </div>
+      <BrandMark size={56} showWordmark={false} />
       <div className="flex flex-col items-center gap-3">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
         <p className="text-muted-foreground text-sm">Autenticando…</p>

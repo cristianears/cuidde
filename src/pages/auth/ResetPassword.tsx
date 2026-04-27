@@ -4,7 +4,8 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Heart, Eye, EyeOff, Lock } from "lucide-react"
+import { Eye, EyeOff, Lock } from "lucide-react"
+import BrandMark from "@/components/shared/BrandMark"
 import { toast } from "sonner"
 import { checkPasswordStrength, PASSWORD_REQUIREMENTS } from "@/lib/password-validation"
 
@@ -51,8 +52,8 @@ export default function ResetPassword() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
-            <Heart className="w-7 h-7 text-primary-foreground fill-primary-foreground" />
+          <div className="inline-flex justify-center mb-4">
+            <BrandMark size={56} showWordmark={false} />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Redefinir Senha</h1>
           <p className="text-muted-foreground mt-2">

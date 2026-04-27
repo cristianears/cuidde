@@ -23,7 +23,7 @@ const checks = [
     icon: Lock,
     title: "Proteção de dados",
     description:
-      "A Cuidde adota medidas de segurança e boas práticas no tratamento de dados, com foco em conformidade com a LGPD.",
+      "A ditti adota medidas de segurança e boas práticas no tratamento de dados, com foco em conformidade com a LGPD.",
   },
 ];
 const Trust = () => {
@@ -45,7 +45,7 @@ const Trust = () => {
               Informação organizada para você decidir com confiança
             </h2>
             <p className="text-sm md:text-base text-muted-foreground mb-4 leading-relaxed">
-              A Cuidde reúne em cada perfil informações enviadas pelo próprio profissional,
+              A ditti reúne em cada perfil informações enviadas pelo próprio profissional,
               facilitando a comparação e a tomada de decisão.
             </p>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed">

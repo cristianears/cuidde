@@ -2,8 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useFamilyProfile } from '@/hooks/useFamilyProfile'
 import { queryKeys } from '@/lib/query-keys'
 import { CAREGIVER_SELECT, mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
+import { abbreviateName } from '@/lib/privacy-masks'
 import type { CaregiverPublic } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -20,9 +22,11 @@ export interface FavoriteWithCaregiver {
  */
 export function useFavorites() {
   const { user } = useAuth()
+  const { data: familyProfile } = useFamilyProfile()
+  const isSubscriber = familyProfile?.subscription_status === 'active'
 
   return useQuery({
-    queryKey: queryKeys.favorites(user?.id ?? ''),
+    queryKey: [...queryKeys.favorites(user?.id ?? ''), isSubscriber],
     queryFn: async (): Promise<FavoriteWithCaregiver[]> => {
       if (!user) return []
 
@@ -40,10 +44,16 @@ export function useFavorites() {
 
       if (error) throw error
 
-      return (data ?? []).map((row: { id: string; caregiver_id: string; caregiver_profiles: RawCaregiverRow }) => ({
-        favorite_id: row.id,
-        caregiver: mapCaregiverRow(row.caregiver_profiles),
-      }))
+      return (data ?? []).map((row: { id: string; caregiver_id: string; caregiver_profiles: RawCaregiverRow }) => {
+        const caregiver = mapCaregiverRow(row.caregiver_profiles)
+        return {
+          favorite_id: row.id,
+          caregiver: isSubscriber ? caregiver : {
+            ...caregiver,
+            full_name: caregiver.full_name ? abbreviateName(caregiver.full_name) : caregiver.full_name,
+          },
+        }
+      })
     },
     enabled: !!user,
     staleTime: 30_000,

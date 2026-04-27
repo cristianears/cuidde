@@ -3,17 +3,17 @@ const faqs = [
   {
     question: "O cadastro do profissional é realmente gratuito?",
     answer:
-      "Sim. Profissionais de cuidado podem criar seu perfil gratuitamente, adicionar certificações, cursos e informações relevantes. A Cuidde não cobra comissão sobre os atendimentos realizados.",
+      "Sim. Profissionais de cuidado podem criar seu perfil gratuitamente, adicionar certificações, cursos e informações relevantes. A ditti não cobra comissão sobre os atendimentos realizados.",
   },
   {
     question: "Quem faz a contratação do profissional?",
     answer:
-      "A contratação é sempre feita diretamente pela família. A Cuidde é uma plataforma de conexão — facilitamos a busca e o contato, mas a negociação de valores, forma de trabalho e vínculo são definidos exclusivamente entre família e profissional, sem intermediação nossa.",
+      "A contratação é sempre feita diretamente pela família. A ditti é uma plataforma de conexão — facilitamos a busca e o contato, mas a negociação de valores, forma de trabalho e vínculo são definidos exclusivamente entre família e profissional, sem intermediação nossa.",
   },
   {
     question: "Como funcionam os documentos e informações do perfil?",
     answer:
-      "Cada profissional preenche seu próprio perfil e pode anexar documentos e declarações (como certificações e certidões, quando desejar). A Cuidde organiza essas informações para facilitar a avaliação da família. A responsabilidade pela veracidade e atualização do que é enviado é do profissional, e a decisão final é sempre da família.",
+      "Cada profissional preenche seu próprio perfil e pode anexar documentos e declarações (como certificações e certidões, quando desejar). A ditti organiza essas informações para facilitar a avaliação da família. A responsabilidade pela veracidade e atualização do que é enviado é do profissional, e a decisão final é sempre da família.",
   },
   {
     question: "O que consigo ver no plano gratuito?",
@@ -26,14 +26,14 @@ const faqs = [
       "Sim. Não há fidelidade. Você pode cancelar quando quiser, sem multa. O acesso continua ativo até o fim do período já pago (mensal, trimestral ou anual).",
   },
   {
-    question: "A Cuidde é responsável pelo vínculo empregatício?",
+    question: "A ditti é responsável pelo vínculo empregatício?",
     answer:
-      "Não. A Cuidde é uma plataforma de conexão entre famílias e profissionais de cuidado. A contratação, o vínculo e o pagamento pelo serviço são definidos e realizados diretamente entre as partes. A Cuidde não é empregadora e não intermedia contratos.",
+      "Não. A ditti é uma plataforma de conexão entre famílias e profissionais de cuidado. A contratação, o vínculo e o pagamento pelo serviço são definidos e realizados diretamente entre as partes. A ditti não é empregadora e não intermedia contratos.",
   },
   {
     question: "Como funcionam os pagamentos?",
     answer:
-      "A família paga à Cuidde apenas a assinatura do plano escolhido para uso da plataforma. O pagamento pelo serviço prestado pelo profissional é feito diretamente a ele, nos valores e condições acordados entre as partes. A Cuidde não intermedia nem processa pagamentos de serviços de cuidado.",
+      "A família paga à ditti apenas a assinatura do plano escolhido para uso da plataforma. O pagamento pelo serviço prestado pelo profissional é feito diretamente a ele, nos valores e condições acordados entre as partes. A ditti não intermedia nem processa pagamentos de serviços de cuidado.",
   },
 ];
 const FAQ = () => {
@@ -46,7 +46,7 @@ const FAQ = () => {
             Perguntas frequentes
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-            Tire suas dúvidas sobre a Cuidde.
+            Tire suas dúvidas sobre a ditti.
           </p>
         </div>
         <div className="max-w-3xl mx-auto">
@@ -55,12 +55,12 @@ const FAQ = () => {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-card rounded-xl px-5 border border-border/30 shadow-card data-[state=open]:shadow-card-hover transition-all duration-300"
+                className="bg-card rounded-xl px-5 border border-border/30 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 hover:border-primary/30 data-[state=open]:shadow-card-hover data-[state=open]:border-primary/40 transition-all duration-300"
               >
-                <AccordionTrigger className="text-left text-foreground font-medium py-4 hover:no-underline text-sm">
+                <AccordionTrigger className="text-left text-foreground font-medium py-4 hover:no-underline hover:text-primary text-sm transition-colors duration-200 [&[data-state=open]]:text-primary">
                   {faq.question}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4 leading-relaxed text-xs md:text-sm">
+                <AccordionContent className="text-muted-foreground pb-4 leading-relaxed text-xs md:text-sm animate-fade-in">
                   {faq.answer}
                 </AccordionContent>
               </AccordionItem>

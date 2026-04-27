@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import {
-  Heart,
   Users,
   User,
   ArrowRight,
@@ -15,6 +14,7 @@ import {
   Circle,
   Phone,
 } from 'lucide-react'
+import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -365,11 +365,8 @@ const Onboarding = () => {
     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">
       <header className="border-b border-border/50 bg-card/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
-          <Link to="/" className="flex items-center gap-3 w-fit">
-            <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-              <Heart className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
-            </div>
-            <span className="text-xl font-semibold text-foreground tracking-tight">cuidde</span>
+          <Link to="/" className="w-fit">
+            <BrandMark size={40} />
           </Link>
         </div>
       </header>
@@ -426,7 +423,7 @@ const Onboarding = () => {
             {currentStepId === 2 && (
               <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a cuidde?</h2>
+                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a ditti?</h2>
                   <p className="text-muted-foreground mt-2">Escolha o perfil que melhor representa você</p>
                 </div>
                 <div className="grid gap-4">

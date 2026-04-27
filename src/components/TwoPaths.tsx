@@ -11,7 +11,7 @@ const TwoPaths = () => {
       <div className="container mx-auto px-6 md:px-10 relative">
         <div className="text-center mb-10 md:mb-12">
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-3 tracking-tight">
-            Para quem é a Cuidde?
+            Para quem é a ditti?
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             Famílias que buscam tranquilidade. Profissionais que buscam reconhecimento.
@@ -41,6 +41,10 @@ const TwoPaths = () => {
                   <li className="flex items-start gap-2 text-foreground">
                     <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
                     <span>Compare perfis com calma, sem pressão</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-foreground">
+                    <CheckCircle className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
+                    <span>Tenha acesso a registro de cuidados realizados e ocorrências em tempo real informados pelo cuidador</span>
                   </li>
                 </ul>
                 <p className="text-xs md:text-sm text-muted-foreground mt-3 leading-relaxed">

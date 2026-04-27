@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useUnreadCounts, useUnreadRealtime } from "@/hooks/useUnreadCounts";
+import BrandMark from "@/components/shared/BrandMark";
 
 import type { UserRole } from '@/types/database';
 
@@ -132,13 +133,8 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
     >
       {/* Logo */}
       <div className="p-4 border-b border-border">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-            <Heart className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <span className="text-xl font-semibold text-foreground">CuidaBem</span>
-          )}
+        <Link to="/" className="flex items-center">
+          <BrandMark size={36} showWordmark={!collapsed} />
         </Link>
       </div>
 

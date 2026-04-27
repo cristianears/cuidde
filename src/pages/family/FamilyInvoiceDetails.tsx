@@ -7,15 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useInvoice } from "@/hooks/useInvoices";
-import type { InvoiceStatus } from "@/types/database";
 
-const statusConfig: Record<InvoiceStatus, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; className: string }> = {
   draft:         { label: "Cancelada",  className: "bg-red-100 text-red-700" },
   open:          { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
   paid:          { label: "Paga",       className: "bg-emerald-100 text-emerald-700" },
   void:          { label: "Cancelada",  className: "bg-red-100 text-red-700" },
   uncollectible: { label: "Cancelada",  className: "bg-red-100 text-red-700" },
+  pending:       { label: "Pendente",   className: "bg-amber-100 text-amber-700" },
+  overdue:       { label: "Vencida",    className: "bg-red-100 text-red-700" },
 };
+
+const fallbackStatus = { label: "—", className: "bg-gray-100 text-gray-500" };
 
 const planNames: Record<string, string> = {
   monthly: "Mensal",
@@ -83,7 +86,7 @@ const FamilyInvoiceDetails = () => {
     );
   }
 
-  const status = statusConfig[invoice.status];
+  const status = statusConfig[invoice.status] ?? fallbackStatus;
 
   return (
     <div className="flex min-h-screen bg-background">

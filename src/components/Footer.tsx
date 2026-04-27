@@ -1,4 +1,5 @@
-import { Heart, Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import BrandMark from "@/components/shared/BrandMark";
 import { useNavigate } from "react-router-dom";
 const Footer = () => {
   const navigate = useNavigate();
@@ -14,12 +15,9 @@ const Footer = () => {
             <button
               type="button"
               onClick={() => navigate("/")}
-              className="flex items-center gap-2 mb-4"
+              className="mb-4"
             >
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Heart className="w-4 h-4 text-primary-foreground fill-primary-foreground" />
-              </div>
-              <span className="text-base font-semibold text-footer-foreground">cuidde</span>
+              <BrandMark size={32} wordmarkClassName="text-footer-foreground" />
             </button>
             <p className="text-footer-foreground/70 mb-5 leading-relaxed text-xs md:text-sm">
               Conectando famílias a profissionais de cuidado com transparência, informação e segurança para decidir melhor.
@@ -138,7 +136,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2.5 text-xs text-footer-foreground/70">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                contato@cuidde.com.br
+                contato@ditti.app.br
               </li>
               <li className="flex items-center gap-2.5 text-xs text-footer-foreground/70">
                 <Phone className="w-4 h-4 flex-shrink-0" />
@@ -153,7 +151,7 @@ const Footer = () => {
         </div>
         {/* Bottom */}
         <div className="pt-6 border-t border-footer-foreground/10 flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="text-xs text-footer-foreground/60 text-center md:text-left">© 2026 cuidde. Todos os direitos reservados.</p>
+          <p className="text-xs text-footer-foreground/60 text-center md:text-left">© 2026 ditti. Todos os direitos reservados.</p>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             <button
               type="button"

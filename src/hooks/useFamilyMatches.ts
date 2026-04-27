@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useFamilyProfile } from '@/hooks/useFamilyProfile'
 import { queryKeys } from '@/lib/query-keys'
 import { DEFAULT_RADIUS_KM } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
+import { abbreviateName } from '@/lib/privacy-masks'
 import type { CaregiverPublic } from '@/types/database'
 
 export type CaregiverMatchWithDistance = CaregiverPublic & {
@@ -13,9 +15,11 @@ export type CaregiverMatchWithDistance = CaregiverPublic & {
 
 export function useFamilyMatches(limit = 3) {
   const { user } = useAuth()
+  const { data: familyProfile } = useFamilyProfile()
+  const isSubscriber = familyProfile?.subscription_status === 'active'
 
   return useQuery({
-    queryKey: queryKeys.familyMatches(user?.id ?? '', limit),
+    queryKey: [...queryKeys.familyMatches(user?.id ?? '', limit), isSubscriber],
     queryFn: async (): Promise<CaregiverMatchWithDistance[]> => {
       if (!user) return []
 
@@ -93,7 +97,14 @@ export function useFamilyMatches(limit = 3) {
 
           results.sort((a, b) => computeRankScore(b, DEFAULT_RADIUS_KM) - computeRankScore(a, DEFAULT_RADIUS_KM))
 
-          return results.slice(0, limit)
+          const sliced = results.slice(0, limit)
+          if (!isSubscriber) {
+            return sliced.map((c) => ({
+              ...c,
+              full_name: c.full_name ? abbreviateName(c.full_name) : c.full_name,
+            }))
+          }
+          return sliced
         }
       }
 

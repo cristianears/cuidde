@@ -15,6 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        montserrat: ['Montserrat', 'system-ui', 'sans-serif'],
+        'dm-sans': ['"DM Sans"', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -94,11 +96,22 @@ export default {
           from: { opacity: "0", transform: "translateY(10px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "soft-pulse": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(var(--accent) / 0.45), 0 4px 12px -2px hsl(var(--accent) / 0.35)" },
+          "50%": { boxShadow: "0 0 0 8px hsl(var(--accent) / 0), 0 8px 20px -4px hsl(var(--accent) / 0.55)" },
+        },
+        "float-up": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-3px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out forwards",
+        "soft-pulse": "soft-pulse 2.4s ease-in-out infinite",
+        "soft-pulse-static": "soft-pulse-static 2.4s ease-in-out infinite",
+        "float-up": "float-up 3s ease-in-out infinite",
       },
     },
   },

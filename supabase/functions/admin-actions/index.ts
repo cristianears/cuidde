@@ -2,8 +2,8 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const ALLOWED_ORIGINS = [
-  'https://cuidde.com.br',
-  'https://www.cuidde.com.br',
+  'https://ditti.app.br',
+  'https://www.ditti.app.br',
   'http://localhost:5173',
   'http://localhost:4173',
 ]

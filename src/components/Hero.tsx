@@ -58,36 +58,34 @@ const Hero = () => {
             </p>
             {/* CEP Search */}
             <div className="mx-auto max-w-lg">
-              <div className="flex flex-col sm:flex-row items-stretch justify-center gap-2 md:gap-3 mb-2">
-                <div className="w-full">
-                  <label className="sr-only" htmlFor="cep">CEP</label>
-                  <input
-                    id="cep"
-                    inputMode="numeric"
-                    autoComplete="postal-code"
-                    placeholder="Digite seu CEP (ex: 12236-063)"
-                    value={cepFormatted}
-                    onChange={(e) => {
-                      setTouched(true);
-                      setCepRaw(e.target.value);
-                    }}
-                    className="w-full rounded-xl px-4 py-3 text-foreground bg-background/95 placeholder:text-muted-foreground/70 border border-white/10 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg text-sm"
-                  />
-                  {touched && !isCepValid && (
-                    <p className="text-xs mt-1.5 text-primary-foreground/70">
-                      Informe um CEP válido com 8 números.
-                    </p>
-                  )}
-                </div>
+              <div className="relative mb-2">
+                <label className="sr-only" htmlFor="cep">CEP</label>
+                <input
+                  id="cep"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  placeholder="Digite seu CEP (ex: 12236-063)"
+                  value={cepFormatted}
+                  onChange={(e) => {
+                    setTouched(true);
+                    setCepRaw(e.target.value);
+                  }}
+                  className="w-full rounded-xl pl-4 pr-2 py-2 text-foreground bg-background/95 placeholder:text-muted-foreground/70 border border-white/10 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg text-sm h-14 sm:pr-[200px]"
+                />
                 <Button
                   onClick={goFamilyFlow}
-                  className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-5 py-3 text-sm rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"
+                  className="mt-2 w-full sm:mt-0 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-5 text-sm rounded-lg shadow-md hover:shadow-lg transition-colors duration-300 h-11 group animate-soft-pulse"
                 >
-                  <CheckCircle className="w-4 h-4 mr-1.5" />
-                  Ver disponibilidade
+                  <CheckCircle className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform" />
+                  Buscar profissionais
                 </Button>
               </div>
-              <p className="text-xs text-primary-foreground/55 mb-4">
+              {touched && !isCepValid && (
+                <p className="text-xs mt-1.5 text-primary-foreground/70">
+                  Informe um CEP válido com 8 números.
+                </p>
+              )}
+              <p className="text-xs text-primary-foreground/55 mb-4 mt-2">
                 Usamos seu CEP para encontrar profissionais na sua região.
               </p>
             </div>
@@ -96,10 +94,10 @@ const Hero = () => {
               <Button
                 variant="outline"
                 onClick={goCaregiverFlow}
-                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border-white/50 font-semibold px-5 py-3 text-sm rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 shadow-md"
+                className="group w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border-white/50 font-semibold px-5 py-3 text-sm rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg shadow-md"
               >
                 Sou Profissional — Criar Perfil Grátis
-                <ArrowRight className="w-4 h-4 ml-1.5" />
+                <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
             {/* Login Link */}

@@ -1,10 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useFamilyProfile } from '@/hooks/useFamilyProfile'
 import { queryKeys } from '@/lib/query-keys'
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
+import { abbreviateName } from '@/lib/privacy-masks'
 import type { CaregiverPublic } from '@/types/database'
 
 // Escapa caracteres especiais do operador LIKE para evitar wildcard injection
@@ -40,9 +42,11 @@ export type CaregiverPublicWithDistance = CaregiverPublic & {
 
 export function useSearchCaregivers(filters: SearchFilters = {}) {
   const { user } = useAuth()
+  const { data: familyProfile } = useFamilyProfile()
+  const isSubscriber = familyProfile?.subscription_status === 'active'
 
   const query = useQuery({
-    queryKey: queryKeys.searchCaregivers(filters as Record<string, unknown>),
+    queryKey: [...queryKeys.searchCaregivers(filters as Record<string, unknown>), isSubscriber],
     queryFn: async (): Promise<CaregiverPublicWithDistance[]> => {
       const useProximity = filters.familyLat != null && filters.familyLng != null
 
@@ -146,6 +150,13 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
       // sem buckets — qualidade (0–114 pts) domina.
       const radius = filters.radiusKm ?? DEFAULT_RADIUS_KM
       rows.sort((a, b) => computeRankScore(b, radius) - computeRankScore(a, radius))
+
+      if (!isSubscriber) {
+        rows = rows.map((c) => ({
+          ...c,
+          full_name: c.full_name ? abbreviateName(c.full_name) : c.full_name,
+        }))
+      }
 
       return rows
     },

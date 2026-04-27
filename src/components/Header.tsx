@@ -1,4 +1,5 @@
-import { Heart, Menu, X, User } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import BrandMark from "@/components/shared/BrandMark";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -40,17 +41,13 @@ const Header = () => {
             }}
             className="flex items-center gap-2"
           >
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
-              <Heart className="w-5 h-5 text-primary-foreground fill-primary-foreground" />
-            </div>
-            <span
-              className={cn(
-                "text-xl font-semibold transition-colors duration-300",
+            <BrandMark
+              size={36}
+              wordmarkClassName={cn(
+                "transition-colors duration-300",
                 isScrolled ? "text-foreground" : "text-white",
               )}
-            >
-              cuidde
-            </span>
+            />
           </button>
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">

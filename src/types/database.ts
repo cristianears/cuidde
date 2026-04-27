@@ -79,7 +79,7 @@ export interface VitalSignsData {
   recordedAt?: string  // ISO timestamp
 }
 
-export type InvoiceStatus = 'paid' | 'pending' | 'open' | 'overdue'
+export type InvoiceStatus = 'draft' | 'open' | 'paid' | 'void' | 'uncollectible'
 
 export type SupportSubject =
   | 'conta'

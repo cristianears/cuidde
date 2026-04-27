@@ -2,9 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import { mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
 import { maskPhoneBrazilian, abbreviateName } from '@/lib/privacy-masks'
-import type { CaregiverPublic, CaregiverProfile, ProfessionalReference, CaregiverDocument, Review, ProfessionalRegType } from '@/types/database'
+import type { CaregiverPublic, ProfessionalReference, CaregiverDocument, Review, ProfessionalRegType } from '@/types/database'
 
 // ─── Tipo estendido para página de detalhe ──────────────────────────────────
 
@@ -23,16 +22,46 @@ export interface CaregiverPublicDetail extends CaregiverPublic {
   show_refs_to_subscribers: boolean
   mask_reference_phones: boolean
   show_reference_full_names: boolean
+  // Controle de acesso
+  isSubscriber: boolean
   // Dados relacionados
   references: ProfessionalReference[]
+  reference_count: number
   documents: Pick<CaregiverDocument, 'id' | 'type' | 'file_name' | 'file_url' | 'status'>[]
   reviews: Review[]
 }
 
-// Estende RawCaregiverRow com campos extras da página de detalhe
-type RawDetailRow = RawCaregiverRow & {
+// Shape do retorno da RPC get_caregiver_public_detail (gating server-side).
+// Campos sensíveis (full_name, professional_reg_number) vêm como null
+// quando o caller não é assinante/admin — masking acontece no banco.
+type GatedDetailPayload = {
+  id: string
+  full_name: string | null
+  photo_url: string | null
+  bio: string | null
+  experience_years: number
+  profissao_formacao: string | null
   formacao_complementar: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  price_per_hour: number | null
+  price_per_day: number | null
   pricing_note: string | null
+  average_rating: number
+  review_count: number
+  specialties: string[]
+  modalities: string[]
+  idiomas: string[]
+  possui_cnh: boolean
+  has_insurance: boolean
+  emergency_available: boolean
+  has_rg_cnh: boolean
+  has_antecedentes: boolean
+  has_certificado: boolean
+  has_references: boolean
+  zona: string | null
+  cep: string | null
   professional_reg_type: ProfessionalRegType | null
   professional_reg_number: string | null
   professional_reg_uf: string | null
@@ -45,49 +74,9 @@ type RawDetailRow = RawCaregiverRow & {
   show_refs_to_subscribers: boolean
   mask_reference_phones: boolean
   show_reference_full_names: boolean
+  is_subscriber: boolean
+  is_admin: boolean
 }
-
-// Select estendido para página de detalhe (não altera CAREGIVER_SELECT da busca)
-const DETAIL_SELECT = `
-  id,
-  photo_url,
-  bio,
-  experience_years,
-  profissao_formacao,
-  formacao_complementar,
-  neighborhood,
-  city,
-  state,
-  price_per_hour,
-  price_per_day,
-  pricing_note,
-  average_rating,
-  review_count,
-  specialties,
-  modalities,
-  idiomas,
-  possui_cnh,
-  has_insurance,
-  emergency_available,
-  has_rg_cnh,
-  has_antecedentes,
-  has_certificado,
-  has_references,
-  zona,
-  professional_reg_type,
-  professional_reg_number,
-  professional_reg_uf,
-  professional_reg_other_desc,
-  is_available_for_new,
-  journey_types,
-  area_type,
-  area_radius,
-  availability_notes,
-  show_refs_to_subscribers,
-  mask_reference_phones,
-  show_reference_full_names,
-  profiles!inner ( full_name )
-` as const
 
 export function usePublicCaregiverProfile(caregiverId: string | undefined) {
   const { user } = useAuth()
@@ -97,36 +86,54 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
     queryFn: async (): Promise<CaregiverPublicDetail | null> => {
       if (!caregiverId) return null
 
-      // 1) Perfil principal com campos estendidos
-      const { data: profileData, error: profileError } = await supabase
-        .from('caregiver_profiles')
-        .select(DETAIL_SELECT)
-        .eq('id', caregiverId)
-        .eq('profile_complete', true)
-        .single()
+      // 1) Perfil principal via RPC com gating server-side.
+      //    full_name e professional_reg_number só vêm preenchidos para assinantes/admin.
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'get_caregiver_public_detail',
+        { p_caregiver_id: caregiverId },
+      )
 
-      if (profileError) {
-        if (profileError.code === 'PGRST116') return null
-        throw profileError
-      }
+      if (rpcError) throw rpcError
+      if (!rpcData) return null
 
-      const row = profileData as RawDetailRow
-      const base = mapCaregiverRow(row)
+      const row = rpcData as GatedDetailPayload
+      const isSubscriber = row.is_subscriber
 
-      // Verificar se a família tem assinatura ativa para acessar dados restritos
-      let isSubscriber = false
-      if (user) {
-        const { data: familyData } = await supabase
-          .from('family_profiles')
-          .select('subscription_status')
-          .eq('id', user.id)
-          .single()
-        isSubscriber = familyData?.subscription_status === 'active'
+      const base: CaregiverPublic = {
+        id: row.id,
+        full_name: row.full_name,
+        photo_url: row.photo_url,
+        bio: row.bio,
+        experience_years: row.experience_years,
+        profissao_formacao: row.profissao_formacao as CaregiverPublic['profissao_formacao'],
+        neighborhood: row.neighborhood,
+        city: row.city,
+        state: row.state,
+        price_per_hour: row.price_per_hour,
+        price_per_day: row.price_per_day,
+        average_rating: row.average_rating,
+        review_count: row.review_count,
+        specialties: row.specialties ?? [],
+        modalities: row.modalities ?? [],
+        idiomas: row.idiomas ?? [],
+        possui_cnh: row.possui_cnh,
+        has_insurance: row.has_insurance,
+        professional_reg_number: row.professional_reg_number,
+        emergency_available: row.emergency_available,
+        whatsapp: null,
+        has_rg_cnh: row.has_rg_cnh,
+        has_antecedentes: row.has_antecedentes,
+        has_certificado: row.has_certificado,
+        has_references: row.has_references,
+        zona: row.zona as CaregiverPublic['zona'],
+        cep: row.cep,
+        is_available_for_new: row.is_available_for_new,
       }
 
       // 2) Referências profissionais — apenas para assinantes
       //    aplicando mascaramento conforme flags de privacidade do cuidador
       let references: ProfessionalReference[] = []
+      let referenceCount = 0
       if (row.has_references && isSubscriber && row.show_refs_to_subscribers) {
         const { data: refsData } = await supabase
           .from('professional_references')
@@ -140,6 +147,7 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
             phone: row.mask_reference_phones ? maskPhoneBrazilian(ref.phone) : ref.phone,
             name: row.show_reference_full_names ? ref.name : abbreviateName(ref.name),
           }))
+          referenceCount = references.length
         }
       }
 
@@ -157,6 +165,23 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         if (docsData) {
           documents = docsData as typeof documents
         }
+      } else {
+        // Preview gated para não-assinantes (RPC SECURITY DEFINER, sem file_url)
+        const { data: previewData } = await supabase.rpc('get_caregiver_gated_preview', {
+          p_caregiver_id: caregiverId,
+        })
+        const preview = (previewData ?? {}) as {
+          documents?: Array<{ id: string; type: string; file_name: string | null; status: string }>
+          reference_count?: number
+        }
+        documents = (preview.documents ?? []).map((d) => ({
+          id: d.id,
+          type: d.type as CaregiverDocument['type'],
+          file_name: d.file_name,
+          file_url: null,
+          status: d.status as CaregiverDocument['status'],
+        }))
+        referenceCount = preview.reference_count ?? 0
       }
 
       // 4) Avaliações
@@ -173,8 +198,11 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
 
       return {
         ...base,
-        // SEGURANÇA: reg number apenas para assinantes
-        professional_reg_number: isSubscriber ? (row.professional_reg_number ?? null) : null,
+        // base.full_name já vem null do servidor para não-assinantes;
+        // para assinantes mantemos o valor original (sem abreviação adicional).
+        full_name: base.full_name,
+        professional_reg_number: base.professional_reg_number,
+        isSubscriber,
         formacao_complementar: row.formacao_complementar ?? null,
         pricing_note: row.pricing_note ?? null,
         availability_notes: row.availability_notes ?? null,
@@ -189,6 +217,7 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         mask_reference_phones: row.mask_reference_phones ?? false,
         show_reference_full_names: row.show_reference_full_names ?? true,
         references,
+        reference_count: referenceCount,
         documents,
         reviews,
       }
