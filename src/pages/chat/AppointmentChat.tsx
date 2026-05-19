@@ -12,6 +12,7 @@ import { useAppointmentDetail } from "@/hooks/useAppointments";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useChatMessages, useSendMessage, useChatRealtime, useMarkMessagesAsRead } from "@/hooks/useChat";
 import { filterContactInfo, hasContactInfo, CONTACT_WARNING_MESSAGE } from "@/lib/contact-filter";
+import { canSendAppointmentChat } from "@/lib/subscription-access";
 import type { AppointmentStatus } from "@/types/database";
 
 const AppointmentChat = () => {
@@ -20,11 +21,13 @@ const AppointmentChat = () => {
   const { user, profile } = useAuth();
   const userRole = profile?.role === "caregiver" ? "caregiver" : "family";
   const { data: familyProfile } = useFamilyProfile();
-  // Cuidadores nunca são bloqueados; famílias precisam de assinatura ativa
-  const canSendMessages =
-    userRole === "caregiver" ||
-    familyProfile?.subscription_status === "active" ||
-    familyProfile?.subscription_status === "past_due";
+  const canSendMessages = canSendAppointmentChat(userRole, familyProfile);
+  const blockedChatMessage = familyProfile?.subscription_status === "past_due"
+    ? "Regularize o pagamento para voltar a enviar mensagens."
+    : "Assine um plano para enviar mensagens.";
+  const blockedChatButtonLabel = familyProfile?.subscription_status === "past_due"
+    ? "Regularizar pagamento"
+    : "Ver planos";
 
   const { data: appointment, isLoading: isLoadingAppointment } = useAppointmentDetail(id, { refetchInterval: 15_000 });
   const { data: messages = [], isLoading: isLoadingMessages } = useChatMessages(id);
@@ -324,10 +327,10 @@ const AppointmentChat = () => {
             ) : (
               <div className="text-center py-2 space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Assine um plano para enviar mensagens.
+                  {blockedChatMessage}
                 </p>
                 <Button size="sm" onClick={() => navigate("/family/billing")}>
-                  Ver planos
+                  {blockedChatButtonLabel}
                 </Button>
               </div>
             )

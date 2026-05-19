@@ -26,6 +26,7 @@ import RequestAppointmentDialog from "@/components/shared/RequestAppointmentDial
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { canCreatePaidAppointment } from "@/lib/subscription-access"
 
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
@@ -105,9 +106,13 @@ const CaregiverPublicProfile = () => {
   const [viewingDoc, setViewingDoc] = useState<{ url: string; name: string; isPdf: boolean } | null>(null)
 
   const isSubscriber = caregiver?.isSubscriber ?? false
+  const canRequestAppointment = canCreatePaidAppointment(familyProfile)
+  const appointmentCtaLabel = familyProfile?.subscription_status === 'past_due'
+    ? 'Regularize para contato'
+    : 'Assine para contato'
 
   const handleRequestAppointment = () => {
-    if (!isSubscriber) {
+    if (!canRequestAppointment) {
       navigate('/family/billing')
       return
     }
@@ -134,7 +139,11 @@ const CaregiverPublicProfile = () => {
 
   const handleCloseDoc = () => {
     if (viewingDoc) {
-      try { URL.revokeObjectURL(viewingDoc.url) } catch {}
+      try {
+        URL.revokeObjectURL(viewingDoc.url)
+      } catch {
+        // Blob URL may already be revoked by the browser.
+      }
     }
     setViewingDoc(null)
   }
@@ -332,8 +341,8 @@ const CaregiverPublicProfile = () => {
                       onClick={handleRequestAppointment}
                       className="gap-2"
                     >
-                      {isSubscriber ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                      {isSubscriber ? "Solicitar Atendimento" : "Assine para contato"}
+                      {canRequestAppointment ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                      {canRequestAppointment ? "Solicitar Atendimento" : appointmentCtaLabel}
                     </Button>
                     <Button
                       variant="outline"
@@ -748,8 +757,8 @@ const CaregiverPublicProfile = () => {
               className="w-full gap-2"
               size="lg"
             >
-              {isSubscriber ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-              {isSubscriber ? "Solicitar Atendimento" : "Assine para contato"}
+              {canRequestAppointment ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+              {canRequestAppointment ? "Solicitar Atendimento" : appointmentCtaLabel}
             </Button>
           </div>
 

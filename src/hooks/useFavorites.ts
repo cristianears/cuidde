@@ -6,6 +6,7 @@ import { useFamilyProfile } from '@/hooks/useFamilyProfile'
 import { queryKeys } from '@/lib/query-keys'
 import { CAREGIVER_SELECT, mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
 import { abbreviateName } from '@/lib/privacy-masks'
+import { hasFullPaidAccess } from '@/lib/subscription-access'
 import type { CaregiverPublic } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -91,11 +92,15 @@ export function useFavoriteIds() {
  */
 export function useAddFavorite() {
   const { user } = useAuth()
+  const { data: familyProfile } = useFamilyProfile()
   const qc = useQueryClient()
 
   return useMutation({
     mutationFn: async (caregiverId: string) => {
       if (!user) throw new Error('Não autenticado')
+      if (!hasFullPaidAccess(familyProfile)) {
+        throw new Error('Regularize sua assinatura para favoritar perfis.')
+      }
 
       const { error } = await supabase
         .from('favorites')

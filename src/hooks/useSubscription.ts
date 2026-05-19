@@ -5,6 +5,10 @@ import { useFamilyProfile } from '@/hooks/useFamilyProfile'
 import { queryKeys } from '@/lib/query-keys'
 import { toast } from 'sonner'
 import type { FamilyProfile } from '@/types/database'
+import {
+  getSubscriptionCheckoutOutcome,
+  type SubscriptionCheckoutResult,
+} from '@/lib/subscription-result'
 
 type FamilyProfileWithRelations = FamilyProfile & {
   profiles?: { full_name: string | null }
@@ -25,23 +29,22 @@ export function useSubscription() {
         },
       })
       if (error) throw error
-      const result = data as {
-        url?: string
-        updated?: boolean
-        same_plan?: boolean
-        scheduled?: boolean
-        pending_plan?: string
-        effective_at?: string | null
-        plan?: string
-        current_period_end?: string | null
-        error?: string
-      }
+      const result = data as SubscriptionCheckoutResult
       if (result.error) throw new Error(result.error)
       return result
     },
     onSuccess: (result) => {
+      const outcome = getSubscriptionCheckoutOutcome(result)
+
       if (result.url) {
         window.location.href = result.url
+        return
+      }
+
+      if (outcome.kind === 'payment_failed') {
+        queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.invoices(user!.id) })
+        toast.error('Não conseguimos cobrar o novo plano. Atualize o pagamento para regularizar.')
         return
       }
 

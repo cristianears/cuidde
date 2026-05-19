@@ -10,6 +10,7 @@ const ALLOWED_ORIGINS = [
   'https://ditti.app.br',
   'https://www.ditti.app.br',
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:4173',
 ]
 
@@ -180,6 +181,32 @@ serve(async (req) => {
     return 'monthly'
   }
 
+  function getImmediatePaymentState(sub: Stripe.Subscription) {
+    const latestInvoice = sub.latest_invoice
+    const invoice = latestInvoice && typeof latestInvoice !== 'string'
+      ? latestInvoice as Stripe.Invoice
+      : null
+    const paymentIntent = invoice?.payment_intent
+    const expandedPaymentIntent = paymentIntent && typeof paymentIntent !== 'string'
+      ? paymentIntent as Stripe.PaymentIntent
+      : null
+    const invoiceStatus = invoice?.status ?? null
+    const paymentIntentStatus = expandedPaymentIntent?.status ?? null
+    const paymentFailed =
+      sub.status === 'past_due' ||
+      invoiceStatus === 'open' ||
+      invoiceStatus === 'uncollectible' ||
+      paymentIntentStatus === 'requires_payment_method' ||
+      paymentIntentStatus === 'requires_action'
+
+    return {
+      payment_failed: paymentFailed,
+      invoice_id: invoice?.id ?? null,
+      invoice_status: invoiceStatus,
+      payment_intent_status: paymentIntentStatus,
+    }
+  }
+
   // Se já existe assinatura ativa → troca de plano
   if (
     profile?.stripe_subscription_id &&
@@ -265,7 +292,9 @@ serve(async (req) => {
       items: [{ id: currentItem.id, price: price_id }],
       proration_behavior: 'always_invoice',
       cancel_at_period_end: false,
+      expand: ['latest_invoice.payment_intent'],
     })
+    const paymentState = getImmediatePaymentState(updatedSub)
 
     const newPeriodEnd = updatedSub.current_period_end
       ? new Date(updatedSub.current_period_end * 1000).toISOString()
@@ -285,6 +314,7 @@ serve(async (req) => {
       updated: true,
       plan: newPlan,
       current_period_end: newPeriodEnd,
+      ...paymentState,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

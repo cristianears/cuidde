@@ -23,6 +23,32 @@ function mapSubStatus(status: Stripe.Subscription.Status): string {
   return 'incomplete'
 }
 
+async function getPlanFromPriceId(priceId: string): Promise<'monthly' | 'quarterly' | 'annual'> {
+  const price = await stripe.prices.retrieve(priceId)
+  return getPlan(
+    price.recurring!.interval,
+    price.recurring!.interval_count,
+  )
+}
+
+async function getPendingPlanFromSchedule(
+  scheduleId: string | Stripe.SubscriptionSchedule | null,
+): Promise<'monthly' | 'quarterly' | 'annual' | null> {
+  if (!scheduleId) return null
+
+  const id = typeof scheduleId === 'string' ? scheduleId : scheduleId.id
+  const schedule = await stripe.subscriptionSchedules.retrieve(id)
+  const now = Math.floor(Date.now() / 1000)
+  const futurePhase = schedule.phases.find((phase) => phase.start_date > now)
+
+  const price = futurePhase?.items?.[0]?.price
+  if (!price) return null
+
+  return typeof price === 'string'
+    ? await getPlanFromPriceId(price)
+    : getPlan(price.recurring!.interval, price.recurring!.interval_count)
+}
+
 /** Formata timestamp Unix (segundos) para data legível pt-BR: DD/MM/AAAA */
 function fmtDate(ts: number): string {
   return new Date(ts * 1000).toLocaleDateString('pt-BR', {
@@ -42,6 +68,12 @@ function toISODate(ts: number): string {
   ].join('-')
 }
 
+function getPaymentIntentId(paymentIntent: string | Stripe.PaymentIntent | null): string | null {
+  return typeof paymentIntent === 'string'
+    ? paymentIntent
+    : paymentIntent?.id ?? null
+}
+
 // ─── Helper com dependência do cliente Supabase ───────────────────────────────
 
 async function getFamilyId(
@@ -57,6 +89,46 @@ async function getFamilyId(
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
+
+async function syncSubscriptionToFamily(
+  supabase: ReturnType<typeof createClient>,
+  sub: Stripe.Subscription,
+  fallbackFamilyId?: string | null,
+): Promise<string | null> {
+  const customerId = sub.customer as string
+  const familyId = fallbackFamilyId ?? await getFamilyId(supabase, customerId)
+  if (!familyId) return null
+
+  const item = sub.items.data[0]
+  const plan = getPlan(
+    item.price.recurring!.interval,
+    item.price.recurring!.interval_count,
+  )
+
+  const periodEndTs =
+    (item as unknown as { current_period_end?: number }).current_period_end
+    ?? (sub as unknown as { current_period_end?: number }).current_period_end
+    ?? null
+
+  const { error } = await supabase
+    .from('family_profiles')
+    .update({
+      stripe_customer_id: customerId,
+      stripe_subscription_id: sub.id,
+      subscription_status: mapSubStatus(sub.status),
+      plan,
+      cancel_at_period_end: sub.cancel_at_period_end ?? false,
+      current_period_end: periodEndTs
+        ? new Date(periodEndTs * 1000).toISOString()
+        : null,
+      payment_failed_at: sub.status === 'past_due' ? new Date().toISOString() : null,
+      pending_plan: null,
+    })
+    .eq('id', familyId)
+
+  if (error) throw error
+  return familyId
+}
 
 serve(async (req) => {
   const signature = req.headers.get('stripe-signature')
@@ -79,6 +151,27 @@ serve(async (req) => {
   )
 
   switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session
+      const familyId = session.metadata?.family_id ?? null
+      const subscriptionId = session.subscription as string | null
+
+      if (familyId && session.customer) {
+        const { error } = await supabase
+          .from('family_profiles')
+          .update({ stripe_customer_id: session.customer as string })
+          .eq('id', familyId)
+
+        if (error) throw error
+      }
+
+      if (subscriptionId) {
+        const sub = await stripe.subscriptions.retrieve(subscriptionId)
+        await syncSubscriptionToFamily(supabase, sub, familyId)
+      }
+      break
+    }
+
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription
@@ -91,6 +184,14 @@ serve(async (req) => {
         item.price.recurring!.interval_count,
       )
 
+      // Stripe moveu current_period_end de Subscription para Subscription Item
+      // em versões recentes da API. Ler do item primeiro com fallback.
+      const periodEndTs =
+        (item as unknown as { current_period_end?: number }).current_period_end
+        ?? (sub as unknown as { current_period_end?: number }).current_period_end
+        ?? null
+      const pendingPlan = await getPendingPlanFromSchedule(sub.schedule ?? null)
+
       await supabase
         .from('family_profiles')
         .update({
@@ -98,10 +199,11 @@ serve(async (req) => {
           subscription_status: mapSubStatus(sub.status),
           plan,
           cancel_at_period_end: sub.cancel_at_period_end ?? false,
-          current_period_end: sub.current_period_end
-            ? new Date(sub.current_period_end * 1000).toISOString()
+          current_period_end: periodEndTs
+            ? new Date(periodEndTs * 1000).toISOString()
             : null,
-          pending_plan: null,
+          payment_failed_at: sub.status === 'past_due' ? new Date().toISOString() : null,
+          pending_plan: pendingPlan,
         })
         .eq('id', familyId)
       break
@@ -119,6 +221,7 @@ serve(async (req) => {
             plan: null,
             cancel_at_period_end: false,
             current_period_end: null,
+            payment_failed_at: null,
             pending_plan: null,
           })
           .eq('id', familyId)
@@ -156,7 +259,7 @@ serve(async (req) => {
         {
           family_id: familyId,
           stripe_invoice_id: inv.id,
-          stripe_payment_intent_id: (inv.payment_intent as string | null) ?? null,
+          stripe_payment_intent_id: getPaymentIntentId(inv.payment_intent),
           amount: inv.amount_paid / 100,
           status: 'paid',
           plan,
@@ -172,7 +275,7 @@ serve(async (req) => {
 
       await supabase
         .from('family_profiles')
-        .update({ subscription_status: 'active' })
+        .update({ subscription_status: 'active', payment_failed_at: null })
         .eq('id', familyId)
       break
     }
@@ -186,6 +289,7 @@ serve(async (req) => {
         {
           family_id: familyId,
           stripe_invoice_id: inv.id,
+          stripe_payment_intent_id: getPaymentIntentId(inv.payment_intent),
           amount: inv.amount_due / 100,
           status: 'overdue',
           due_date: inv.due_date
@@ -198,7 +302,7 @@ serve(async (req) => {
 
       await supabase
         .from('family_profiles')
-        .update({ subscription_status: 'past_due' })
+        .update({ subscription_status: 'past_due', payment_failed_at: new Date().toISOString() })
         .eq('id', familyId)
       break
     }
@@ -209,7 +313,7 @@ serve(async (req) => {
       if (familyId) {
         await supabase
           .from('family_profiles')
-          .update({ subscription_status: 'incomplete' })
+          .update({ subscription_status: 'incomplete', payment_failed_at: null })
           .eq('id', familyId)
       }
       break
