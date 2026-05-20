@@ -310,6 +310,7 @@ const FamilyBilling = () => {
               {plans.map((p) => {
                 const isCurrentPlan = p.id === plan && subscriptionStatus === "active";
                 const isPendingPlan = p.id === pendingPlan && subscriptionStatus === "active";
+                const canKeepCurrentPlan = isCurrentPlan && !!pendingPlan;
                 const isFeatured = p.id === featuredPlanId;
 
                 const cardClass = [
@@ -386,13 +387,13 @@ const FamilyBilling = () => {
                         <Button
                           className={`w-full text-sm ${buttonClass}`}
                           variant={isCurrentPlan || isPendingPlan ? "secondary" : buttonVariant}
-                          disabled={isCurrentPlan || isPendingPlan || startCheckout.isPending}
+                          disabled={(!canKeepCurrentPlan && (isCurrentPlan || isPendingPlan)) || startCheckout.isPending}
                           onClick={() => handleSelectPlan(p)}
                         >
                           {startCheckout.isPending && selectedPlan?.id === p.id ? (
                             <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
                           ) : null}
-                          {isCurrentPlan ? "Plano atual" : isPendingPlan ? "Agendado" : ctaLabel[p.id]}
+                          {canKeepCurrentPlan ? "Manter plano atual" : isCurrentPlan ? "Plano atual" : isPendingPlan ? "Agendado" : ctaLabel[p.id]}
                         </Button>
                       </div>
                     </CardContent>
@@ -434,9 +435,13 @@ const FamilyBilling = () => {
       <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirmar assinatura</DialogTitle>
+            <DialogTitle>
+              {selectedPlan?.id === plan && pendingPlan ? "Manter plano atual" : "Confirmar assinatura"}
+            </DialogTitle>
             <DialogDescription>
-              Você será redirecionada para o Stripe para finalizar o pagamento com segurança.
+              {selectedPlan?.id === plan && pendingPlan
+                ? "A troca agendada será cancelada e sua assinatura continuará no plano atual."
+                : "Você será redirecionada para o Stripe para finalizar o pagamento com segurança."}
             </DialogDescription>
           </DialogHeader>
 
@@ -465,7 +470,7 @@ const FamilyBilling = () => {
               {startCheckout.isPending ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
               ) : null}
-              Ir para pagamento
+              {selectedPlan?.id === plan && pendingPlan ? "Confirmar" : "Ir para pagamento"}
             </Button>
           </DialogFooter>
         </DialogContent>

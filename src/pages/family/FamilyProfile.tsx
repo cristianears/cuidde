@@ -56,6 +56,10 @@ const FamilyProfile = () => {
   const realName = familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? "";
   const realEmail = user?.email ?? "";
   const realPhone = familyProfileData?.profiles?.phone ?? user?.user_metadata?.phone ?? "";
+  const googlePhoto =
+    (user?.user_metadata?.avatar_url as string | undefined) ||
+    (user?.user_metadata?.picture as string | undefined) ||
+    null;
 
   // Responsible data
   const [responsibleName, setResponsibleName] = useState("");
@@ -95,9 +99,9 @@ const FamilyProfile = () => {
       if (fp.health_insurance) setHealthInsurance(fp.health_insurance);
       if (fp.care_needs) setCareNeeds(fp.care_needs);
       if (fp.elderly_medications?.length) setElderlyMedications(fp.elderly_medications);
-      setResponsiblePhoto(fp.photo_url ?? null);
+      setResponsiblePhoto(fp.photo_url ?? googlePhoto);
     }
-  }, [familyProfileData, user?.email, user?.user_metadata]);
+  }, [familyProfileData, googlePhoto, user?.email, user?.user_metadata]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -268,6 +272,7 @@ const FamilyProfile = () => {
                       src={responsiblePhoto}
                       alt={responsibleName}
                       className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover"
+                      onError={() => setResponsiblePhoto(null)}
                     />
                   ) : (
                     <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-muted flex items-center justify-center">

@@ -32,7 +32,7 @@ export function useCareRoutines(appointmentId: string | undefined) {
       if (error) throw error
 
       // Buscar colunas opcionais separadamente (podem não existir ainda no banco)
-      let extraMap: Record<string, { vital_signs: VitalSignsData | null; hydration: HydrationLevel | null }> = {}
+      const extraMap: Record<string, { vital_signs: VitalSignsData | null; hydration: HydrationLevel | null }> = {}
       try {
         const { data: extraData } = await supabase
           .from('care_routines')

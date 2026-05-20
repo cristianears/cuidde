@@ -20,7 +20,7 @@
 |------|-------|------|--------|-------|------|-------|-----|
 | 1 | simplify | — | ⏳ | — | — | — | — |
 | 1 | find-bugs | — | ⏳ | — | — | — | — |
-| 3 | postgres-best-practices | — | ⏳ | — | — | — | — |
+| 3 | postgres-best-practices | 2026-04-27 | ✅ | 3 | 5 | — | 0 |
 | 3 | database-optimizer | — | ⏳ | — | — | — | — |
 | 4 | idor-testing | — | ⏳ | — | — | — | — |
 | 4 | broken-authentication | — | ⏳ | — | — | — | — |
@@ -77,13 +77,27 @@
 ## Fase 3 — Banco e dados
 
 ### Skill: postgres-best-practices
-- **Data:** —
+- **Data:** 2026-04-27
 - **Commits:** —
-- **Bloqueantes:** —
-- **Importantes:** —
-- **Issues criadas:** —
+- **Arquivos:** `supabase/sql/production_readiness_indexes_rls.sql` (migration única, idempotente — aplicar via Supabase Dashboard → SQL Editor)
+- **Bloqueantes:**
+  - 🔴 **FKs sem índice em todas as tabelas relacionais** — `appointments.family_id/caregiver_id`, `messages.appointment_id/sender_id`, `reviews.*_id`, `favorites.*_id`, `invoices.family_id`, `caregiver_documents.caregiver_id`, `professional_references.caregiver_id`, `caregiver_availability.caregiver_id`, `care_routines.appointment_id`, `support_tickets.user_id`, `system_logs.user_id`. Queries de RLS (`auth.uid() = family_id`) e ON DELETE CASCADE viram seq scan em produção. Fix: 16 `CREATE INDEX IF NOT EXISTS` na migration.
+  - 🔴 **Falta de UNIQUE em IDs do Stripe** — `family_profiles.stripe_customer_id`, `family_profiles.stripe_subscription_id`, `invoices.stripe_invoice_id`. O webhook (`stripe-webhook/index.ts:170`) faz `upsert(..., { onConflict: 'stripe_invoice_id' })` — sem unique constraint, primeira corrida gera linha duplicada. Risco de cobrança duplicada na UI. Fix: 3 `ADD CONSTRAINT ... UNIQUE` idempotentes.
+  - 🔴 **RLS chamando `auth.uid()` por linha** — todas as policies do `SPEC.md` usam `auth.uid() = id` direto. Postgres re-avalia VOLATILE por linha → 10–100× mais lento em `messages`/`appointments` quando crescerem. Fix: drop+recreate envolvendo em `(select auth.uid())` (recomendação oficial Supabase, regra 3.3 do guia).
+- **Importantes:**
+  - 🟡 **Hot path do chat sem índice composto** — `useChatMessages` faz `eq(appointment_id).order(created_at)`. Fix: `idx_messages_appointment_created (appointment_id, created_at)`.
+  - 🟡 **`useUnreadCounts` faz seq scan em messages** — query `WHERE read_at IS NULL AND sender_id <> me AND appointment_id IN (...)`. Fix: índice parcial `idx_messages_unread (appointment_id, sender_id) WHERE read_at IS NULL` — 10–100× menor que índice completo, ataca exatamente o filtro.
+  - 🟡 **`useSearchCaregivers` filtros de array sem GIN** — `.contains('modalities', [...])` e `.contains('idiomas', [...])` viram seq scan. Fix: 3 índices `USING GIN` em `modalities`, `idiomas`, `specialties`.
+  - 🟡 **ILIKE wildcard duplo em `city`/`neighborhood` sem trigram** — Fix: `CREATE EXTENSION pg_trgm` + 2 índices `gin_trgm_ops` + 1 índice parcial sobre cuidadores elegíveis para busca (`profile_complete AND has_rg_cnh AND is_available_for_new`).
+  - 🟡 **Sem `statement_timeout`** — query lenta de cliente comprometido pode travar conexão indefinidamente. Fix: `alter role authenticated set statement_timeout = '8s'`, `anon = '5s'`. Não afeta `service_role`.
+- **Issues criadas (pós-launch, não-bloqueantes):**
+  - 🟢 Trocar `useInvoices`, `useReviews`, `useAppointments` para paginação cursor-based — hoje fazem `order by created_at desc` sem `limit`. OK enquanto volume é baixo, mas degrada O(N) com a base.
+  - 🟢 `system_logs` deve crescer rápido (logs de auditoria) — considerar particionamento por `range(created_at)` mensal quando passar de 10M linhas (regra 4.3).
+  - 🟢 Migrar UUIDs aleatórios (default `gen_random_uuid()` herdado de `auth.users` para PKs) para UUIDv7 nas tabelas filhas (`appointments`, `messages`, `reviews`, etc.) ao próximo refactor — UUIDv4 fragmenta o índice da PK.
 - **Falsos positivos:**
-  - —
+  - ⚪ Mixed-case identifiers — schema já usa snake_case lowercase em todas as tabelas. Nada a fazer.
+  - ⚪ JSONB indexing — projeto não usa colunas JSONB em filtros (apenas como output de RPCs). Não aplicável.
+  - ⚪ Connection pooling — Supabase já provê PgBouncer (Supavisor) por padrão na porta 6543. Edge Functions usam pool nativo.
 
 ### Skill: database-optimizer
 - **Data:** —

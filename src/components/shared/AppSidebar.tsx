@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -81,9 +81,14 @@ function getInitials(name: string): string {
 
 const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const items = sidebarItems[role];
+
+  useEffect(() => {
+    setPhotoFailed(false);
+  }, [userPhoto]);
 
   // Notificações — apenas caregiver/family (admin não precisa)
   const enableNotifications = role === 'caregiver' || role === 'family';
@@ -143,8 +148,14 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-muted overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
-              {userPhoto ? (
-                <img src={userPhoto} alt={userName} className="w-full h-full object-cover" loading="lazy" />
+              {userPhoto && !photoFailed ? (
+                <img
+                  src={userPhoto}
+                  alt={userName}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={() => setPhotoFailed(true)}
+                />
               ) : getInitials(userName) ? (
                 <div className="w-full h-full flex items-center justify-center bg-primary/10">
                   <span className="text-sm font-semibold text-primary">{getInitials(userName)}</span>

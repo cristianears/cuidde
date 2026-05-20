@@ -22,12 +22,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import { signUpWithEmail, signInWithGoogle } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
 import { formatPhone } from '@/lib/formatters'
 import { supabase } from '@/lib/supabase'
 import { geocodeAddress } from '@/lib/geocode'
 import { useAuth } from '@/contexts/AuthContext'
+import { queryKeys } from '@/lib/query-keys'
 
 type ProfileType = 'family' | 'caregiver' | null
 
@@ -71,6 +73,7 @@ const Onboarding = () => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   const isGoogleFlow = searchParams.get('from') === 'google'
 
@@ -170,11 +173,13 @@ const Onboarding = () => {
   const handleGoogleSignup = async () => {
     setIsGoogleLoading(true)
     try {
+      const typeParam = searchParams.get('type') as ProfileType
+      const cepParam = searchParams.get('cep')
       localStorage.setItem('cuidde_pending_signup', 'true')
       // Preservar dados do onboarding para recuperar após callback OAuth
       localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
-        type: formData.profileType,
-        cep: formData.cep,
+        type: formData.profileType ?? typeParam,
+        cep: formData.cep || cepParam || '',
       }))
       const { error } = await signInWithGoogle()
       if (error) {
@@ -223,13 +228,41 @@ const Onboarding = () => {
     }
   }
 
+  const saveProfileAddress = async (
+    table: 'caregiver_profiles' | 'family_profiles',
+    userId: string,
+    addressData: Record<string, string | null>,
+  ) => {
+    const { data: updatedRows, error: updateError } = await supabase
+      .from(table)
+      .update(addressData)
+      .eq('id', userId)
+      .select('id')
+
+    if (updateError) throw updateError
+    if (updatedRows && updatedRows.length > 0) return updatedRows
+
+    const { data: insertedRows, error: insertError } = await supabase
+      .from(table)
+      .insert({ id: userId, ...addressData })
+      .select('id')
+
+    if (insertError) throw insertError
+    return insertedRows
+  }
+
   const handleSubmit = async () => {
     if (!formData.profileType) return
     setIsSubmitting(true)
     try {
       if (isGoogleFlow && user) {
+        const googlePhoto =
+          (user.user_metadata?.avatar_url as string | undefined) ||
+          (user.user_metadata?.picture as string | undefined) ||
+          null
+
         // Upsert garante criação do row caso não exista (novo usuário Google)
-        await supabase
+        const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
             id: user.id,
@@ -238,8 +271,9 @@ const Onboarding = () => {
             phone: formData.phone,
           }, { onConflict: 'id' })
 
+        if (profileError) throw profileError
+
         const addressData = {
-          id: user.id,
           cep: formData.cep,
           street: formData.street,
           number: formData.number,
@@ -247,22 +281,33 @@ const Onboarding = () => {
           neighborhood: formData.neighborhood,
           city: formData.city,
           state: formData.state,
+          photo_url: googlePhoto,
         }
 
         const table = formData.profileType === 'caregiver' ? 'caregiver_profiles' : 'family_profiles'
-        await supabase.from(table).upsert(addressData)
+        const addressRows = await saveProfileAddress(table, user.id, addressData)
+        if (!addressRows || addressRows.length === 0) {
+          throw new Error('Nao foi possivel salvar seu endereco. Verifique as permissoes do perfil.')
+        }
 
         // Geocodificar CEP — aguardar antes de navegar para garantir lat/lng no perfil
         if (formData.cep) {
           try {
             const geo = await geocodeAddress({ cep: formData.cep })
             if (geo) {
-              await supabase.from(table).update({ lat: geo.lat, lng: geo.lng }).eq('id', user.id)
+              const { error: geoError } = await supabase.from(table).update({ lat: geo.lat, lng: geo.lng }).eq('id', user.id)
+              if (geoError) throw geoError
             }
-          } catch {
-            // Falha na geocodificação não bloqueia o fluxo
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Nao foi possivel salvar a localizacao do CEP.')
+            return
           }
         }
+
+        const profileQueryKey = formData.profileType === 'caregiver'
+          ? queryKeys.caregiverProfile(user.id)
+          : queryKeys.familyProfile(user.id)
+        queryClient.removeQueries({ queryKey: profileQueryKey })
 
         if (formData.profileType === 'caregiver') {
           navigate('/caregiver', { replace: true })
@@ -307,9 +352,11 @@ const Onboarding = () => {
           }
 
           const table2 = formData.profileType === 'caregiver' ? 'caregiver_profiles' : 'family_profiles'
-          const { error: upsertErr } = await supabase.from(table2).upsert({ id: data.user.id, ...addressData })
+          const addressErr = await saveProfileAddress(table2, data.user.id, addressData)
+            .then(() => null)
+            .catch((error) => error as Error)
 
-          if (upsertErr) {
+          if (addressErr) {
             // RLS bloqueou — salvar para aplicar após verificação de e-mail
             localStorage.setItem('cuidde_pending_address', JSON.stringify({
               userId: data.user.id,
@@ -331,6 +378,8 @@ const Onboarding = () => {
 
         navigate('/verify-email', { replace: true })
       }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao finalizar cadastro. Tente novamente.')
     } finally {
       setIsSubmitting(false)
     }
