@@ -117,3 +117,45 @@ create policy "caregiver_availability: dono remove"
   for delete
   to authenticated
   using (caregiver_id = (select auth.uid()));
+
+-- Group D5: caregiver_documents SELECT policies are complementary.
+-- Keep subscriber gating and split owner writes by command.
+
+drop policy if exists "caregiver_documents: dono gerencia" on public.caregiver_documents;
+drop policy if exists "caregiver_documents: família assinante lê visíveis" on public.caregiver_documents;
+
+create policy "caregiver_documents: dono ou família assinante lê"
+  on public.caregiver_documents
+  for select
+  to authenticated
+  using (
+    caregiver_id = (select auth.uid())
+    or (
+      is_visible = true
+      and exists (
+        select 1
+        from public.family_profiles
+        where family_profiles.id = (select auth.uid())
+          and family_profiles.subscription_status = 'active'
+      )
+    )
+  );
+
+create policy "caregiver_documents: dono insere"
+  on public.caregiver_documents
+  for insert
+  to authenticated
+  with check (caregiver_id = (select auth.uid()));
+
+create policy "caregiver_documents: dono atualiza"
+  on public.caregiver_documents
+  for update
+  to authenticated
+  using (caregiver_id = (select auth.uid()))
+  with check (caregiver_id = (select auth.uid()));
+
+create policy "caregiver_documents: dono remove"
+  on public.caregiver_documents
+  for delete
+  to authenticated
+  using (caregiver_id = (select auth.uid()));

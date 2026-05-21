@@ -318,3 +318,36 @@ create policy "caregiver_availability: dono gerencia"
   to authenticated
   using (caregiver_id = (select auth.uid()));
 ```
+
+## Bloco D: duplicate permissive policies - caregiver_documents
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "caregiver_documents: dono ou família assinante lê" on public.caregiver_documents;
+drop policy if exists "caregiver_documents: dono insere" on public.caregiver_documents;
+drop policy if exists "caregiver_documents: dono atualiza" on public.caregiver_documents;
+drop policy if exists "caregiver_documents: dono remove" on public.caregiver_documents;
+
+create policy "caregiver_documents: dono gerencia"
+  on public.caregiver_documents
+  for all
+  to authenticated
+  using (caregiver_id = (select auth.uid()));
+
+create policy "caregiver_documents: família assinante lê visíveis"
+  on public.caregiver_documents
+  for select
+  to authenticated
+  using (
+    is_visible = true
+    and exists (
+      select 1
+      from public.family_profiles
+      where family_profiles.id = (select auth.uid())
+        and family_profiles.subscription_status = 'active'
+    )
+  );
+```
