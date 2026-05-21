@@ -131,3 +131,13 @@ alter function public.update_updated_at() reset search_path;
 
 notify pgrst, 'reload schema';
 ```
+
+## Bloco F: caregiver_events.family_id index
+
+Applied migration: `supabase/sql/advisor_hardening_indexes.sql`
+
+Rollback SQL:
+
+```sql
+drop index concurrently if exists public.idx_caregiver_events_family_id;
+```

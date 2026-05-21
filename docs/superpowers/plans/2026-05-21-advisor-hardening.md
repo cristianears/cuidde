@@ -20,7 +20,7 @@
 - [ ] Bloco C concluído: RLS `auth.uid()` otimizado.
 - [ ] Bloco D concluído: policies permissive duplicadas revisadas.
 - [ ] Bloco E concluído: Storage `avatars` sem listagem ampla.
-- [ ] Bloco F concluído: índice faltante em `caregiver_events.family_id`.
+- [x] Bloco F concluído: índice faltante em `caregiver_events.family_id`.
 - [ ] Bloco G concluído: decisões manuais de Auth/Dashboard documentadas.
 - [ ] Advisors reexecutados e checklist final atualizado.
 - [ ] PR/push final feito.
@@ -320,10 +320,10 @@ create index if not exists idx_caregiver_events_family_id
 
 ### Validação
 
-- [ ] Aplicar migration.
-- [ ] Rodar Performance Advisor.
-- [ ] Confirmar que o alerta sumiu.
-- [ ] Commit.
+- [x] Aplicar migration.
+- [x] Rodar Performance Advisor.
+- [x] Confirmar que o alerta sumiu.
+- [x] Commit.
 
 ---
 
