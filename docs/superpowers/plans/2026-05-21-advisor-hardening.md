@@ -238,6 +238,7 @@ por:
 - [x] Rodar Performance Advisor. Grupo C1 saiu dos alertas de initplan.
 - [x] Rodar smoke do domínio da tabela. Validação por `pg_policies` e suíte local; smoke autenticado manual não rodado por ausência de credenciais.
 - [x] Commit por grupo pequeno de tabelas. Grupo C1.
+- [x] Grupo C2: `family_profiles`.
 
 ```powershell
 git add supabase/sql/advisor_hardening_rls_initplan.sql PRODUCTION_CHECKLIST.md AUDIT.md

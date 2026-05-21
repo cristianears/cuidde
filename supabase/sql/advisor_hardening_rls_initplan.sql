@@ -36,3 +36,36 @@ create policy "support_tickets: usuário gerencia os seus"
   for all
   to authenticated
   using (user_id = (select auth.uid()));
+
+-- Group 2: family_profiles linked-caregiver read policies.
+
+drop policy if exists "caregiver reads linked family" on public.family_profiles;
+create policy "caregiver reads linked family"
+  on public.family_profiles
+  for select
+  to authenticated
+  using (
+    (select auth.uid()) = id
+    or exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = (select auth.uid())
+        and appointments.status = any (array['ativo'::text, 'pendente'::text])
+    )
+  );
+
+drop policy if exists "family_profiles: cuidador lê dados do idoso no atendimento" on public.family_profiles;
+create policy "family_profiles: cuidador lê dados do idoso no atendimento"
+  on public.family_profiles
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = (select auth.uid())
+        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
+    )
+  );

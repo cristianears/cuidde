@@ -72,6 +72,45 @@ create policy "support_tickets: usuário gerencia os seus"
   using (user_id = auth.uid());
 ```
 
+## Bloco C: RLS auth.uid() initPlan - group 2
+
+Applied migration: `advisor_hardening_rls_initplan_group_2`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "caregiver reads linked family" on public.family_profiles;
+create policy "caregiver reads linked family"
+  on public.family_profiles
+  for select
+  to public
+  using (
+    auth.uid() = id
+    or exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = auth.uid()
+        and appointments.status = any (array['ativo'::text, 'pendente'::text])
+    )
+  );
+
+drop policy if exists "family_profiles: cuidador lê dados do idoso no atendimento" on public.family_profiles;
+create policy "family_profiles: cuidador lê dados do idoso no atendimento"
+  on public.family_profiles
+  for select
+  to public
+  using (
+    exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = auth.uid()
+        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
+    )
+  );
+```
+
 Prefer a forward rollback migration in Supabase instead of rewriting git history.
 
 ## Bloco B: function search_path
