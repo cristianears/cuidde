@@ -271,6 +271,7 @@ git commit -m "Optimize RLS auth uid policies"
 - [x] Grupo D3: `caregiver_profiles` consolidada em SELECT única e writes por comando; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Grupo D4: `caregiver_availability` manteve leitura pública e separou writes do dono; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Grupo D5: `caregiver_documents` consolidada em SELECT única com gating de assinante e writes do dono; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
+- [x] Grupo D6: `family_profiles` consolidada em SELECT única para dono ou cuidador vinculado, sem auto-consulta da própria tabela; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 
 ---
 

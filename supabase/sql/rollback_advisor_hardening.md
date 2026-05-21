@@ -351,3 +351,48 @@ create policy "caregiver_documents: família assinante lê visíveis"
     )
   );
 ```
+
+## Bloco D: duplicate permissive policies - family_profiles
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "family_profiles: leitura consolidada" on public.family_profiles;
+
+create policy "family_profiles_owner_select"
+  on public.family_profiles
+  for select
+  to public
+  using ((select auth.uid()) = id);
+
+create policy "caregiver reads linked family"
+  on public.family_profiles
+  for select
+  to authenticated
+  using (
+    ((select auth.uid()) = id)
+    or exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = (select auth.uid())
+        and appointments.status = any (array['ativo'::text, 'pendente'::text])
+    )
+  );
+
+create policy "family_profiles: cuidador lê dados do idoso no atendimento"
+  on public.family_profiles
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = (select auth.uid())
+        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
+    )
+  );
+```

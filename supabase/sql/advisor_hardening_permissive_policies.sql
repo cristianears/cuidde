@@ -159,3 +159,25 @@ create policy "caregiver_documents: dono remove"
   for delete
   to authenticated
   using (caregiver_id = (select auth.uid()));
+
+-- Group D6: family_profiles SELECT policies consolidated.
+-- Never query family_profiles from a family_profiles policy, to avoid RLS recursion.
+
+drop policy if exists "caregiver reads linked family" on public.family_profiles;
+drop policy if exists "family_profiles: cuidador lê dados do idoso no atendimento" on public.family_profiles;
+drop policy if exists "family_profiles_owner_select" on public.family_profiles;
+
+create policy "family_profiles: leitura consolidada"
+  on public.family_profiles
+  for select
+  to authenticated
+  using (
+    id = (select auth.uid())
+    or exists (
+      select 1
+      from public.appointments
+      where appointments.family_id = family_profiles.id
+        and appointments.caregiver_id = (select auth.uid())
+        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
+    )
+  );
