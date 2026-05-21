@@ -239,6 +239,7 @@ por:
 - [x] Rodar smoke do domínio da tabela. Validação por `pg_policies` e suíte local; smoke autenticado manual não rodado por ausência de credenciais.
 - [x] Commit por grupo pequeno de tabelas. Grupo C1.
 - [x] Grupo C2: `family_profiles`.
+- [x] Grupo C3: policies legadas redundantes de `favorites` e `invoices` removidas; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 
 ```powershell
 git add supabase/sql/advisor_hardening_rls_initplan.sql PRODUCTION_CHECKLIST.md AUDIT.md

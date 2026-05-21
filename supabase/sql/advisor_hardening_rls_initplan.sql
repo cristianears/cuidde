@@ -69,3 +69,9 @@ create policy "family_profiles: cuidador lê dados do idoso no atendimento"
         and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
     )
   );
+
+-- Group 3: remove duplicate legacy policies already covered by optimized policies.
+
+drop policy if exists "favorites: família gerencia os seus" on public.favorites;
+
+drop policy if exists "invoices: família vê as suas" on public.invoices;

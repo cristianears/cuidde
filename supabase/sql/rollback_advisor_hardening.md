@@ -189,3 +189,23 @@ create policy "reviews: família insere"
   to public
   with check (family_id = (select auth.uid()));
 ```
+
+## Bloco C: RLS auth.uid() initPlan - group 3
+
+Applied migration: `supabase/sql/advisor_hardening_rls_initplan.sql`
+
+Rollback SQL:
+
+```sql
+create policy "favorites: família gerencia os seus"
+  on public.favorites
+  for all
+  to public
+  using (family_id = auth.uid());
+
+create policy "invoices: família vê as suas"
+  on public.invoices
+  for select
+  to public
+  using (family_id = auth.uid());
+```
