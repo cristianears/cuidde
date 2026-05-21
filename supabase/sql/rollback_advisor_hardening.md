@@ -209,3 +209,24 @@ create policy "invoices: família vê as suas"
   to public
   using (family_id = auth.uid());
 ```
+
+## Bloco C: RLS auth.uid() initPlan - group 4
+
+Applied migration: `supabase/sql/advisor_hardening_rls_initplan.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "caregiver: público lê perfil completo" on public.caregiver_profiles;
+create policy "caregiver: público lê perfil completo"
+  on public.caregiver_profiles
+  for select
+  to public
+  using ((profile_complete = true) or (auth.uid() = id));
+
+create policy "caregiver_profiles: dono gerencia"
+  on public.caregiver_profiles
+  for all
+  to public
+  using (auth.uid() = id);
+```

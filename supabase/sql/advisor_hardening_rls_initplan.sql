@@ -75,3 +75,17 @@ create policy "family_profiles: cuidador lê dados do idoso no atendimento"
 drop policy if exists "favorites: família gerencia os seus" on public.favorites;
 
 drop policy if exists "invoices: família vê as suas" on public.invoices;
+
+-- Group 4: caregiver_profiles duplicate owner policy and public read initPlan.
+
+drop policy if exists "caregiver_profiles: dono gerencia" on public.caregiver_profiles;
+
+drop policy if exists "caregiver: público lê perfil completo" on public.caregiver_profiles;
+create policy "caregiver: público lê perfil completo"
+  on public.caregiver_profiles
+  for select
+  to public
+  using (
+    profile_complete = true
+    or id = (select auth.uid())
+  );

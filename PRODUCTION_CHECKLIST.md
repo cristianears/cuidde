@@ -106,6 +106,7 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
   - [x] Grupo C1: `support_tickets`, `caregiver_availability` e `caregiver_documents`.
   - [x] Grupo C2: `family_profiles`.
   - [x] Grupo C3: `favorites` e `invoices`.
+  - [x] Grupo C4: `caregiver_profiles`.
 - [ ] Bloco D aplicado: policies permissive duplicadas revisadas.
   - [x] Grupo D1: `reviews`.
 - [x] Bloco E aplicado: bucket `avatars` sem listagem ampla.
