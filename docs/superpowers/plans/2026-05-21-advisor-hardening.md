@@ -257,14 +257,14 @@ git commit -m "Optimize RLS auth uid policies"
 
 ### Passos
 
-- [ ] Para cada tabela alertada, listar policies por `cmd`.
-- [ ] Identificar duplicidade real versus regra complementar.
-- [ ] Consolidar uma tabela por vez.
-- [ ] Evitar mexer em `messages` primeiro; começar por uma tabela de menor blast radius.
-- [ ] Aplicar migration.
-- [ ] Rodar advisor.
-- [ ] Rodar testes e smoke do domínio.
-- [ ] Commit.
+- [x] Para cada tabela alertada, listar policies por `cmd`. Grupo D1: `reviews`.
+- [x] Identificar duplicidade real versus regra complementar. Grupo D1 remove a INSERT ampla e mantém a regra de atendimento finalizado.
+- [x] Consolidar uma tabela por vez.
+- [x] Evitar mexer em `messages` primeiro; começar por uma tabela de menor blast radius.
+- [x] Aplicar migration. Grupo D1: `reviews`.
+- [x] Rodar advisor. Grupo D1 saiu dos alertas de policies permissive duplicadas e initplan.
+- [x] Rodar testes e smoke do domínio. Grupo D1 validado por `pg_policies`; `test`, `build`, `lint` e `test:e2e` passaram.
+- [x] Commit. Grupo D1.
 
 ---
 

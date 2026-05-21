@@ -123,6 +123,7 @@
 - **Bloco C2 validacao:** policies de leitura vinculada em `family_profiles` recriadas sem auto-consulta da tabela; Performance Advisor deixou de listar `family_profiles` para initplan; `pg_policies` confirmou `(select auth.uid())`; `test`, `build`, `lint` e `test:e2e` passaram.
 - **Bloco E validacao:** SELECT ampla `avatars: leitura pública` substituída por `avatars: leitura própria`; Security Advisor removeu `public_bucket_allows_listing`; `pg_policies` confirmou INSERT/UPDATE próprios preservados; URL pública existente de avatar respondeu HTTP 200; `npm.cmd run test` passou.
 - **Bloco F validacao:** indice `idx_caregiver_events_family_id` criado em `public.caregiver_events(family_id)`; Performance Advisor removeu o alerta `unindexed_foreign_keys` de `caregiver_events_family_id_fkey`; `pg_indexes` confirmou o indice.
+- **Bloco D1 validacao:** policy INSERT ampla de `reviews` removida e regra de atendimento finalizado recriada com `(select auth.uid())`; Performance Advisor deixou de listar `reviews` em policies permissive duplicadas e initplan; `pg_policies` confirmou a regra; `test`, `build`, `lint` e `test:e2e` passaram.
 - **Bloco G decisao:** `auth_leaked_password_protection` permanece como acao manual de Supabase Dashboard; redirects do codigo revisados (`/login`, `/auth/callback`, `/reset-password`); checklist registra redirects e CORS de producao pendentes ate existir dominio final.
 - **Rollback:** documentado em `supabase/sql/rollback_advisor_hardening.md`.
 
