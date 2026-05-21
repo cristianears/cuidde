@@ -108,7 +108,17 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
 - [ ] Bloco D aplicado: policies permissive duplicadas revisadas.
 - [x] Bloco E aplicado: bucket `avatars` sem listagem ampla.
 - [x] Bloco F aplicado: indice em `caregiver_events.family_id`.
-- [ ] Bloco G documentado: Auth leaked password protection e URLs de redirect.
+- [x] Bloco G documentado: Auth leaked password protection e URLs de redirect.
+
+### Auth Dashboard - decisoes manuais
+
+- [ ] Supabase Dashboard: habilitar **Leaked Password Protection** em Authentication > Sign In / Password Security. Advisor 2026-05-21 ainda reporta `auth_leaked_password_protection`.
+- [ ] Supabase Dashboard: cadastrar redirects de producao quando o dominio final existir:
+  - `https://<dominio-producao>/login`
+  - `https://<dominio-producao>/auth/callback`
+  - `https://<dominio-producao>/reset-password`
+- [x] Redirects no codigo revisados: signup usa `/login`, Google OAuth usa `/auth/callback`, reset de senha usa `/reset-password`.
+- [ ] Edge Functions CORS: adicionar dominio de producao em `create-checkout` e `admin-actions` antes do go-live.
 
 ### Protecao Stripe em `family_profiles`
 

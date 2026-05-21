@@ -21,7 +21,7 @@
 - [ ] Bloco D concluído: policies permissive duplicadas revisadas.
 - [x] Bloco E concluído: Storage `avatars` sem listagem ampla.
 - [x] Bloco F concluído: índice faltante em `caregiver_events.family_id`.
-- [ ] Bloco G concluído: decisões manuais de Auth/Dashboard documentadas.
+- [x] Bloco G concluído: decisões manuais de Auth/Dashboard documentadas.
 - [ ] Advisors reexecutados e checklist final atualizado.
 - [ ] PR/push final feito.
 
@@ -333,10 +333,10 @@ create index if not exists idx_caregiver_events_family_id
 
 ### Itens
 
-- [ ] Avaliar `Leaked Password Protection Disabled`.
+- [x] Avaliar `Leaked Password Protection Disabled`.
 - [ ] Se disponível no plano atual, ativar no Supabase Dashboard.
-- [ ] Se não disponível ou se for decisão de negócio, registrar no `PRODUCTION_CHECKLIST.md`.
-- [ ] Confirmar que URLs de Auth/redirect seguem corretas para produção.
+- [x] Se não disponível ou se for decisão de negócio, registrar no `PRODUCTION_CHECKLIST.md`.
+- [x] Confirmar que URLs de Auth/redirect seguem corretas para produção. Código usa `/login`, `/auth/callback` e `/reset-password`; domínio final de produção ainda precisa ser cadastrado no Dashboard.
 
 ---
 
