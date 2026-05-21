@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 
 const TYPE_LABELS: Record<string, string> = {
   "plantão": "Plantão",
@@ -29,6 +30,7 @@ const FamilyMatches = () => {
   const qc = useQueryClient();
   const { data: familyProfileData } = useFamilyProfile();
   const { data: appointments, isLoading } = useAppointments("family");
+  const { data: unread } = useUnreadCounts("family");
 
   // Marcar solicitações como vistas ao entrar na página
   useEffect(() => {
@@ -93,10 +95,13 @@ const FamilyMatches = () => {
     });
   };
 
-  const SolicitationCard = ({ appointment }: { appointment: AppointmentWithNames }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
+  const SolicitationCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
+    const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
+
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-4">
           <Avatar className="w-14 h-14">
             <AvatarFallback className="bg-primary/10 text-primary text-lg">
               {getInitials(appointment.caregiver_name)}
@@ -153,10 +158,15 @@ const FamilyMatches = () => {
                 <p className="text-xs text-muted-foreground">
                   Aguardando resposta do cuidador.
                 </p>
-                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                <Button asChild size="sm" variant="outline" className="gap-1.5 relative">
                   <Link to={`/chat/${appointment.id}`}>
                     <MessageCircle className="w-4 h-4" />
                     Chat
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </Link>
                 </Button>
               </div>
@@ -169,10 +179,15 @@ const FamilyMatches = () => {
                     Acessar atendimento
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="gap-1.5">
+                <Button asChild size="sm" variant="outline" className="gap-1.5 relative">
                   <Link to={`/chat/${appointment.id}`}>
                     <MessageCircle className="w-4 h-4" />
                     Chat
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </Link>
                 </Button>
               </div>
@@ -194,9 +209,10 @@ const FamilyMatches = () => {
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   const EmptyState = () => (
     <Card className="border-dashed">

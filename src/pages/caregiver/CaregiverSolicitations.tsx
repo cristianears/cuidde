@@ -30,6 +30,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useAppointments, useUpdateAppointmentStatus, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 
 const TYPE_LABELS: Record<string, string> = {
   "plantão": "Plantão",
@@ -43,6 +44,7 @@ const CaregiverSolicitations = () => {
   const qc = useQueryClient();
   const { data: profileData } = useCaregiverProfile();
   const { data: appointments, isLoading } = useAppointments("caregiver");
+  const { data: unread } = useUnreadCounts("caregiver");
   const { mutate: updateStatus, isPending: isUpdating } = useUpdateAppointmentStatus();
 
   // Marcar solicitações como vistas ao entrar na página
@@ -137,6 +139,7 @@ const CaregiverSolicitations = () => {
   const SolicitationCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const isPending = appointment.status === "pendente";
     const isAccepted = appointment.status === "ativo";
+    const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
 
     return (
       <Card className="hover:shadow-md transition-shadow">
@@ -269,11 +272,16 @@ const CaregiverSolicitations = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5"
+                    className="gap-1.5 relative"
                     onClick={() => navigate(`/chat/${appointment.id}`)}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Chat
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </Button>
                 </div>
               )}
@@ -291,11 +299,16 @@ const CaregiverSolicitations = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5"
+                    className="gap-1.5 relative"
                     onClick={() => navigate(`/chat/${appointment.id}`)}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Chat
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
                   </Button>
                 </div>
               )}
