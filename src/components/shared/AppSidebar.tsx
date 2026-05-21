@@ -99,16 +99,18 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
   const badgeCounts: Record<string, number> = {};
   if (unread) {
     if (role === 'caregiver') {
-      if (unread.newSolicitations > 0)
-        badgeCounts['/caregiver/solicitations'] = unread.newSolicitations;
-      if (unread.totalUnreadMessages > 0)
-        badgeCounts['/caregiver/appointments'] = unread.totalUnreadMessages;
+      const solicitationBadge = unread.newSolicitations + unread.pendingUnreadMessages;
+      if (solicitationBadge > 0)
+        badgeCounts['/caregiver/solicitations'] = solicitationBadge;
+      if (unread.appointmentUnreadMessages > 0)
+        badgeCounts['/caregiver/appointments'] = unread.appointmentUnreadMessages;
     }
     if (role === 'family') {
-      if (unread.updatedSolicitations > 0)
-        badgeCounts['/family/matches'] = unread.updatedSolicitations;
-      if (unread.totalUnreadMessages > 0)
-        badgeCounts['/family/appointments'] = unread.totalUnreadMessages;
+      const solicitationBadge = unread.updatedSolicitations + unread.pendingUnreadMessages;
+      if (solicitationBadge > 0)
+        badgeCounts['/family/matches'] = solicitationBadge;
+      if (unread.appointmentUnreadMessages > 0)
+        badgeCounts['/family/appointments'] = unread.appointmentUnreadMessages;
     }
   }
 

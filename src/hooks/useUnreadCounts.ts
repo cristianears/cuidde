@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { queryKeys } from '@/lib/query-keys'
 
 // ─── Query key ──────────────────────────────────────────────────────────────
 
@@ -15,6 +14,10 @@ function unreadKey(userId: string, role: string) {
 export interface UnreadCounts {
   /** Total de mensagens não lidas (todos os atendimentos) */
   totalUnreadMessages: number
+  /** Mensagens não lidas em solicitações ainda pendentes */
+  pendingUnreadMessages: number
+  /** Mensagens não lidas em atendimentos fora do fluxo de solicitação */
+  appointmentUnreadMessages: number
   /** Mensagens não lidas por appointment_id */
   unreadByAppointment: Record<string, number>
   /** Solicitações pendentes não vistas (cuidador) */
@@ -25,6 +28,8 @@ export interface UnreadCounts {
 
 const EMPTY: UnreadCounts = {
   totalUnreadMessages: 0,
+  pendingUnreadMessages: 0,
+  appointmentUnreadMessages: 0,
   unreadByAppointment: {},
   newSolicitations: 0,
   updatedSolicitations: 0,
@@ -64,10 +69,13 @@ export function useUnreadCounts(role?: 'caregiver' | 'family') {
       const participantColumn = role === 'caregiver' ? 'caregiver_id' : 'family_id'
       const { data: myAppointments } = await supabase
         .from('appointments')
-        .select('id')
+        .select('id, status')
         .eq(participantColumn, user.id)
 
       const myAppointmentIds = (myAppointments ?? []).map((a) => a.id)
+      const appointmentStatusById = new Map(
+        (myAppointments ?? []).map((appointment) => [appointment.id, appointment.status])
+      )
 
       const { data: unreadMessages } = myAppointmentIds.length > 0
         ? await supabase
@@ -83,6 +91,12 @@ export function useUnreadCounts(role?: 'caregiver' | 'family') {
         for (const msg of unreadMessages) {
           counts.unreadByAppointment[msg.appointment_id] =
             (counts.unreadByAppointment[msg.appointment_id] || 0) + 1
+
+          if (appointmentStatusById.get(msg.appointment_id) === 'pendente') {
+            counts.pendingUnreadMessages += 1
+          } else {
+            counts.appointmentUnreadMessages += 1
+          }
         }
       }
 

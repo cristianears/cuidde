@@ -5,6 +5,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import AppSidebar from '../AppSidebar'
 
 const mockNavigate = vi.fn()
+const mockUnreadCounts = vi.hoisted(() => ({
+  data: undefined as
+    | {
+        totalUnreadMessages: number
+        pendingUnreadMessages: number
+        appointmentUnreadMessages: number
+        unreadByAppointment: Record<string, number>
+        newSolicitations: number
+        updatedSolicitations: number
+      }
+    | undefined,
+}))
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
@@ -32,6 +44,11 @@ vi.mock('@/lib/supabase', () => ({
   },
 }))
 
+vi.mock('@/hooks/useUnreadCounts', () => ({
+  useUnreadCounts: () => ({ data: mockUnreadCounts.data }),
+  useUnreadRealtime: vi.fn(),
+}))
+
 function createTestQueryClient() {
   return new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -52,6 +69,7 @@ function renderSidebar(props?: Partial<Parameters<typeof AppSidebar>[0]>, initia
 describe('AppSidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockUnreadCounts.data = undefined
   })
 
   it('renderiza o logo ditti', () => {
@@ -144,5 +162,24 @@ describe('AppSidebar', () => {
     renderSidebar({ userPhoto: undefined })
     // Sem foto, não deve haver img com alt igual ao nome do usuário (só o logo existe)
     expect(screen.queryByAltText('Maria Silva')).not.toBeInTheDocument()
+  })
+
+  it('mostra mensagens de solicitacoes pendentes da familia em Solicitacoes, nao em Atendimentos', () => {
+    mockUnreadCounts.data = {
+      totalUnreadMessages: 2,
+      pendingUnreadMessages: 2,
+      appointmentUnreadMessages: 0,
+      unreadByAppointment: { 'appointment-pendente': 2 },
+      newSolicitations: 0,
+      updatedSolicitations: 0,
+    }
+
+    const { container } = renderSidebar({ role: 'family' }, '/family')
+
+    const solicitacoes = container.querySelector('a[href="/family/matches"]')
+    const atendimentos = container.querySelector('a[href="/family/appointments"]')
+
+    expect(solicitacoes).toHaveTextContent('2')
+    expect(atendimentos).not.toHaveTextContent('2')
   })
 })
