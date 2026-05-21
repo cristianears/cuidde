@@ -230,3 +230,35 @@ create policy "caregiver_profiles: dono gerencia"
   to public
   using (auth.uid() = id);
 ```
+
+## Bloco D: duplicate permissive policies - professional_references
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "professional_references: dono ou família assinante lê" on public.professional_references;
+drop policy if exists "professional_references: dono insere" on public.professional_references;
+drop policy if exists "professional_references: dono atualiza" on public.professional_references;
+drop policy if exists "professional_references: dono remove" on public.professional_references;
+
+create policy "professional_references: dono gerencia"
+  on public.professional_references
+  for all
+  to public
+  using (caregiver_id = auth.uid());
+
+create policy "professional_references: família assinante lê"
+  on public.professional_references
+  for select
+  to public
+  using (
+    exists (
+      select 1
+      from public.family_profiles
+      where family_profiles.id = auth.uid()
+        and family_profiles.subscription_status = 'active'
+    )
+  );
+```

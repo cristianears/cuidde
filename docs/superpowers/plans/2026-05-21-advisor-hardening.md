@@ -267,6 +267,7 @@ git commit -m "Optimize RLS auth uid policies"
 - [x] Rodar advisor. Grupo D1 saiu dos alertas de policies permissive duplicadas e initplan.
 - [x] Rodar testes e smoke do domínio. Grupo D1 validado por `pg_policies`; `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Commit. Grupo D1.
+- [x] Grupo D2: `professional_references` consolidada em SELECT única e writes por comando; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 
 ---
 
