@@ -16,7 +16,7 @@
 - [x] Branch isolada criada para o sprint de advisor hardening.
 - [x] Baseline local e remoto capturado.
 - [x] Bloco A concluído: `SECURITY DEFINER` executável.
-- [ ] Bloco B concluído: `search_path` fixo em functions.
+- [x] Bloco B concluído: `search_path` fixo em functions.
 - [ ] Bloco C concluído: RLS `auth.uid()` otimizado.
 - [ ] Bloco D concluído: policies permissive duplicadas revisadas.
 - [ ] Bloco E concluído: Storage `avatars` sem listagem ampla.
@@ -170,14 +170,14 @@ git commit -m "Harden security definer function grants"
 
 ### Passos
 
-- [ ] Exportar definição anterior das functions alertadas.
-- [ ] Para cada function, recriar preservando:
+- [x] Exportar definição anterior das functions alertadas.
+- [x] Para cada function, recriar preservando:
   - assinatura;
   - `security definer` ou `security invoker`;
   - owner;
   - grants;
   - lógica original.
-- [ ] Adicionar `set search_path = public, pg_temp` ou schema mais restrito.
+- [x] Adicionar `set search_path = public, pg_temp` ou schema mais restrito.
 
 Modelo:
 
@@ -194,11 +194,11 @@ end;
 $$;
 ```
 
-- [ ] Aplicar uma function por vez se houver risco.
-- [ ] Rodar Security Advisor.
-- [ ] Rodar `npm.cmd run test`.
-- [ ] Rodar smoke de onboarding/perfil se functions de perfil forem alteradas.
-- [ ] Commit.
+- [x] Aplicar uma function por vez se houver risco.
+- [x] Rodar Security Advisor.
+- [x] Rodar `npm.cmd run test`.
+- [x] Rodar smoke automatizado de onboarding via Playwright; smoke autenticado de perfil não rodado por ausência de credenciais nesta sessão.
+- [x] Commit.
 
 ```powershell
 git add supabase/sql/advisor_hardening_function_search_path.sql PRODUCTION_CHECKLIST.md AUDIT.md

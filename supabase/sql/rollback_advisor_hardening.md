@@ -29,3 +29,22 @@ notify pgrst, 'reload schema';
 ```
 
 Prefer a forward rollback migration in Supabase instead of rewriting git history.
+
+## Bloco B: function search_path
+
+Applied migration: `supabase/sql/advisor_hardening_function_search_path.sql`
+
+Rollback SQL:
+
+```sql
+alter function public.compute_profile_complete(uuid) reset search_path;
+alter function public.fn_update_caregiver_rating() reset search_path;
+alter function public.refresh_caregiver_computed(uuid) reset search_path;
+alter function public.replace_professional_references(uuid, jsonb, boolean, boolean, boolean) reset search_path;
+alter function public.trg_profile_complete_from_doc() reset search_path;
+alter function public.trg_profile_complete_from_profile() reset search_path;
+alter function public.trg_profile_complete_from_ref() reset search_path;
+alter function public.update_updated_at() reset search_path;
+
+notify pgrst, 'reload schema';
+```

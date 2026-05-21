@@ -101,7 +101,7 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
 - [x] Baseline remoto: Security e Performance Advisors capturados antes das migrations.
 - [x] `pg_policies` e `pg_get_functiondef` exportados antes das alteracoes.
 - [x] Bloco A aplicado: grants de `SECURITY DEFINER` revisados.
-- [ ] Bloco B aplicado: `search_path` fixo em functions alertadas.
+- [x] Bloco B aplicado: `search_path` fixo em functions alertadas.
 - [ ] Bloco C aplicado: RLS `auth.uid()` otimizado com initplan.
 - [ ] Bloco D aplicado: policies permissive duplicadas revisadas.
 - [ ] Bloco E aplicado: bucket `avatars` sem listagem ampla.
