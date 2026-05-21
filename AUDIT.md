@@ -112,6 +112,14 @@
 
 ## Fase 4 — Segurança
 
+### 2026-05-21 - Advisor hardening
+
+- **Baseline local:** `npm.cmd run test` passou com 121 testes; `build` passou; `lint` passou com 10 warnings conhecidos; `test:e2e` passou com 2 testes.
+- **Baseline remoto:** Supabase Security Advisor apontou functions `SECURITY DEFINER`, `search_path`, bucket `avatars`, `pg_trgm` em `public`, `system_logs` sem policy e Auth leaked password protection. Performance Advisor apontou FK sem indice, RLS initplan e duplicidade de policies.
+- **Bloco A classificacao:** trigger/helpers internos perdem `anon` e `authenticated`; RPCs usadas pelo frontend perdem `anon` e mantem `authenticated`.
+- **Bloco A validacao:** migration aplicada no Supabase; Security Advisor removeu os alertas `anon_security_definer_function_executable`; `has_function_privilege` confirmou a matriz esperada; `test`, `build`, `lint` e `test:e2e` passaram.
+- **Rollback:** documentado em `supabase/sql/rollback_advisor_hardening.md`.
+
 ### Skill: idor-testing
 - **Data:** —
 - **Commits:** —

@@ -88,12 +88,25 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
 
 ## RLS e Supabase
 
-- [ ] Exportar policies com `pg_policies` antes de nova alteracao.
+- [x] Exportar policies com `pg_policies` antes de nova alteracao.
 - [ ] Confirmar que `family_profiles` nao tem policy com auto-consulta.
 - [ ] Confirmar que busca de cuidadores nao depende de `status = 'verified'`.
 - [x] Confirmar que `service_role_key` nao existe no frontend (`rg` encontrou apenas `.env.example`).
 - [ ] Confirmar Storage RLS para documentos.
 - [ ] Confirmar Edge Functions autenticadas onde necessario.
+
+### Advisor hardening - 2026-05-21
+
+- [x] Baseline local: `test`, `build`, `lint` e `test:e2e` passaram. Lint manteve 10 warnings conhecidos.
+- [x] Baseline remoto: Security e Performance Advisors capturados antes das migrations.
+- [x] `pg_policies` e `pg_get_functiondef` exportados antes das alteracoes.
+- [x] Bloco A aplicado: grants de `SECURITY DEFINER` revisados.
+- [ ] Bloco B aplicado: `search_path` fixo em functions alertadas.
+- [ ] Bloco C aplicado: RLS `auth.uid()` otimizado com initplan.
+- [ ] Bloco D aplicado: policies permissive duplicadas revisadas.
+- [ ] Bloco E aplicado: bucket `avatars` sem listagem ampla.
+- [ ] Bloco F aplicado: indice em `caregiver_events.family_id`.
+- [ ] Bloco G documentado: Auth leaked password protection e URLs de redirect.
 
 ### Protecao Stripe em `family_profiles`
 
