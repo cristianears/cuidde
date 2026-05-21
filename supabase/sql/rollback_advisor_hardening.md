@@ -28,6 +28,50 @@ grant execute on function public.track_search_appearances(uuid[]) to anon, authe
 notify pgrst, 'reload schema';
 ```
 
+## Bloco C: RLS auth.uid() initPlan - group 1
+
+Applied migration: `supabase/sql/advisor_hardening_rls_initplan.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "caregiver_availability: dono gerencia" on public.caregiver_availability;
+create policy "caregiver_availability: dono gerencia"
+  on public.caregiver_availability
+  for all
+  to public
+  using (caregiver_id = auth.uid());
+
+drop policy if exists "caregiver_documents: dono gerencia" on public.caregiver_documents;
+create policy "caregiver_documents: dono gerencia"
+  on public.caregiver_documents
+  for all
+  to public
+  using (caregiver_id = auth.uid());
+
+drop policy if exists "caregiver_documents: família assinante lê visíveis" on public.caregiver_documents;
+create policy "caregiver_documents: família assinante lê visíveis"
+  on public.caregiver_documents
+  for select
+  to public
+  using (
+    is_visible = true
+    and exists (
+      select 1
+      from public.family_profiles
+      where family_profiles.id = auth.uid()
+        and family_profiles.subscription_status = 'active'
+    )
+  );
+
+drop policy if exists "support_tickets: usuário gerencia os seus" on public.support_tickets;
+create policy "support_tickets: usuário gerencia os seus"
+  on public.support_tickets
+  for all
+  to public
+  using (user_id = auth.uid());
+```
+
 Prefer a forward rollback migration in Supabase instead of rewriting git history.
 
 ## Bloco B: function search_path

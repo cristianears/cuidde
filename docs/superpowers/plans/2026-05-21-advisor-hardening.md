@@ -217,10 +217,10 @@ git commit -m "Set search path on database functions"
 
 ### Passos
 
-- [ ] Começar por tabela de menor risco.
-- [ ] Exportar policies da tabela.
-- [ ] Recriar policy com `to authenticated` quando aplicável.
-- [ ] Substituir:
+- [x] Começar por tabela de menor risco.
+- [x] Exportar policies da tabela.
+- [x] Recriar policy com `to authenticated` quando aplicável.
+- [x] Substituir:
 
 ```sql
 auth.uid() = id
@@ -232,12 +232,12 @@ por:
 (select auth.uid()) = id
 ```
 
-- [ ] Em subqueries, usar o mesmo padrão.
-- [ ] Não alterar a regra de negócio no mesmo commit.
-- [ ] Aplicar migration.
-- [ ] Rodar Performance Advisor.
-- [ ] Rodar smoke do domínio da tabela.
-- [ ] Commit por grupo pequeno de tabelas.
+- [x] Em subqueries, usar o mesmo padrão.
+- [x] Não alterar a regra de negócio no mesmo commit.
+- [x] Aplicar migration. Grupo C1: `support_tickets`, `caregiver_availability`, `caregiver_documents`.
+- [x] Rodar Performance Advisor. Grupo C1 saiu dos alertas de initplan.
+- [x] Rodar smoke do domínio da tabela. Validação por `pg_policies` e suíte local; smoke autenticado manual não rodado por ausência de credenciais.
+- [x] Commit por grupo pequeno de tabelas. Grupo C1.
 
 ```powershell
 git add supabase/sql/advisor_hardening_rls_initplan.sql PRODUCTION_CHECKLIST.md AUDIT.md

@@ -119,6 +119,7 @@
 - **Bloco A classificacao:** trigger/helpers internos perdem `anon` e `authenticated`; RPCs usadas pelo frontend perdem `anon` e mantem `authenticated`.
 - **Bloco A validacao:** migration aplicada no Supabase; Security Advisor removeu os alertas `anon_security_definer_function_executable`; `has_function_privilege` confirmou a matriz esperada; `test`, `build`, `lint` e `test:e2e` passaram.
 - **Bloco B validacao:** `ALTER FUNCTION ... SET search_path = public, pg_temp` aplicado nas 8 functions alertadas; Security Advisor removeu os alertas `function_search_path_mutable`; `pg_proc.proconfig` confirmou `search_path=public, pg_temp`; `test`, `build`, `lint` e `test:e2e` passaram.
+- **Bloco C1 validacao:** policies de `support_tickets`, `caregiver_availability` e `caregiver_documents` recriadas com `to authenticated` e `(select auth.uid())`; Performance Advisor deixou de listar essas tabelas para initplan; `pg_policies` confirmou as regras; `test`, `build`, `lint` e `test:e2e` passaram.
 - **Rollback:** documentado em `supabase/sql/rollback_advisor_hardening.md`.
 
 ### Skill: idor-testing
