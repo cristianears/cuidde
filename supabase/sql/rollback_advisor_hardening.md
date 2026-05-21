@@ -300,3 +300,21 @@ create policy "caregiver_public_searchable"
   to public
   using ((profile_complete = true) and (has_rg_cnh = true) and (is_available_for_new = true));
 ```
+
+## Bloco D: duplicate permissive policies - caregiver_availability
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "caregiver_availability: dono insere" on public.caregiver_availability;
+drop policy if exists "caregiver_availability: dono atualiza" on public.caregiver_availability;
+drop policy if exists "caregiver_availability: dono remove" on public.caregiver_availability;
+
+create policy "caregiver_availability: dono gerencia"
+  on public.caregiver_availability
+  for all
+  to authenticated
+  using (caregiver_id = (select auth.uid()));
+```

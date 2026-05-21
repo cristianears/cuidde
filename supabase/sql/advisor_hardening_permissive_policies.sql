@@ -94,3 +94,26 @@ create policy "caregiver_profiles: dono remove"
   for delete
   to authenticated
   using (id = (select auth.uid()));
+
+-- Group D4: caregiver_availability keeps public read and splits owner writes.
+
+drop policy if exists "caregiver_availability: dono gerencia" on public.caregiver_availability;
+
+create policy "caregiver_availability: dono insere"
+  on public.caregiver_availability
+  for insert
+  to authenticated
+  with check (caregiver_id = (select auth.uid()));
+
+create policy "caregiver_availability: dono atualiza"
+  on public.caregiver_availability
+  for update
+  to authenticated
+  using (caregiver_id = (select auth.uid()))
+  with check (caregiver_id = (select auth.uid()));
+
+create policy "caregiver_availability: dono remove"
+  on public.caregiver_availability
+  for delete
+  to authenticated
+  using (caregiver_id = (select auth.uid()));
