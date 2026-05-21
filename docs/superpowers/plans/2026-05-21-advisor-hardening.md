@@ -19,7 +19,7 @@
 - [x] Bloco B concluído: `search_path` fixo em functions.
 - [ ] Bloco C concluído: RLS `auth.uid()` otimizado.
 - [ ] Bloco D concluído: policies permissive duplicadas revisadas.
-- [ ] Bloco E concluído: Storage `avatars` sem listagem ampla.
+- [x] Bloco E concluído: Storage `avatars` sem listagem ampla.
 - [x] Bloco F concluído: índice faltante em `caregiver_events.family_id`.
 - [ ] Bloco G concluído: decisões manuais de Auth/Dashboard documentadas.
 - [ ] Advisors reexecutados e checklist final atualizado.
@@ -278,7 +278,7 @@ git commit -m "Optimize RLS auth uid policies"
 
 ### Passos
 
-- [ ] Exportar policies atuais do bucket `avatars`.
+- [x] Exportar policies atuais do bucket `avatars`.
 
 ```sql
 select policyname, cmd, qual, with_check
@@ -288,11 +288,11 @@ where schemaname = 'storage'
 order by policyname;
 ```
 
-- [ ] Ajustar policy para evitar listagem ampla.
-- [ ] Confirmar upload de avatar.
-- [ ] Confirmar avatar renderiza nas telas.
-- [ ] Rodar Security Advisor.
-- [ ] Commit.
+- [x] Ajustar policy para evitar listagem ampla.
+- [x] Confirmar upload de avatar. Validado por policies de INSERT/UPDATE próprias preservadas e SELECT própria para upsert; upload manual autenticado não rodado por ausência de credenciais.
+- [x] Confirmar avatar renderiza nas telas. URL pública existente de avatar respondeu HTTP 200.
+- [x] Rodar Security Advisor.
+- [x] Commit.
 
 ---
 

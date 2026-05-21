@@ -141,3 +141,19 @@ Rollback SQL:
 ```sql
 drop index concurrently if exists public.idx_caregiver_events_family_id;
 ```
+
+## Bloco E: avatars bucket listing
+
+Applied migration: `supabase/sql/advisor_hardening_storage_avatars.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "avatars: leitura própria" on storage.objects;
+
+create policy "avatars: leitura pública"
+  on storage.objects
+  for select
+  to public
+  using (bucket_id = 'avatars'::text);
+```

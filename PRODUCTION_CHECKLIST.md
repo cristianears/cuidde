@@ -106,7 +106,7 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
   - [x] Grupo C1: `support_tickets`, `caregiver_availability` e `caregiver_documents`.
   - [x] Grupo C2: `family_profiles`.
 - [ ] Bloco D aplicado: policies permissive duplicadas revisadas.
-- [ ] Bloco E aplicado: bucket `avatars` sem listagem ampla.
+- [x] Bloco E aplicado: bucket `avatars` sem listagem ampla.
 - [x] Bloco F aplicado: indice em `caregiver_events.family_id`.
 - [ ] Bloco G documentado: Auth leaked password protection e URLs de redirect.
 
