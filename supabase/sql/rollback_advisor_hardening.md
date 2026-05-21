@@ -262,3 +262,41 @@ create policy "professional_references: família assinante lê"
     )
   );
 ```
+
+## Bloco D: duplicate permissive policies - caregiver_profiles
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "caregiver_profiles: leitura consolidada" on public.caregiver_profiles;
+drop policy if exists "caregiver_profiles: dono insere" on public.caregiver_profiles;
+drop policy if exists "caregiver_profiles: dono atualiza" on public.caregiver_profiles;
+drop policy if exists "caregiver_profiles: dono remove" on public.caregiver_profiles;
+
+create policy "caregiver: dono edita"
+  on public.caregiver_profiles
+  for all
+  to public
+  using (id = (select auth.uid()))
+  with check (id = (select auth.uid()));
+
+create policy "caregiver: público lê perfil completo"
+  on public.caregiver_profiles
+  for select
+  to public
+  using ((profile_complete = true) or (id = (select auth.uid())));
+
+create policy "caregiver_profiles: público lê verificados e visíveis"
+  on public.caregiver_profiles
+  for select
+  to public
+  using ((status = 'verified'::text) and (is_visible = true));
+
+create policy "caregiver_public_searchable"
+  on public.caregiver_profiles
+  for select
+  to public
+  using ((profile_complete = true) and (has_rg_cnh = true) and (is_available_for_new = true));
+```

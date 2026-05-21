@@ -57,3 +57,40 @@ create policy "professional_references: dono remove"
   for delete
   to authenticated
   using (caregiver_id = (select auth.uid()));
+
+-- Group D3: caregiver_profiles SELECT policies consolidated, owner writes split by command.
+
+drop policy if exists "caregiver: dono edita" on public.caregiver_profiles;
+drop policy if exists "caregiver: público lê perfil completo" on public.caregiver_profiles;
+drop policy if exists "caregiver_profiles: público lê verificados e visíveis" on public.caregiver_profiles;
+drop policy if exists "caregiver_public_searchable" on public.caregiver_profiles;
+
+create policy "caregiver_profiles: leitura consolidada"
+  on public.caregiver_profiles
+  for select
+  to public
+  using (
+    id = (select auth.uid())
+    or profile_complete = true
+    or (status = 'verified' and is_visible = true)
+    or (profile_complete = true and has_rg_cnh = true and is_available_for_new = true)
+  );
+
+create policy "caregiver_profiles: dono insere"
+  on public.caregiver_profiles
+  for insert
+  to authenticated
+  with check (id = (select auth.uid()));
+
+create policy "caregiver_profiles: dono atualiza"
+  on public.caregiver_profiles
+  for update
+  to authenticated
+  using (id = (select auth.uid()))
+  with check (id = (select auth.uid()));
+
+create policy "caregiver_profiles: dono remove"
+  on public.caregiver_profiles
+  for delete
+  to authenticated
+  using (id = (select auth.uid()));
