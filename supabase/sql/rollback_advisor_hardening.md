@@ -441,3 +441,57 @@ create policy "profiles: leitura contextual"
     )
   );
 ```
+
+## Bloco D: duplicate permissive policies - appointments
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "appointments: participantes leem" on public.appointments;
+drop policy if exists "appointments: participantes inserem" on public.appointments;
+drop policy if exists "appointments: participantes atualizam" on public.appointments;
+drop policy if exists "appointments: participantes removem" on public.appointments;
+
+create policy "appointments: participantes"
+  on public.appointments
+  for all
+  to public
+  using (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  )
+  with check (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  );
+
+create policy "appointments: participantes acessam"
+  on public.appointments
+  for all
+  to public
+  using (
+    family_id = auth.uid()
+    or caregiver_id = auth.uid()
+  );
+
+create policy "Family creates appointments"
+  on public.appointments
+  for insert
+  to public
+  with check (family_id = auth.uid());
+
+create policy "Participants update appointments"
+  on public.appointments
+  for update
+  to public
+  using (
+    family_id = auth.uid()
+    or caregiver_id = auth.uid()
+  )
+  with check (
+    family_id = auth.uid()
+    or caregiver_id = auth.uid()
+  );
+```

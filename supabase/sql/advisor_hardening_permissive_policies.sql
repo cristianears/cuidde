@@ -230,3 +230,50 @@ create policy "profiles: dono remove"
   for delete
   to authenticated
   using (id = (select auth.uid()));
+
+-- Group D8: appointments participant policies split by command.
+
+drop policy if exists "appointments: participantes" on public.appointments;
+drop policy if exists "appointments: participantes acessam" on public.appointments;
+drop policy if exists "Family creates appointments" on public.appointments;
+drop policy if exists "Participants update appointments" on public.appointments;
+
+create policy "appointments: participantes leem"
+  on public.appointments
+  for select
+  to authenticated
+  using (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  );
+
+create policy "appointments: participantes inserem"
+  on public.appointments
+  for insert
+  to authenticated
+  with check (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  );
+
+create policy "appointments: participantes atualizam"
+  on public.appointments
+  for update
+  to authenticated
+  using (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  )
+  with check (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  );
+
+create policy "appointments: participantes removem"
+  on public.appointments
+  for delete
+  to authenticated
+  using (
+    family_id = (select auth.uid())
+    or caregiver_id = (select auth.uid())
+  );
