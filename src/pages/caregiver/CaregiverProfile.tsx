@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Camera,
   Save,
   Trash2,
   Plus,
   X,
+  Pencil,
   Phone,
   Building,
   Clock,
@@ -23,15 +24,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import {
-  mockCaregivers,
-  specialtiesList,
-  modalitiesList,
-  idiomasList,
-  ProfessionalReference,
-} from "@/data/mockData";
+import { specialtiesList, modalitiesList, idiomasList } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchAddressByCep } from "@/lib/viacep";
+import { formatPhone } from "@/lib/formatters";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import type { ProfessionalReference } from "@/types/database";
+import {
+  useCaregiverProfile,
+  useProfessionalReferences,
+  useUpdateCaregiverBasic,
+  useUpdateCaregiverBio,
+  useUpdateCaregiverSpecialties,
+  useUpdateCaregiverReferences,
+  useUploadCaregiverPhoto,
+} from "@/hooks/useCaregiverProfile";
 
 const profileSteps = [
   { id: 1, title: "Dados básicos" },
@@ -40,51 +49,50 @@ const profileSteps = [
   { id: 4, title: "Referências" },
 ];
 
+type NewRef = Omit<ProfessionalReference, 'id' | 'caregiver_id' | 'created_at'>
+
 const CaregiverProfile = () => {
-  const currentUser = mockCaregivers[0];
+  const { user } = useAuth()
+  const { data: profileData, isLoading } = useCaregiverProfile()
+  const { data: refsData } = useProfessionalReferences()
+
+  const updateBasic = useUpdateCaregiverBasic()
+  const updateBio = useUpdateCaregiverBio()
+  const updateSpecialties = useUpdateCaregiverSpecialties()
+  const updateReferences = useUpdateCaregiverReferences()
+  const uploadPhoto = useUploadCaregiverPhoto()
+
+  const photoInputRef = useRef<HTMLInputElement>(null)
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [isFetchingCep, setIsFetchingCep] = useState(false)
+
   const [formData, setFormData] = useState({
-    // Básico
-    name: currentUser.name,
-    email: currentUser.email,
-    phone: currentUser.phone,
-    whatsapp: currentUser.whatsapp,
-    photo: currentUser.photo,
-    // Endereço
-    cep: currentUser.address.cep,
-    street: currentUser.address.street,
-    number: currentUser.address.number,
-    neighborhood: currentUser.address.neighborhood,
-    city: currentUser.address.city,
-    state: currentUser.address.state,
-    // Bio
-    bio: currentUser.bio,
-    hasInsurance: currentUser.hasInsurance,
-    // Formação
-    profissaoFormacao: (
-      "" as
-        | ""
-        | "cuidador"
-        | "tecnico_enfermagem"
-        | "auxiliar_enfermagem"
-        | "enfermeiro"
-        | "fisioterapeuta"
-        | "terapeuta_ocupacional"
-        | "outro"
-    ),
+    name: "",
+    email: "",
+    phone: "",
+    whatsapp: "",
+    photo: "",
+    cep: "",
+    street: "",
+    number: "",
+    complement: "",
+    neighborhood: "",
+    city: "",
+    state: "",
+    bio: "",
+    hasInsurance: false,
+    profissaoFormacao: "" as "" | "cuidador" | "tecnico_enfermagem" | "auxiliar_enfermagem" | "enfermeiro" | "fisioterapeuta" | "terapeuta_ocupacional" | "outro",
     profissaoOutro: "",
     formacaoComplementar: "",
-    // Idiomas
-    idiomas: (currentUser.idiomas || ["Português"]) as string[],
+    idiomas: ["Português"] as string[],
     idiomaOutro: "",
-    // Especialidades
-    specialties: currentUser.specialties || [],
-    modalities: currentUser.modalities || [],
-    yearsExperience: currentUser.experienceYears?.toString() ?? "",
-    // CNH
+    specialties: [] as string[],
+    modalities: [] as string[],
+    yearsExperience: "",
+    emergencyAvailable: false,
     possuiCNH: false,
     categoriaCNH: "" as "" | "A" | "B" | "AB" | "C" | "D" | "E",
-    // Referências — visibilidade
     showReferencesToSubscribers: true,
     maskReferencePhones: true,
     showReferenceFullNames: false,
@@ -92,14 +100,173 @@ const CaregiverProfile = () => {
 
   const [references, setReferences] = useState<ProfessionalReference[]>([]);
   const [showAddReference, setShowAddReference] = useState(false);
-  const [newReference, setNewReference] = useState<Partial<ProfessionalReference>>({
+  const [newReference, setNewReference] = useState<NewRef>({
     name: "",
     phone: "",
     workplace: "",
     position: "",
-    workDuration: "",
+    work_duration: "",
     notes: "",
   });
+  const [refErrors, setRefErrors] = useState({ name: false, phone: false });
+
+  const [editingRefId, setEditingRefId] = useState<string | null>(null);
+  const [editRef, setEditRef] = useState<NewRef>({ name: "", phone: "", workplace: "", position: "", work_duration: "", notes: "" });
+  const [editRefErrors, setEditRefErrors] = useState({ name: false, phone: false });
+
+  // Sincronizar form com dados do Supabase quando carregarem
+  useEffect(() => {
+    if (profileData) {
+      setFormData({
+        name: profileData.profiles.full_name ?? "",
+        email: user?.email ?? "",
+        phone: "",
+        whatsapp: profileData.whatsapp ?? profileData.profiles.phone ?? "",
+        photo: profileData.photo_url ?? "",
+        cep: profileData.cep ?? "",
+        street: profileData.street ?? "",
+        number: profileData.number ?? "",
+        complement: profileData.complement ?? "",
+        neighborhood: profileData.neighborhood ?? "",
+        city: profileData.city ?? "",
+        state: profileData.state ?? "",
+        bio: profileData.bio ?? "",
+        hasInsurance: profileData.has_insurance,
+        profissaoFormacao: (profileData.profissao_formacao ?? "") as typeof formData.profissaoFormacao,
+        profissaoOutro: "",
+        formacaoComplementar: profileData.formacao_complementar ?? "",
+        ...(() => {
+          const standardSet = new Set(idiomasList.filter((i) => i !== "Outro"))
+          const dbIdiomas = profileData.idiomas?.length ? profileData.idiomas : ["Português"]
+          const customIdioma = dbIdiomas.find((i) => !standardSet.has(i)) ?? ""
+          const idiomasForForm = customIdioma
+            ? [...dbIdiomas.filter((i) => standardSet.has(i)), "Outro"]
+            : dbIdiomas
+          return { idiomas: idiomasForForm, idiomaOutro: customIdioma }
+        })(),
+        specialties: profileData.specialties ?? [],
+        modalities: profileData.modalities ?? [],
+        yearsExperience: profileData.experience_years ? String(profileData.experience_years) : "",
+        emergencyAvailable: profileData.emergency_available,
+        possuiCNH: profileData.possui_cnh,
+        categoriaCNH: (profileData.categoria_cnh ?? "") as typeof formData.categoriaCNH,
+        showReferencesToSubscribers: profileData.show_refs_to_subscribers,
+        maskReferencePhones: profileData.mask_reference_phones,
+        showReferenceFullNames: profileData.show_reference_full_names,
+      })
+    }
+  }, [profileData, user?.email])
+
+  useEffect(() => {
+    if (refsData) setReferences(refsData)
+  }, [refsData])
+
+  const handleCepChange = async (value: string) => {
+    setFormData((prev) => ({ ...prev, cep: value }))
+    const clean = value.replace(/\D/g, '')
+    if (clean.length === 8) {
+      setIsFetchingCep(true)
+      try {
+        const address = await fetchAddressByCep(clean)
+        if (address) {
+          setFormData((prev) => ({
+            ...prev,
+            street: address.street,
+            neighborhood: address.neighborhood,
+            city: address.city,
+            state: address.state,
+          }))
+        }
+      } finally {
+        setIsFetchingCep(false)
+      }
+    }
+  }
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) uploadPhoto.mutate(file)
+  }
+
+  const handleSave = () => {
+    if (currentStep === 1) {
+      if (!formData.name.trim()) {
+        toast.error("Nome completo é obrigatório.")
+        return
+      }
+      if (!formData.whatsapp.trim() && !formData.phone.trim()) {
+        toast.error("Informe pelo menos um número de contato (telefone ou WhatsApp).")
+        return
+      }
+      if (!formData.cep.trim() || !formData.street.trim() || !formData.number.trim() || !formData.neighborhood.trim() || !formData.city.trim() || !formData.state.trim()) {
+        toast.error("CEP, rua, número, bairro, cidade e estado são obrigatórios.")
+        return
+      }
+      updateBasic.mutate({
+        full_name: formData.name,
+        phone: formData.phone,
+        whatsapp: formData.whatsapp,
+        cep: formData.cep,
+        street: formData.street,
+        number: formData.number,
+        complement: formData.complement,
+        neighborhood: formData.neighborhood,
+        city: formData.city,
+        state: formData.state,
+        possui_cnh: formData.possuiCNH,
+        categoria_cnh: formData.possuiCNH ? formData.categoriaCNH || null : null,
+      })
+    } else if (currentStep === 2) {
+      if (!formData.bio.trim()) {
+        toast.error("A biografia é obrigatória.")
+        return
+      }
+      if (formData.bio.trim().length < 150) {
+        toast.error("A biografia deve ter pelo menos 150 caracteres.")
+        return
+      }
+      // Substitui "Outro" pelo texto digitado; remove se o campo estiver vazio
+      const idiomasToSave = formData.idiomas.flatMap((i) =>
+        i === "Outro"
+          ? formData.idiomaOutro.trim() ? [formData.idiomaOutro.trim()] : []
+          : [i]
+      )
+      updateBio.mutate({
+        bio: formData.bio,
+        profissao_formacao: formData.profissaoFormacao || null,
+        formacao_complementar: formData.formacaoComplementar,
+        idiomas: idiomasToSave,
+        has_insurance: formData.hasInsurance,
+      })
+    } else if (currentStep === 3) {
+      updateSpecialties.mutate({
+        specialties: formData.specialties,
+        modalities: formData.modalities,
+        experience_years: formData.yearsExperience ? Number(formData.yearsExperience) : 0,
+        emergency_available: formData.emergencyAvailable,
+      })
+    } else if (currentStep === 4) {
+      updateReferences.mutate({
+        references: references.map((r) => ({
+          name: r.name,
+          phone: r.phone,
+          workplace: r.workplace,
+          position: r.position,
+          work_duration: r.work_duration,
+          notes: r.notes,
+        })),
+        show_refs_to_subscribers: formData.showReferencesToSubscribers,
+        mask_reference_phones: formData.maskReferencePhones,
+        show_reference_full_names: formData.showReferenceFullNames,
+      })
+    }
+  }
+
+  const isSaving =
+    updateBasic.isPending ||
+    updateBio.isPending ||
+    updateSpecialties.isPending ||
+    updateReferences.isPending
 
   const toggleSpecialty = (specialty: string) => {
     setFormData((prev) => ({
@@ -130,43 +297,85 @@ const CaregiverProfile = () => {
   };
 
   const handleAddReference = () => {
-    if (newReference.name && newReference.phone) {
-      const reference: ProfessionalReference = {
-        id: String(Date.now()),
-        caregiverId: currentUser.id,
-        name: newReference.name || "",
-        phone: newReference.phone || "",
-        workplace: newReference.workplace || "",
-        position: newReference.position || "",
-        workDuration: newReference.workDuration || "",
-        notes: newReference.notes || "",
-      };
-      setReferences([...references, reference]);
-      setNewReference({ name: "", phone: "", workplace: "", position: "", workDuration: "", notes: "" });
-      setShowAddReference(false);
-    }
+    const errors = { name: !newReference.name.trim(), phone: !newReference.phone.trim() };
+    setRefErrors(errors);
+    if (errors.name || errors.phone) return;
+
+    const ref: ProfessionalReference = {
+      id: String(Date.now()),
+      caregiver_id: user?.id ?? "",
+      name: newReference.name,
+      phone: newReference.phone,
+      workplace: newReference.workplace,
+      position: newReference.position,
+      work_duration: newReference.work_duration,
+      notes: newReference.notes,
+      created_at: new Date().toISOString(),
+    };
+    setReferences([...references, ref]);
+    setNewReference({ name: "", phone: "", workplace: "", position: "", work_duration: "", notes: "" });
+    setRefErrors({ name: false, phone: false });
+    setShowAddReference(false);
   };
 
   const handleRemoveReference = (id: string) => {
     setReferences(references.filter((r) => r.id !== id));
+    if (editingRefId === id) setEditingRefId(null);
   };
+
+  const handleStartEdit = (ref: ProfessionalReference) => {
+    setEditingRefId(ref.id);
+    setEditRef({ name: ref.name, phone: ref.phone, workplace: ref.workplace, position: ref.position, work_duration: ref.work_duration, notes: ref.notes });
+    setEditRefErrors({ name: false, phone: false });
+    setShowAddReference(false);
+  };
+
+  const handleSaveEdit = (id: string) => {
+    const errors = { name: !editRef.name.trim(), phone: !editRef.phone.trim() };
+    setEditRefErrors(errors);
+    if (errors.name || errors.phone) return;
+
+    setReferences(references.map((r) =>
+      r.id === id ? { ...r, ...editRef } : r
+    ));
+    setEditingRefId(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-background">
+        <AppSidebar role="caregiver" userName={user?.user_metadata?.full_name ?? user?.email ?? ""} />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar
+        role="caregiver"
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
+      />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
-        <PageHeader title="Meu Perfil" description="Gerencie suas informações pessoais e profissionais">
-          <Button className="gap-2 bg-accent hover:bg-accent/90 text-xs md:text-sm">
-            <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
-            Salvar alterações
-          </Button>
-        </PageHeader>
+        <PageHeader title="Meu Perfil" description="Gerencie suas informações pessoais e profissionais" />
 
         {/* Steps */}
         <div className="mb-6 md:mb-8">
-          <Stepper steps={profileSteps} currentStep={currentStep} />
+          <Stepper steps={profileSteps} currentStep={currentStep} onStepClick={setCurrentStep} />
         </div>
+
+        {/* Hidden file input for photo upload */}
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          className="hidden"
+          onChange={handlePhotoChange}
+        />
 
         <div className="max-w-4xl">
           {/* STEP 1 — Dados básicos */}
@@ -179,22 +388,44 @@ const CaregiverProfile = () => {
                 {/* Photo */}
                 <div className="flex items-center gap-4 md:gap-6">
                   <div className="relative shrink-0">
-                    <img
-                      src={formData.photo}
-                      alt={formData.name}
-                      className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover"
-                    />
-                    <button className="absolute -bottom-2 -right-2 p-1.5 md:p-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors">
-                      <Camera className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    {formData.photo ? (
+                      <img
+                        src={formData.photo}
+                        alt={formData.name}
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-muted flex items-center justify-center">
+                        <Camera className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={uploadPhoto.isPending}
+                      className="absolute -bottom-2 -right-2 p-1.5 md:p-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {uploadPhoto.isPending ? (
+                        <div className="w-3.5 h-3.5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Camera className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                      )}
                     </button>
                   </div>
                   <div>
                     <p className="text-sm md:text-base font-medium text-foreground">Foto de perfil</p>
                     <p className="text-xs md:text-sm text-muted-foreground mb-2">JPG, PNG ou GIF. Máximo 5MB.</p>
-                    <Button variant="outline" size="sm" className="gap-2 text-destructive hover:text-destructive text-xs md:text-sm">
-                      <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                      Remover foto
-                    </Button>
+                    {formData.photo && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-destructive hover:text-destructive text-xs md:text-sm"
+                        onClick={() => setFormData((prev) => ({ ...prev, photo: "" }))}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                        Remover foto
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -205,7 +436,7 @@ const CaregiverProfile = () => {
                   </div>
                   <div>
                     <Label htmlFor="email" className="text-xs md:text-sm">E-mail</Label>
-                    <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))} className="mt-1.5 text-sm" />
+                    <Input id="email" type="email" value={formData.email} readOnly className="mt-1.5 text-sm bg-muted/40 cursor-not-allowed" />
                   </div>
                   <div>
                     <Label htmlFor="phone" className="text-xs md:text-sm">Telefone</Label>
@@ -223,7 +454,14 @@ const CaregiverProfile = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                     <div>
                       <Label htmlFor="cep" className="text-xs md:text-sm">CEP</Label>
-                      <Input id="cep" value={formData.cep} onChange={(e) => setFormData((prev) => ({ ...prev, cep: e.target.value }))} className="mt-1.5 text-sm" />
+                      <Input
+                        id="cep"
+                        value={formData.cep}
+                        onChange={(e) => handleCepChange(e.target.value)}
+                        placeholder="00000-000"
+                        className={cn("mt-1.5 text-sm", isFetchingCep && "opacity-70")}
+                      />
+                      {isFetchingCep && <p className="text-xs text-muted-foreground mt-1">Buscando endereço...</p>}
                     </div>
                     <div className="md:col-span-2">
                       <Label htmlFor="street" className="text-xs md:text-sm">Rua</Label>
@@ -234,17 +472,21 @@ const CaregiverProfile = () => {
                       <Input id="number" value={formData.number} onChange={(e) => setFormData((prev) => ({ ...prev, number: e.target.value }))} className="mt-1.5 text-sm" />
                     </div>
                     <div>
+                      <Label htmlFor="complement" className="text-xs md:text-sm">Complemento</Label>
+                      <Input id="complement" value={formData.complement} onChange={(e) => setFormData((prev) => ({ ...prev, complement: e.target.value }))} placeholder="Apto, bloco, etc." className="mt-1.5 text-sm" />
+                    </div>
+                    <div>
                       <Label htmlFor="neighborhood" className="text-xs md:text-sm">Bairro</Label>
                       <Input id="neighborhood" value={formData.neighborhood} onChange={(e) => setFormData((prev) => ({ ...prev, neighborhood: e.target.value }))} className="mt-1.5 text-sm" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3 md:gap-4">
+                    <div className="grid grid-cols-[1fr_5rem] gap-3 md:gap-4">
                       <div>
                         <Label htmlFor="city" className="text-xs md:text-sm">Cidade</Label>
                         <Input id="city" value={formData.city} onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))} className="mt-1.5 text-sm" />
                       </div>
                       <div>
                         <Label htmlFor="state" className="text-xs md:text-sm">UF</Label>
-                        <Input id="state" value={formData.state} onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Input id="state" value={formData.state} onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))} maxLength={2} className="mt-1.5 text-sm" />
                       </div>
                     </div>
                   </div>
@@ -492,6 +734,28 @@ const CaregiverProfile = () => {
                   </div>
                 </div>
 
+                {/* Disponibilidade para emergências */}
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-start gap-3">
+                    <Switch
+                      id="emergency-available"
+                      checked={formData.emergencyAvailable}
+                      onCheckedChange={(checked) =>
+                        setFormData((prev) => ({ ...prev, emergencyAvailable: checked }))
+                      }
+                    />
+                    <div>
+                      <Label htmlFor="emergency-available" className="text-xs md:text-sm cursor-pointer">
+                        Disponível para atendimento emergencial
+                      </Label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Ative se puder aceitar chamados com pouca antecedência ou em situações urgentes.
+                        Aparecerá como badge no seu perfil e no filtro de busca das famílias.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Anos de experiência */}
                 <div className="pt-4 border-t border-border">
                   <Label className="text-xs md:text-sm">Anos de experiência</Label>
@@ -588,32 +852,103 @@ const CaregiverProfile = () => {
 
                 {/* Lista de referências */}
                 {references.map((ref) => (
-                  <div key={ref.id} className="p-3 md:p-4 rounded-xl bg-muted/50 border border-border">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-sm md:text-base font-medium text-foreground">{ref.name}</h4>
-                        <p className="text-xs md:text-sm text-muted-foreground">{ref.position}</p>
+                  <div key={ref.id} className="rounded-xl border border-border overflow-hidden">
+                    {editingRefId === ref.id ? (
+                      /* Form de edição inline */
+                      <div className="p-3 md:p-4 bg-primary/5 space-y-3 md:space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm md:text-base font-medium text-foreground">Editar referência</h4>
+                          <Button variant="ghost" size="icon" onClick={() => setEditingRefId(null)} className="text-muted-foreground">
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                          <div>
+                            <Label className="text-xs md:text-sm">
+                              Nome <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              value={editRef.name}
+                              onChange={(e) => { setEditRef((p) => ({ ...p, name: e.target.value })); setEditRefErrors((p) => ({ ...p, name: false })); }}
+                              className={cn("mt-1.5 text-sm", editRefErrors.name && "border-destructive focus-visible:ring-destructive")}
+                            />
+                            {editRefErrors.name && <p className="text-xs text-destructive mt-1">Campo obrigatório</p>}
+                          </div>
+                          <div>
+                            <Label className="text-xs md:text-sm">
+                              Telefone <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                              placeholder="(11) 99999-9999"
+                              value={editRef.phone}
+                              onChange={(e) => { setEditRef((p) => ({ ...p, phone: formatPhone(e.target.value) })); setEditRefErrors((p) => ({ ...p, phone: false })); }}
+                              className={cn("mt-1.5 text-sm", editRefErrors.phone && "border-destructive focus-visible:ring-destructive")}
+                            />
+                            {editRefErrors.phone && <p className="text-xs text-destructive mt-1">Campo obrigatório</p>}
+                          </div>
+                          <div>
+                            <Label className="text-xs md:text-sm">Local de trabalho</Label>
+                            <Input value={editRef.workplace ?? ""} onChange={(e) => setEditRef((p) => ({ ...p, workplace: e.target.value }))} className="mt-1.5 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="text-xs md:text-sm">Cargo / Função</Label>
+                            <Input value={editRef.position ?? ""} onChange={(e) => setEditRef((p) => ({ ...p, position: e.target.value }))} className="mt-1.5 text-sm" />
+                          </div>
+                          <div>
+                            <Label className="text-xs md:text-sm">Tempo de trabalho</Label>
+                            <Input value={editRef.work_duration ?? ""} onChange={(e) => setEditRef((p) => ({ ...p, work_duration: e.target.value }))} className="mt-1.5 text-sm" placeholder="Ex: 2 anos" />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs md:text-sm">Observações</Label>
+                          <Textarea value={editRef.notes ?? ""} onChange={(e) => setEditRef((p) => ({ ...p, notes: e.target.value }))} className="mt-1.5 text-sm" />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={() => handleSaveEdit(ref.id)} className="flex-1 bg-primary hover:bg-primary/90 text-sm">
+                            Salvar alterações
+                          </Button>
+                          <Button variant="outline" onClick={() => setEditingRefId(null)} className="text-sm">
+                            Cancelar
+                          </Button>
+                        </div>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => handleRemoveReference(ref.id)} className="text-muted-foreground hover:text-destructive -mt-1 -mr-1">
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 mt-3 text-xs md:text-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
-                        {ref.phone}
+                    ) : (
+                      /* Visualização normal */
+                      <div className="p-3 md:p-4 bg-muted/50">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="text-sm md:text-base font-medium text-foreground">{ref.name}</h4>
+                            <p className="text-xs md:text-sm text-muted-foreground">{ref.position}</p>
+                          </div>
+                          <div className="flex items-center gap-1 -mt-1 -mr-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleStartEdit(ref)} className="text-muted-foreground hover:text-primary">
+                              <Pencil className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveReference(ref.id)} className="text-muted-foreground hover:text-destructive">
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3 mt-3 text-xs md:text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
+                            {ref.phone}
+                          </div>
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Building className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
+                            {ref.workplace}
+                          </div>
+                          {ref.work_duration && (
+                            <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
+                              <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
+                              {ref.work_duration}
+                            </div>
+                          )}
+                        </div>
+                        {ref.notes && (
+                          <p className="text-xs md:text-sm text-muted-foreground mt-3 pt-3 border-t border-border">{ref.notes}</p>
+                        )}
                       </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Building className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
-                        {ref.workplace}
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
-                        <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
-                        {ref.workDuration} de trabalho conjunto
-                      </div>
-                    </div>
-                    {ref.notes && (
-                      <p className="text-xs md:text-sm text-muted-foreground mt-3 pt-3 border-t border-border">{ref.notes}</p>
                     )}
                   </div>
                 ))}
@@ -623,35 +958,53 @@ const CaregiverProfile = () => {
                   <div className="p-3 md:p-4 rounded-xl border-2 border-primary/20 bg-primary/5 space-y-3 md:space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm md:text-base font-medium text-foreground">Nova referência</h4>
-                      <Button variant="ghost" size="icon" onClick={() => setShowAddReference(false)} className="text-muted-foreground">
+                      <Button variant="ghost" size="icon" onClick={() => { setShowAddReference(false); setRefErrors({ name: false, phone: false }); }} className="text-muted-foreground">
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                       <div>
-                        <Label htmlFor="refName" className="text-xs md:text-sm">Nome</Label>
-                        <Input id="refName" placeholder="Nome da referência" value={newReference.name} onChange={(e) => setNewReference((prev) => ({ ...prev, name: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Label htmlFor="refName" className="text-xs md:text-sm">
+                          Nome <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="refName"
+                          placeholder="Nome da referência"
+                          value={newReference.name}
+                          onChange={(e) => { setNewReference((prev) => ({ ...prev, name: e.target.value })); setRefErrors((p) => ({ ...p, name: false })); }}
+                          className={cn("mt-1.5 text-sm", refErrors.name && "border-destructive focus-visible:ring-destructive")}
+                        />
+                        {refErrors.name && <p className="text-xs text-destructive mt-1">Campo obrigatório</p>}
                       </div>
                       <div>
-                        <Label htmlFor="refPhone" className="text-xs md:text-sm">Telefone</Label>
-                        <Input id="refPhone" placeholder="(11) 99999-9999" value={newReference.phone} onChange={(e) => setNewReference((prev) => ({ ...prev, phone: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Label htmlFor="refPhone" className="text-xs md:text-sm">
+                          Telefone <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="refPhone"
+                          placeholder="(11) 99999-9999"
+                          value={newReference.phone}
+                          onChange={(e) => { setNewReference((prev) => ({ ...prev, phone: formatPhone(e.target.value) })); setRefErrors((p) => ({ ...p, phone: false })); }}
+                          className={cn("mt-1.5 text-sm", refErrors.phone && "border-destructive focus-visible:ring-destructive")}
+                        />
+                        {refErrors.phone && <p className="text-xs text-destructive mt-1">Campo obrigatório</p>}
                       </div>
                       <div>
                         <Label htmlFor="refWorkplace" className="text-xs md:text-sm">Local de trabalho</Label>
-                        <Input id="refWorkplace" placeholder="Empresa ou residência" value={newReference.workplace} onChange={(e) => setNewReference((prev) => ({ ...prev, workplace: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Input id="refWorkplace" placeholder="Empresa ou residência" value={newReference.workplace ?? ""} onChange={(e) => setNewReference((prev) => ({ ...prev, workplace: e.target.value }))} className="mt-1.5 text-sm" />
                       </div>
                       <div>
                         <Label htmlFor="refPosition" className="text-xs md:text-sm">Cargo / Função</Label>
-                        <Input id="refPosition" placeholder="Ex: Médico, Familiar" value={newReference.position} onChange={(e) => setNewReference((prev) => ({ ...prev, position: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Input id="refPosition" placeholder="Ex: Médico, Familiar" value={newReference.position ?? ""} onChange={(e) => setNewReference((prev) => ({ ...prev, position: e.target.value }))} className="mt-1.5 text-sm" />
                       </div>
                       <div>
                         <Label htmlFor="refDuration" className="text-xs md:text-sm">Tempo de trabalho</Label>
-                        <Input id="refDuration" placeholder="Ex: 2 anos" value={newReference.workDuration} onChange={(e) => setNewReference((prev) => ({ ...prev, workDuration: e.target.value }))} className="mt-1.5 text-sm" />
+                        <Input id="refDuration" placeholder="Ex: 2 anos" value={newReference.work_duration ?? ""} onChange={(e) => setNewReference((prev) => ({ ...prev, work_duration: e.target.value }))} className="mt-1.5 text-sm" />
                       </div>
                     </div>
                     <div>
                       <Label htmlFor="refNotes" className="text-xs md:text-sm">Observações</Label>
-                      <Textarea id="refNotes" placeholder="Contexto do trabalho realizado..." value={newReference.notes} onChange={(e) => setNewReference((prev) => ({ ...prev, notes: e.target.value }))} className="mt-1.5 text-sm" />
+                      <Textarea id="refNotes" placeholder="Contexto do trabalho realizado..." value={newReference.notes ?? ""} onChange={(e) => setNewReference((prev) => ({ ...prev, notes: e.target.value }))} className="mt-1.5 text-sm" />
                     </div>
                     <Button onClick={handleAddReference} className="w-full bg-primary hover:bg-primary/90 text-sm">
                       Adicionar referência
@@ -677,7 +1030,7 @@ const CaregiverProfile = () => {
           )}
 
           {/* Step Navigation */}
-          <div className="flex justify-between mt-4 md:mt-6">
+          <div className="flex items-center justify-between mt-4 md:mt-6 gap-2">
             <Button
               variant="outline"
               onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
@@ -686,6 +1039,20 @@ const CaregiverProfile = () => {
             >
               Anterior
             </Button>
+
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="gap-2 bg-accent hover:bg-accent/90 text-xs md:text-sm"
+            >
+              {isSaving ? (
+                <div className="w-3.5 h-3.5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              )}
+              Salvar alterações
+            </Button>
+
             <Button
               onClick={() => setCurrentStep(Math.min(profileSteps.length, currentStep + 1))}
               disabled={currentStep === profileSteps.length}

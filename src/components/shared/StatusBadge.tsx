@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Check, Clock, AlertCircle, X, Loader2 } from "lucide-react";
 
-type StatusType = 'pending' | 'analyzing' | 'sent' | 'approved' | 'verified' | 'rejected' | 'open' | 'investigating' | 'resolved' | 'dismissed' | 'active' | 'finished';
+type StatusType = 'pending' | 'analyzing' | 'sent' | 'approved' | 'verified' | 'rejected' | 'open' | 'investigating' | 'resolved' | 'dismissed' | 'active' | 'finished' | 'pendente' | 'ativo' | 'finalizado' | 'cancelado';
 
 type SizeType = 'sm' | 'md';
 
@@ -72,6 +72,26 @@ const statusConfig: Record<StatusType, { label: string; className: string; icon:
     label: 'Finalizado',
     className: 'bg-gray-50 text-gray-700 border-gray-200',
     icon: <Check className="w-3.5 h-3.5" />,
+  },
+  pendente: {
+    label: 'Pendente',
+    className: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: <Clock className="w-3.5 h-3.5" />,
+  },
+  ativo: {
+    label: 'Ativo',
+    className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    icon: <Check className="w-3.5 h-3.5" />,
+  },
+  finalizado: {
+    label: 'Finalizado',
+    className: 'bg-gray-50 text-gray-700 border-gray-200',
+    icon: <Check className="w-3.5 h-3.5" />,
+  },
+  cancelado: {
+    label: 'Cancelado',
+    className: 'bg-red-50 text-red-700 border-red-200',
+    icon: <X className="w-3.5 h-3.5" />,
   },
 };
 

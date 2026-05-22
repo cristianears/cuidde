@@ -5,6 +5,7 @@ import Benefits from "@/components/Benefits";
 import Trust from "@/components/Trust";
 import HiringFlexibility from "@/components/HiringFlexibility";
 import HowItWorks from "@/components/HowItWorks";
+import CareRoutinePreview from "@/components/CareRoutinePreview";
 import Pricing from "@/components/Pricing";
 import WhyItMatters from "@/components/WhyItMatters";
 import CaregiverCTA from "@/components/CaregiverCTA";
@@ -23,6 +24,7 @@ const Index = () => {
       <Trust />
       <HiringFlexibility />
       <HowItWorks />
+      <CareRoutinePreview />
       <Pricing />
       <WhyItMatters />
       <CaregiverCTA />

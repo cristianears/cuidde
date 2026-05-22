@@ -24,7 +24,7 @@ const stats = [
     icon: Heart,
     number: "Decisão no aperto",
     label: "é quando a urgência chega sem aviso",
-    detail: "Quando a necessidade surge, não há tempo para pesquisar. Quem já conhece a Cuidde decide com mais tranquilidade.",
+    detail: "Quando a necessidade surge, não há tempo para pesquisar. Quem já conhece a ditti decide com mais tranquilidade.",
   },
 ];
 const WhyItMatters = () => {
@@ -42,7 +42,7 @@ const WhyItMatters = () => {
             Muitas famílias só percebem o problema quando ele já chegou
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-            Encontrar um cuidador confiável ainda é difícil. A Cuidde existe para tornar essa decisão mais clara, com
+            Encontrar um cuidador confiável ainda é difícil. A ditti existe para tornar essa decisão mais clara, com
             informação organizada e avaliações reais.
           </p>
         </div>
@@ -69,7 +69,7 @@ const WhyItMatters = () => {
             Não espere a urgência chegar para se preparar
           </h3>
           <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-            Criar uma conta na Cuidde é gratuito. Você pode explorar perfis, avaliações e salvar favoritos. Quando quiser
+            Criar uma conta na ditti é gratuito. Você pode explorar perfis, avaliações e salvar favoritos. Quando quiser
             conversar com o profissional e ver documentos completos, é só liberar o acesso.
           </p>
           <Button

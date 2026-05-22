@@ -16,7 +16,7 @@ const hiringOptions = [
     icon: FileCheck,
     title: "Você define o formato",
     description:
-      "A Cuidde conecta famílias e profissionais. A forma de contratação — autônomo, MEI ou outro modelo — é definida diretamente entre as partes.",
+      "A ditti conecta famílias e profissionais. A forma de contratação — autônomo, MEI ou outro modelo — é definida diretamente entre as partes.",
   },
 ];
 const HiringFlexibility = () => {
@@ -32,7 +32,7 @@ const HiringFlexibility = () => {
             Flexibilidade para cuidar do seu jeito
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
-            Seja para uma necessidade pontual ou um cuidado contínuo, a Cuidde facilita a conexão
+            Seja para uma necessidade pontual ou um cuidado contínuo, a ditti facilita a conexão
             entre famílias e profissionais, respeitando a autonomia de cada parte.
           </p>
         </div>

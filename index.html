@@ -3,10 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project">
-    <meta name="author" content="Lovable" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+    <link rel="shortcut icon" href="/logo.png" />
+    <title>ditti — Cuidadores de idosos para sua família</title>
+    <meta name="description" content="ditti conecta famílias a cuidadores de idosos de confiança.">
+    <meta name="author" content="ditti" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://js.stripe.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: blob: https:;
+      connect-src 'self' data:
+        https://*.supabase.co
+        wss://*.supabase.co
+        https://api.stripe.com
+        https://nominatim.openstreetmap.org
+        https://maps.googleapis.com
+        https://viacep.com.br;
+      frame-src 'self' blob: https://js.stripe.com https://hooks.stripe.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self' https://checkout.stripe.com;
+    " />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
 
     <!-- TODO: Update og:title to match your application name -->
     
@@ -17,10 +49,10 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/283bb730-2429-4543-8f39-f33756d18bfd/id-preview-c1704581--a86ccc0e-502a-41b8-b267-3151d80d6dfc.lovable.app-1770769063743.png">
-    <meta property="og:title" content="Lovable App">
-  <meta name="twitter:title" content="Lovable App">
-  <meta property="og:description" content="Lovable Generated Project">
-  <meta name="twitter:description" content="Lovable Generated Project">
+    <meta property="og:title" content="ditti — Cuidadores de idosos para sua família">
+  <meta name="twitter:title" content="ditti — Cuidadores de idosos para sua família">
+  <meta property="og:description" content="ditti conecta famílias a cuidadores de idosos de confiança.">
+  <meta name="twitter:description" content="ditti conecta famílias a cuidadores de idosos de confiança.">
 </head>
 
   <body>

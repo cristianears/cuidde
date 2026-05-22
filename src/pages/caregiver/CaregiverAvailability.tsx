@@ -1,24 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
   CheckCircle2,
   Circle,
-  MapPin,
   Briefcase,
   MessageSquare,
   ArrowLeft,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { mockCaregivers } from "@/data/mockData";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile, useUpdateAvailability } from "@/hooks/useCaregiverProfile";
 
 const journeyTypes = [
   { id: "plantoes", label: "Plantões avulsos", desc: "Atendimentos pontuais e esporádicos" },
@@ -28,27 +25,27 @@ const journeyTypes = [
   { id: "longo-periodo", label: "Longo período", desc: "Atendimentos contínuos e prolongados" },
 ];
 
-const areaOptions = [
-  { value: "bairro", label: "Somente meu bairro" },
-  { value: "cidade", label: "Minha cidade" },
-  { value: "proximas", label: "Cidades próximas" },
-];
-
-const radiusOptions = [
-  { value: "5", label: "Até 5 km" },
-  { value: "10", label: "Até 10 km" },
-  { value: "20", label: "Até 20 km" },
-];
 
 const CaregiverAvailability = () => {
   const navigate = useNavigate();
-  const currentUser = mockCaregivers[0];
+  const { user } = useAuth()
+  const { data: profileData } = useCaregiverProfile()
+  const updateAvailability = useUpdateAvailability()
 
   const [isAvailable, setIsAvailable] = useState(true);
   const [selectedJourneyTypes, setSelectedJourneyTypes] = useState<string[]>(["diarias"]);
-  const [areaType, setAreaType] = useState<"bairro" | "cidade" | "proximas">("cidade");
-  const [radius, setRadius] = useState("10");
   const [observations, setObservations] = useState("");
+
+  // Sincronizar com dados reais quando carregarem
+  useEffect(() => {
+    if (profileData) {
+      setIsAvailable(profileData.is_available_for_new ?? true)
+      setSelectedJourneyTypes(
+        profileData.journey_types?.length ? profileData.journey_types : ["diarias"]
+      )
+      setObservations(profileData.availability_notes ?? "")
+    }
+  }, [profileData])
 
   const toggleJourneyType = (id: string) => {
     setSelectedJourneyTypes((prev) =>
@@ -57,12 +54,20 @@ const CaregiverAvailability = () => {
   };
 
   const handleSave = () => {
-    toast.success("Disponibilidade atualizada com sucesso");
+    updateAvailability.mutate({
+      is_available_for_new: isAvailable,
+      journey_types: selectedJourneyTypes,
+      availability_notes: observations,
+    })
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar
+        role="caregiver"
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
+      />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <div className="max-w-3xl space-y-4 md:space-y-6">
@@ -191,63 +196,7 @@ const CaregiverAvailability = () => {
             </CardContent>
           </Card>
 
-          {/* Seção 3 - Área de Atendimento */}
-          <Card>
-            <CardHeader className="pb-3 md:pb-6">
-              <CardTitle className="text-base md:text-lg flex items-center gap-2">
-                <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                Área de atendimento
-              </CardTitle>
-              <CardDescription className="text-xs md:text-sm">
-                Indique seu alcance com base no endereço cadastrado. Você pode combinar detalhes de deslocamento diretamente com a família.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 md:space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs md:text-sm">Alcance</Label>
-                <div className="flex flex-wrap gap-2">
-                  {areaOptions.map((option) => (
-                    <button
-                      type="button"
-                      key={option.value}
-                      onClick={() => setAreaType(option.value as typeof areaType)}
-                      className={cn(
-                        "px-3 md:px-4 py-1.5 md:py-2 rounded-full border-2 text-xs md:text-sm font-medium transition-all",
-                        areaType === option.value
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border hover:border-muted-foreground/30 text-foreground",
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {areaType === "proximas" && (
-                <div className="space-y-2">
-                  <Label className="text-xs md:text-sm">Raio aproximado</Label>
-                  <Select value={radius} onValueChange={setRadius}>
-                    <SelectTrigger className="w-full sm:w-48 text-sm">
-                      <SelectValue placeholder="Selecione o raio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {radiusOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Dica: raio maior pode aumentar solicitações — ajuste conforme sua rotina.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Seção 4 - Observações */}
+          {/* Seção 3 - Observações */}
           <Card>
             <CardHeader className="pb-3 md:pb-6">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
@@ -277,7 +226,14 @@ const CaregiverAvailability = () => {
               <ArrowLeft className="w-4 h-4" />
               Voltar
             </Button>
-            <Button onClick={handleSave} className="flex-1 sm:flex-none">
+            <Button
+              onClick={handleSave}
+              disabled={updateAvailability.isPending}
+              className="flex-1 sm:flex-none"
+            >
+              {updateAvailability.isPending ? (
+                <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+              ) : null}
               Salvar disponibilidade
             </Button>
           </div>

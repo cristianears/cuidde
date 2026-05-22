@@ -1,170 +1,218 @@
+import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Calendar, Search, Clock, CheckCircle, XCircle, UserCheck } from "lucide-react";
+import { markMatchesSeen } from "@/hooks/useUnreadCounts";
+import {
+  Calendar, Search, Clock, CheckCircle, XCircle, UserCheck, Loader2,
+  FileText, MapPin, Briefcase, MessageCircle,
+} from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { mockFamilies } from "@/data/mockData";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type MatchStatus = "pending" | "accepted" | "rejected";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 
-interface MatchRequest {
-  id: string;
-  caregiver: {
-    name: string;
-    photo?: string;
-    specialties: string[];
-  };
-  requestDate: string;
-  status: MatchStatus;
-  appointmentId?: string;
-}
-
-const mockMatchRequests: MatchRequest[] = [
-  {
-    id: "1",
-    caregiver: {
-      name: "Maria Silva",
-      photo: "",
-      specialties: ["Alzheimer", "Mobilidade Reduzida"],
-    },
-    requestDate: "2024-01-20",
-    status: "accepted",
-    appointmentId: "1",
-  },
-  {
-    id: "2",
-    caregiver: {
-      name: "João Santos",
-      photo: "",
-      specialties: ["Parkinson", "Cuidados Noturnos"],
-    },
-    requestDate: "2024-01-22",
-    status: "pending",
-  },
-  {
-    id: "3",
-    caregiver: {
-      name: "Ana Costa",
-      photo: "",
-      specialties: ["Diabetes", "Hipertensão"],
-    },
-    requestDate: "2024-01-18",
-    status: "rejected",
-  },
-  {
-    id: "4",
-    caregiver: {
-      name: "Carlos Oliveira",
-      photo: "",
-      specialties: ["Fisioterapia", "Reabilitação"],
-    },
-    requestDate: "2024-01-25",
-    status: "pending",
-  },
-];
+const TYPE_LABELS: Record<string, string> = {
+  "plantão": "Plantão",
+  "contínuo": "Contínuo",
+  "turno": "Turno",
+};
 
 const FamilyMatches = () => {
-  const currentUser = mockFamilies[0];
-  const hasAnyMatches = mockMatchRequests.length > 0;
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const { data: familyProfileData } = useFamilyProfile();
+  const { data: appointments, isLoading } = useAppointments("family");
+  const { data: unread } = useUnreadCounts("family");
 
-  const getStatusBadge = (status: MatchStatus) => {
+  // Marcar solicitações como vistas ao entrar na página
+  useEffect(() => {
+    if (!user) return;
+    markMatchesSeen(user.id);
+    qc.invalidateQueries({ queryKey: ['unread_counts', user.id] });
+  }, [user, qc]);
+
+  const { pending, accepted, rejected } = useMemo(() => {
+    const list = appointments ?? [];
+    return {
+      pending: list.filter((a) => a.status === "pendente"),
+      accepted: list.filter((a) => a.status === "ativo"),
+      rejected: list.filter((a) => a.status === "cancelado"),
+    };
+  }, [appointments]);
+
+  const allSolicitations = useMemo(
+    () => [...pending, ...accepted, ...rejected],
+    [pending, accepted, rejected]
+  );
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "pending":
+      case "pendente":
         return (
           <Badge variant="secondary" className="gap-1">
             <Clock className="w-3 h-3" />
             Aguardando resposta
           </Badge>
         );
-      case "accepted":
+      case "ativo":
         return (
           <Badge className="gap-1 bg-green-100 text-green-800 hover:bg-green-100">
             <CheckCircle className="w-3 h-3" />
             Aceito
           </Badge>
         );
-      case "rejected":
+      case "cancelado":
         return (
           <Badge variant="outline" className="gap-1 text-muted-foreground">
             <XCircle className="w-3 h-3" />
             Recusado
           </Badge>
         );
+      default:
+        return null;
     }
   };
 
-  const getStatusMessage = (status: MatchStatus) => {
-    switch (status) {
-      case "pending":
-        return "Aguardando resposta do cuidador.";
-      case "accepted":
-        return "O cuidador aceitou sua solicitação.";
-      case "rejected":
-        return "O cuidador recusou esta solicitação.";
-    }
+  const getInitials = (name: string | null) => {
+    if (!name) return "?";
+    return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
   };
 
-  const MatchCard = ({ match }: { match: MatchRequest }) => (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-4">
+  const formatDate = (dateString: string) => {
+    const d = dateString.length === 10 ? dateString + "T00:00:00" : dateString;
+    return new Date(d).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const SolicitationCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
+    const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
+
+    return (
+      <Card className="hover:shadow-md transition-shadow">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-4">
           <Avatar className="w-14 h-14">
-            <AvatarImage src={match.caregiver.photo} alt={match.caregiver.name} />
             <AvatarFallback className="bg-primary/10 text-primary text-lg">
-              {match.caregiver.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+              {getInitials(appointment.caregiver_name)}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-2">
               <h3 className="font-semibold text-foreground truncate">
-                {match.caregiver.name}
+                {appointment.caregiver_name ?? "Cuidador"}
               </h3>
-              {getStatusBadge(match.status)}
+              {getStatusBadge(appointment.status)}
             </div>
 
-            <div className="flex flex-wrap gap-1 mb-3">
-              {match.caregiver.specialties.map((specialty) => (
-                <Badge key={specialty} variant="outline" className="text-xs">
-                  {specialty}
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              <Badge variant="secondary" className="text-xs font-normal">
+                {TYPE_LABELS[appointment.type] ?? appointment.type}
+              </Badge>
+              {appointment.modality && (
+                <Badge variant="outline" className="text-xs font-normal gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {appointment.modality}
                 </Badge>
-              ))}
+              )}
             </div>
 
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-              <Calendar className="w-4 h-4" />
-              <span>Solicitado em {new Date(match.requestDate).toLocaleDateString("pt-BR")}</span>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Início: {formatDate(appointment.start_date)}</span>
+              </div>
+              {appointment.end_date && (
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Fim: {formatDate(appointment.end_date)}</span>
+                </div>
+              )}
             </div>
 
-            <p className="text-sm text-muted-foreground mb-4">
-              {getStatusMessage(match.status)}
-            </p>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+              <Calendar className="w-3 h-3" />
+              <span>Solicitado em {formatDate(appointment.created_at)}</span>
+            </div>
 
-            {match.status === "accepted" && match.appointmentId && (
-              <Button asChild size="sm" className="gap-2">
-                <Link to={`/family/appointments/${match.appointmentId}`}>
-                  <CheckCircle className="w-4 h-4" />
-                  Acessar atendimento
-                </Link>
-              </Button>
+            {appointment.description && (
+              <div className="flex items-start gap-1.5 text-xs text-muted-foreground mb-2">
+                <FileText className="w-3 h-3 mt-0.5 shrink-0" />
+                <span className="line-clamp-2">{appointment.description}</span>
+              </div>
             )}
 
-            {match.status === "rejected" && (
-              <Button asChild variant="outline" size="sm" className="gap-2">
-                <Link to="/family/search">
-                  <Search className="w-4 h-4" />
-                  Buscar outros cuidadores
-                </Link>
-              </Button>
+            {appointment.status === "pendente" && (
+              <div className="flex items-center gap-2 mt-2">
+                <p className="text-xs text-muted-foreground">
+                  Aguardando resposta do cuidador.
+                </p>
+                <Button asChild size="sm" variant="outline" className="gap-1.5 relative">
+                  <Link to={`/chat/${appointment.id}`}>
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+              </div>
+            )}
+            {appointment.status === "ativo" && (
+              <div className="flex gap-2 mt-3">
+                <Button asChild size="sm" className="gap-2">
+                  <Link to={`/family/appointments/${appointment.id}`}>
+                    <CheckCircle className="w-4 h-4" />
+                    Acessar atendimento
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="gap-1.5 relative">
+                  <Link to={`/chat/${appointment.id}`}>
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                </Button>
+              </div>
+            )}
+            {appointment.status === "cancelado" && (
+              <div className="mt-3">
+                {appointment.cancel_reason && (
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Motivo: {appointment.cancel_reason}
+                  </p>
+                )}
+                <Button asChild variant="outline" size="sm" className="gap-2">
+                  <Link to="/family/search">
+                    <Search className="w-4 h-4" />
+                    Buscar outros cuidadores
+                  </Link>
+                </Button>
+              </div>
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   const EmptyState = () => (
     <Card className="border-dashed">
@@ -176,7 +224,7 @@ const FamilyMatches = () => {
           Nenhuma solicitação enviada
         </h3>
         <p className="text-muted-foreground max-w-md mx-auto mb-6">
-          Quando você solicitar contato com um cuidador, o status aparecerá aqui.
+          Quando você solicitar atendimento a um cuidador, o status aparecerá aqui.
         </p>
         <Button asChild className="gap-2">
           <Link to="/family/search">
@@ -188,17 +236,26 @@ const FamilyMatches = () => {
     </Card>
   );
 
-  if (!hasAnyMatches) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen bg-background">
-        <AppSidebar role="family" userName={currentUser.name} />
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+      </div>
+    );
+  }
 
+  if (allSolicitations.length === 0) {
+    return (
+      <div className="flex min-h-screen bg-background">
+        <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
         <main className="flex-1 p-6 lg:p-8">
           <PageHeader
             title="Solicitações"
             description="Acompanhe o status das suas solicitações enviadas aos cuidadores"
           />
-
           <div className="mt-6">
             <EmptyState />
           </div>
@@ -209,7 +266,7 @@ const FamilyMatches = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="family" userName={currentUser.name} />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
 
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader
@@ -217,11 +274,85 @@ const FamilyMatches = () => {
           description="Acompanhe o status das suas solicitações enviadas aos cuidadores"
         />
 
-        <div className="grid gap-4">
-          {mockMatchRequests.map((match) => (
-            <MatchCard key={match.id} match={match} />
-          ))}
-        </div>
+        <Tabs defaultValue="todas" className="mt-6">
+          <TabsList>
+            <TabsTrigger value="todas">
+              Todas
+              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                {allSolicitations.length}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="pendentes">
+              Pendentes
+              {pending.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {pending.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="aceitas">
+              Aceitas
+              {accepted.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {accepted.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="recusadas">
+              Recusadas
+              {rejected.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {rejected.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="todas" className="mt-4 space-y-3">
+            {allSolicitations.map((a) => (
+              <SolicitationCard key={a.id} appointment={a} />
+            ))}
+          </TabsContent>
+
+          <TabsContent value="pendentes" className="mt-4 space-y-3">
+            {pending.length > 0 ? (
+              pending.map((a) => <SolicitationCard key={a.id} appointment={a} />)
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Clock className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">Nenhuma solicitação pendente.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="aceitas" className="mt-4 space-y-3">
+            {accepted.length > 0 ? (
+              accepted.map((a) => <SolicitationCard key={a.id} appointment={a} />)
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <CheckCircle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">Nenhuma solicitação aceita ainda.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="recusadas" className="mt-4 space-y-3">
+            {rejected.length > 0 ? (
+              rejected.map((a) => <SolicitationCard key={a.id} appointment={a} />)
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <XCircle className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">Nenhuma solicitação recusada.</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

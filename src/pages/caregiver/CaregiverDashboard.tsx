@@ -1,7 +1,6 @@
 import React from "react";
 import {
   User,
-  FileText,
   CheckCircle,
   Clock,
   AlertCircle,
@@ -9,194 +8,261 @@ import {
   Briefcase,
   Eye,
   ArrowRight,
-  Shield,
-  BadgeCheck,
-  Heart,
-  MapPin,
-  Zap,
   Calendar,
-  Languages,
-  Clock as ClockIcon,
-  Sunset,
-  Car,
   Search,
   MessageCircle,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import StarRating from "@/components/shared/StarRating";
+import CaregiverCard from "@/components/shared/CaregiverCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { mockCaregivers, mockDocuments, mockReviews, mockAppointments, mockReferences } from "@/data/mockData";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile, useProfessionalReferences, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
+import { useDocuments } from "@/hooks/useCaregiverDocuments";
+import { useAppointments } from "@/hooks/useAppointments";
+import { useReviews } from "@/hooks/useReviews";
+import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
+import type { CaregiverDocument, ProfessionalReference, CaregiverPublic } from "@/types/database";
 
-// ---------------------------------------------------------------------------
-// Insights mock data
-// TODO: Replace with real API data when backend is ready
-// ---------------------------------------------------------------------------
-const mockInsights = {
-  visualizacoes_30d: 87,
-  visualizacoes_delta_pct: 12,   // positive = growth vs previous 30-day period
-  aparicoes_busca_30d: 234,
-  familias_interessadas_30d: 5,
-  buscas_proximas_30d: 42,
-};
+// ─── Completude do perfil ─────────────────────────────────────────────────────
+// 8 critérios ponderados — cada um vale 1 ponto
 
-type Caregiver = (typeof mockCaregivers)[0];
+interface CompletenessCheck {
+  done: boolean;
+  label: string;
+  href: string;
+}
 
 function getProfileCompleteness(
-  user: Caregiver,
-  docs: typeof mockDocuments,
-  refs: typeof mockReferences,
-): { pct: number; nextSteps: string[] } {
-  const checks = [
-    { done: !!user.photo, label: "Adicionar foto ao perfil" },
-    { done: (user.bio?.length ?? 0) >= 150, label: "Completar biografia (mín. 150 caracteres)" },
-    { done: (user.specialties?.length ?? 0) >= 1, label: "Selecionar especialidades" },
-    { done: (user.modalities?.length ?? 0) >= 1, label: "Selecionar formato de atendimento" },
+  profile: CaregiverProfileFull,
+  docs: CaregiverDocument[],
+  refs: ProfessionalReference[],
+): { pct: number; checks: CompletenessCheck[] } {
+  const checks: CompletenessCheck[] = [
     {
-      done: docs.some(
-        (d) => d.type === "certificacao" && (d.status === "approved" || d.status === "sent"),
-      ),
-      label: "Adicionar certificações",
+      done: !!profile.photo_url,
+      label: "Adicionar foto ao perfil",
+      href: "/caregiver/profile",
     },
-    { done: refs.length >= 1, label: "Inserir referências profissionais" },
+    {
+      done: (profile.bio?.length ?? 0) >= 150,
+      label: "Completar biografia (mín. 150 caracteres)",
+      href: "/caregiver/profile",
+    },
+    {
+      done: (profile.specialties?.length ?? 0) >= 1,
+      label: "Selecionar especialidades",
+      href: "/caregiver/profile",
+    },
+    {
+      done: (profile.modalities?.length ?? 0) >= 1,
+      label: "Selecionar formato de atendimento",
+      href: "/caregiver/profile",
+    },
+    {
+      done: !!(profile.cep && profile.city && profile.state),
+      label: "Completar endereço",
+      href: "/caregiver/profile",
+    },
+    {
+      done: !!(profile.price_per_hour != null || profile.price_per_day != null),
+      label: "Definir valores de atendimento",
+      href: "/caregiver/pricing",
+    },
+    (() => {
+      const rgCnh = docs.find((d) => d.type === "rg_cnh");
+      if (rgCnh?.status === "rejected") {
+        return {
+          done: false,
+          label: "Reenviar RG/CNH — documento ilegível",
+          href: "/caregiver/documents",
+        };
+      }
+      return {
+        done: !!rgCnh && (rgCnh.status === "approved" || rgCnh.status === "sent"),
+        label: "Enviar RG ou CNH",
+        href: "/caregiver/documents",
+      };
+    })(),
+    {
+      done: refs.length >= 1,
+      label: "Inserir referências profissionais",
+      href: "/caregiver/profile",
+    },
   ];
+
   const doneCount = checks.filter((c) => c.done).length;
   const pct = Math.round((doneCount / checks.length) * 100);
-  const nextSteps = checks
-    .filter((c) => !c.done)
-    .map((c) => c.label)
-    .slice(0, 3);
-  return { pct, nextSteps };
+  return { pct, checks };
 }
 
-const weeklyTips = [
-  {
-    body: "Perfis com biografia detalhada e foto clara tendem a receber mais visitas.",
+// ─── Dica semanal ─────────────────────────────────────────────────────────────
+
+// Dica personalizada baseada no primeiro item incompleto do perfil.
+// Se tudo estiver completo, rotaciona dicas de engajamento semanalmente.
+
+const TIP_BY_CHECK: Record<string, { body: string; actionTarget: string }> = {
+  "Adicionar foto ao perfil": {
+    body: "Perfis com foto recebem até 3x mais cliques. Adicione uma foto profissional para se destacar na busca.",
     actionTarget: "/caregiver/profile",
   },
-  {
-    body: "Adicionar certificações pode aumentar a confiança das famílias no seu perfil.",
+  "Completar biografia (mín. 150 caracteres)": {
+    body: "Uma biografia detalhada conta sua história e gera confiança. Descreva sua experiência e diferenciais.",
+    actionTarget: "/caregiver/profile",
+  },
+  "Selecionar especialidades": {
+    body: "Especialidades definem em quais buscas você aparece. Marque todas as áreas em que atua.",
+    actionTarget: "/caregiver/profile",
+  },
+  "Selecionar formato de atendimento": {
+    body: "Informe se você faz plantões, diárias ou períodos longos — famílias filtram por isso na busca.",
+    actionTarget: "/caregiver/profile",
+  },
+  "Completar endereço": {
+    body: "Sem endereço cadastrado você não aparece nas buscas por proximidade. Complete seu CEP e cidade.",
+    actionTarget: "/caregiver/profile",
+  },
+  "Definir valores de atendimento": {
+    body: "Famílias filtram por faixa de preço. Defina seus valores para aparecer nesses resultados.",
+    actionTarget: "/caregiver/pricing",
+  },
+  "Enviar RG ou CNH": {
+    body: "O documento de identificação é obrigatório para habilitar seu perfil. Tire uma foto clara ou faça upload do arquivo.",
     actionTarget: "/caregiver/documents",
   },
-  {
-    body: "Atualize suas especialidades para aparecer em mais buscas relevantes.",
+  "Reenviar RG/CNH — documento ilegível": {
+    body: "Seu documento foi recusado por estar ilegível. Envie uma nova foto com boa iluminação e sem cortes.",
+    actionTarget: "/caregiver/documents",
+  },
+  "Inserir referências profissionais": {
+    body: "Referências profissionais são o fator de confiança mais valorizado pelas famílias.",
     actionTarget: "/caregiver/profile",
   },
-  {
-    body: "Perfis com referências profissionais transmitem mais credibilidade para as famílias.",
-    actionTarget: "/caregiver/profile",
-  },
-  {
-    body: "Registre seus atendimentos realizados para construir um histórico sólido.",
-    actionTarget: "/caregiver/appointments",
-  },
-  {
-    body: "Mantenha sua disponibilidade sempre atualizada para não perder oportunidades.",
-    actionTarget: "/caregiver/availability",
-  },
+};
+
+const engagementTips = [
+  { body: "Mantenha sua disponibilidade sempre atualizada para não perder oportunidades.", actionTarget: "/caregiver/availability" },
+  { body: "Responda às solicitações rapidamente — famílias valorizam cuidadores ágeis.", actionTarget: "/caregiver/appointments" },
+  { body: "Perfis com avaliações positivas sobem no ranking de busca. Peça feedback aos seus pacientes.", actionTarget: "/caregiver/reviews" },
 ];
 
-function getWeeklyTip() {
+function getPersonalizedTip(incompleteLabels: string[]) {
+  // Prioridade: primeiro item incompleto do perfil
+  for (const label of incompleteLabels) {
+    if (TIP_BY_CHECK[label]) return TIP_BY_CHECK[label];
+  }
+  // Tudo completo: rotaciona dicas de engajamento semanalmente
   const startOfYear = new Date(new Date().getFullYear(), 0, 0).getTime();
-  const dayOfYear = Math.floor((Date.now() - startOfYear) / 86_400_000);
-  return weeklyTips[Math.floor(dayOfYear / 7) % weeklyTips.length];
+  const week = Math.floor((Date.now() - startOfYear) / (7 * 86_400_000));
+  return engagementTips[week % engagementTips.length];
 }
 
-// ---------------------------------------------------------------------------
+// ─── Componente ───────────────────────────────────────────────────────────────
 
 const CaregiverDashboard = () => {
-  // Using first caregiver as current user for demo
-  const currentUser = mockCaregivers[0];
-  const userDocuments = mockDocuments.filter((d) => d.caregiverId === currentUser.id);
-  const userReviews = mockReviews.filter((r) => r.caregiverId === currentUser.id);
-  const userAppointments = mockAppointments.filter((a) => a.caregiverId === currentUser.id);
+  const { user } = useAuth();
 
-  const userReferences = mockReferences.filter((r) => r.caregiverId === currentUser.id);
-  const approvedDocs = userDocuments.filter((d) => d.status === "approved").length;
+  // ── Dados reais ──────────────────────────────────────────────────────────
+  const { data: profileData, isLoading: profileLoading } = useCaregiverProfile();
+  useAutoGeocodeCaregiver(profileData);
 
-  // Profile badges conditions
-  const hasDocsEnviados = userDocuments.some((d) => d.status === "approved" || d.status === "sent");
-  const hasCertificados = userDocuments.some((d) => d.type === "certificacao" && d.status === "approved");
-  const hasAntecedentes = userDocuments.some((d) => d.type === "antecedentes" && (d.status === "approved" || d.status === "sent"));
-  const hasReferencias = userReferences.length > 0;
-  const hasPhoto = !!currentUser.photo;
-  const profileProgress = currentUser.profileComplete ? 100 : 65;
-  const activeAppointments = userAppointments.filter((a) => a.status === "active").length;
-  const totalAppointments = userAppointments.filter((a) => a.status === "active" || a.status === "completed").length;
+  const { data: documents = [] } = useDocuments();
+  const { data: refs = [] } = useProfessionalReferences();
+  const { data: appointments = [] } = useAppointments("caregiver");
+  const { data: reviews = [] } = useReviews(user?.id);
 
-  // Visibility criteria mock
-  const visibilityCriteria = [
-    { label: "Dados pessoais completos", completed: profileProgress === 100, icon: User },
-    { label: "Especialidades e modalidades preenchidas", completed: true, icon: Heart },
-    { label: "Histórico de atendimentos registrado", completed: userAppointments.length > 0, icon: Briefcase },
-    { label: "Avaliações das famílias", completed: userReviews.length > 0, icon: Star },
-    { label: "Seguro profissional informado (opcional)", completed: false, icon: Shield },
-  ];
+  // ── Métricas de atendimentos ─────────────────────────────────────────────
+  const activeAppointments  = appointments.filter((a) => a.status === "ativo").length;
+  const doneAppointments    = appointments.filter((a) => a.status === "finalizado").length;
 
-  const completedCriteria = visibilityCriteria.filter((c) => c.completed).length;
+  // ── Completude do perfil ─────────────────────────────────────────────────
+  const profileCompleteness = profileData
+    ? getProfileCompleteness(profileData, documents, refs)
+    : { pct: 0, checks: [] };
 
-  /**
-   * Importante:
-   * Você não "verifica" profissionais.
-   * Aqui o status representa um estado interno de "análise/visibilidade"
-   * (ex.: perfil/documentos em análise; aprovado para exibição; etc.).
-   */
-  const statusConfig: Record<
-    string,
-    { label: string; className: string; icon: React.ElementType }
-  > = {
-    pending: { label: "Pendente", className: "bg-amber-100 text-amber-700", icon: Clock },
-    analyzing: { label: "Em análise", className: "bg-blue-100 text-blue-700", icon: Clock },
-    verified: { label: "Aprovado p/ exibição", className: "bg-emerald-100 text-emerald-700", icon: CheckCircle },
-    rejected: { label: "Rejeitado", className: "bg-red-100 text-red-700", icon: AlertCircle },
-  };
+  const incompleteChecks = profileCompleteness.checks.filter((c) => !c.done);
 
-  const recommendedActions = [
-    {
-      label: "Completar perfil",
-      href: "/caregiver/profile",
-      icon: User,
-      show: profileProgress < 100,
-    },
-    {
-      label: "Enviar / revisar documentos",
-      href: "/caregiver/documents",
-      icon: FileText,
-      show: approvedDocs < userDocuments.length,
-    },
-    {
-      label: "Registrar atendimentos realizados",
-      href: "/caregiver/appointments",
-      icon: Calendar,
-      show: userAppointments.length < 3,
-    },
-    {
-      label: "Informar seguro profissional (opcional)",
-      href: "/caregiver/profile",
-      icon: Shield,
-      show: true,
-    },
-  ].filter((action) => action.show);
+  // ── Ações recomendadas (mostrar apenas itens incompletos, máx. 4) ────────
+  const recommendedActions = incompleteChecks
+    .slice(0, 4)
+    .map((c) => ({ label: c.label, href: c.href }));
 
-  // Insights
-  const profileCompleteness = getProfileCompleteness(currentUser, userDocuments, userReferences);
-  const weeklyTip = getWeeklyTip();
+  const weeklyTip = getPersonalizedTip(incompleteChecks.map((c) => c.label));
+
+  // ── Loading state ────────────────────────────────────────────────────────
+  if (profileLoading) {
+    return (
+      <div className="flex min-h-screen bg-muted/30">
+        <AppSidebar
+          role="caregiver"
+          userName={user?.email ?? ""}
+          userPhoto={undefined}
+        />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+      </div>
+    );
+  }
+
+  // ── Valores do perfil com fallbacks seguros ──────────────────────────────
+  const profileName      = profileData?.profiles.full_name ?? user?.email ?? "";
+  const profilePhoto     = profileData?.photo_url ?? undefined;
+  const avgRating        = profileData?.average_rating ?? 0;
+  const reviewCount      = profileData?.review_count ?? 0;
+  const profileViews30d  = profileData?.profile_views_30d ?? 0;
+  const searchApps30d    = profileData?.search_appearances_30d ?? 0;
+  const intFamilies30d   = profileData?.interested_families_30d ?? 0;
+
+  // ── Objeto CaregiverPublic para o card (exatamente como a família vê) ────
+  const caregiverPublicView: CaregiverPublic | null = profileData
+    ? {
+        id: profileData.id,
+        full_name: profileData.profiles.full_name,
+        photo_url: profileData.photo_url,
+        bio: profileData.bio,
+        experience_years: profileData.experience_years,
+        profissao_formacao: profileData.profissao_formacao,
+        neighborhood: profileData.neighborhood,
+        city: profileData.city,
+        state: profileData.state,
+        zona: profileData.zona,
+        cep: profileData.cep,
+        price_per_hour: profileData.price_per_hour,
+        price_per_day: profileData.price_per_day,
+        average_rating: profileData.average_rating,
+        review_count: profileData.review_count,
+        specialties: profileData.specialties,
+        modalities: profileData.modalities,
+        idiomas: profileData.idiomas,
+        possui_cnh: profileData.possui_cnh,
+        has_insurance: profileData.has_insurance,
+        professional_reg_number: profileData.professional_reg_number,
+        emergency_available: profileData.emergency_available,
+        whatsapp: profileData.whatsapp,
+        has_rg_cnh: profileData.has_rg_cnh,
+        has_antecedentes: profileData.has_antecedentes,
+        has_certificado: profileData.has_certificado,
+        has_references: profileData.has_references,
+        is_available_for_new: profileData.is_available_for_new,
+      }
+    : null;
 
   return (
     <div className="flex min-h-screen bg-muted/30">
       <AppSidebar
         role="caregiver"
-        userName={currentUser.name}
-        userPhoto={currentUser.photo}
-        verificationStatus={currentUser.status}
+        userName={profileName}
+        userPhoto={profilePhoto}
       />
 
-      <main className="flex-1 p-4 md:p-6 lg:p-8">
+      <main className="flex-1 min-w-0 overflow-x-hidden p-4 md:p-6 lg:p-8">
         {/* Header */}
         <div className="mb-6 md:mb-8">
           <h1 className="text-xl md:text-2xl font-bold text-foreground">Dashboard</h1>
@@ -205,9 +271,10 @@ const CaregiverDashboard = () => {
           </p>
         </div>
 
-        {/* Seção 1 — Status Geral do Perfil */}
+        {/* ── Seção 1 — Métricas rápidas ──────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
-          {/* Profile Status */}
+
+          {/* 1. Perfil completo */}
           <Card className="shadow-sm border-0 bg-card">
             <CardContent className="p-4 md:p-5">
               <div className="flex items-start justify-between mb-3">
@@ -216,51 +283,24 @@ const CaregiverDashboard = () => {
                 </div>
               </div>
               <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Perfil</p>
-              <div className="flex items-center gap-2">
-                <span
-                  className={cn(
-                    "inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-1 rounded-full text-xs font-semibold",
-                    profileProgress === 100 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700",
-                  )}
-                >
-                  {profileProgress === 100 ? (
-                    <>
-                      <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                      Completo
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                      Incompleto
-                    </>
-                  )}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Status do Perfil (análise/visibilidade) */}
-          <Card className="shadow-sm border-0 bg-card">
-            <CardContent className="p-4 md:p-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2 md:p-2.5 rounded-xl bg-primary/10">
-                  <Shield className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                </div>
-              </div>
-              <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Status do perfil</p>
               <span
                 className={cn(
                   "inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-1 rounded-full text-xs font-semibold",
-                  statusConfig[currentUser.status]?.className,
+                  profileCompleteness.pct === 100
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-amber-100 text-amber-700",
                 )}
               >
-                {React.createElement(statusConfig[currentUser.status]?.icon, { className: "w-3 h-3 md:w-3.5 md:h-3.5" })}
-                {statusConfig[currentUser.status]?.label}
+                {profileCompleteness.pct === 100 ? (
+                  <><CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5" /> Completo</>
+                ) : (
+                  <><Clock className="w-3 h-3 md:w-3.5 md:h-3.5" /> {profileCompleteness.pct}%</>
+                )}
               </span>
             </CardContent>
           </Card>
 
-          {/* Average Rating */}
+          {/* 2. Avaliação média */}
           <Card className="col-span-2 sm:col-span-1 shadow-sm border-0 bg-card">
             <CardContent className="p-4 md:p-5">
               <div className="flex items-start justify-between mb-3">
@@ -269,14 +309,18 @@ const CaregiverDashboard = () => {
                 </div>
               </div>
               <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Avaliação média</p>
-              <div className="flex items-center gap-2">
-                <StarRating rating={currentUser.rating} size="sm" />
-                <span className="text-xs text-muted-foreground">({currentUser.reviewCount})</span>
-              </div>
+              {reviewCount > 0 ? (
+                <div className="flex items-center gap-2">
+                  <StarRating rating={avgRating} size="sm" />
+                  <span className="text-xs text-muted-foreground">({reviewCount})</span>
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">Sem avaliações ainda</span>
+              )}
             </CardContent>
           </Card>
 
-          {/* Active Appointments */}
+          {/* 3. Ativos */}
           <Card className="shadow-sm border-0 bg-card">
             <CardContent className="p-4 md:p-5">
               <div className="flex items-start justify-between mb-3">
@@ -289,7 +333,7 @@ const CaregiverDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Total Appointments */}
+          {/* 4. Realizados */}
           <Card className="shadow-sm border-0 bg-card">
             <CardContent className="p-4 md:p-5">
               <div className="flex items-start justify-between mb-3">
@@ -298,15 +342,17 @@ const CaregiverDashboard = () => {
                 </div>
               </div>
               <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Realizados</p>
-              <p className="text-xl md:text-2xl font-bold text-foreground">{totalAppointments}</p>
+              <p className="text-xl md:text-2xl font-bold text-foreground">{doneAppointments}</p>
               <p className="text-xs text-muted-foreground mt-1 hidden md:block">
-                Total desde o cadastro na plataforma.
+                Total finalizados na plataforma.
               </p>
             </CardContent>
           </Card>
+
+
         </div>
 
-        {/* Seção 2 — Insights do seu perfil */}
+        {/* ── Seção 2 — Insights do perfil ────────────────────────────────── */}
         <div className="mb-6 md:mb-8">
           <div className="mb-3 md:mb-4">
             <h2 className="text-base md:text-lg font-semibold text-foreground">Insights do seu perfil</h2>
@@ -316,29 +362,16 @@ const CaregiverDashboard = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
 
-            {/* Card 1 — Visualizações do perfil */}
+            {/* Visualizações do perfil */}
             <Card className="shadow-sm border-0 bg-card">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="p-2 md:p-2.5 rounded-xl bg-sky-100">
                     <Eye className="w-4 h-4 md:w-5 md:h-5 text-sky-600" />
                   </div>
-                  {mockInsights.visualizacoes_delta_pct !== 0 && (
-                    <span
-                      className={cn(
-                        "text-xs font-semibold px-2 py-0.5 rounded-full",
-                        mockInsights.visualizacoes_delta_pct > 0
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-red-100 text-red-700",
-                      )}
-                    >
-                      {mockInsights.visualizacoes_delta_pct > 0 ? "▲" : "▼"}{" "}
-                      {Math.abs(mockInsights.visualizacoes_delta_pct)}% vs mês anterior
-                    </span>
-                  )}
                 </div>
                 <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Visualizações do perfil</p>
-                <p className="text-xl md:text-2xl font-bold text-foreground">{mockInsights.visualizacoes_30d}</p>
+                <p className="text-xl md:text-2xl font-bold text-foreground">{profileViews30d}</p>
                 <p className="text-xs text-muted-foreground mt-1">nos últimos 30 dias</p>
                 <p className="text-xs text-muted-foreground/70 mt-2 italic">
                   Perfis completos tendem a receber mais visitas.
@@ -346,7 +379,7 @@ const CaregiverDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Card 2 — Aparições nas buscas */}
+            {/* Aparições nas buscas */}
             <Card className="shadow-sm border-0 bg-card">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -355,7 +388,7 @@ const CaregiverDashboard = () => {
                   </div>
                 </div>
                 <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Aparições nas buscas</p>
-                <p className="text-xl md:text-2xl font-bold text-foreground">{mockInsights.aparicoes_busca_30d}</p>
+                <p className="text-xl md:text-2xl font-bold text-foreground">{searchApps30d}</p>
                 <p className="text-xs text-muted-foreground mt-1">nos últimos 30 dias</p>
                 <p className="text-xs text-muted-foreground/70 mt-2 italic">
                   Complete seu perfil para aparecer em mais buscas.
@@ -363,7 +396,7 @@ const CaregiverDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Card 3 — Perfil completo */}
+            {/* Perfil completo — barra de progresso */}
             <Card className="shadow-sm border-0 bg-card">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -383,13 +416,13 @@ const CaregiverDashboard = () => {
                 </div>
                 <p className="text-xs md:text-sm font-medium text-muted-foreground mb-2">Perfil completo</p>
                 <Progress value={profileCompleteness.pct} className="h-1.5 mb-3" />
-                {profileCompleteness.nextSteps.length > 0 ? (
+                {incompleteChecks.length > 0 ? (
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-foreground">Próximos passos:</p>
-                    {profileCompleteness.nextSteps.map((step, i) => (
+                    {incompleteChecks.slice(0, 3).map((check, i) => (
                       <div key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
                         <AlertCircle className="w-3 h-3 mt-0.5 text-amber-500 shrink-0" />
-                        <span>{step}</span>
+                        <span>{check.label}</span>
                       </div>
                     ))}
                   </div>
@@ -402,7 +435,7 @@ const CaregiverDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Card 4 — Famílias interessadas */}
+            {/* 5. Famílias interessadas */}
             <Card className="shadow-sm border-0 bg-card">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -411,40 +444,18 @@ const CaregiverDashboard = () => {
                   </div>
                 </div>
                 <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Famílias interessadas</p>
-                <p className="text-xl md:text-2xl font-bold text-foreground">{mockInsights.familias_interessadas_30d}</p>
+                <p className="text-xl md:text-2xl font-bold text-foreground">{intFamilies30d}</p>
                 <p className="text-xs text-muted-foreground mt-1 mb-3">nos últimos 30 dias</p>
-                {/* TODO: wire to messaging route when available */}
                 <Button variant="outline" size="sm" className="w-full text-xs h-8" asChild>
                   <Link to="/caregiver/appointments">
                     <MessageCircle className="w-3.5 h-3.5 mr-1.5" />
-                    Ver mensagens
+                    Ver atendimentos
                   </Link>
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Card 5 — Buscas na sua região */}
-            <Card className="shadow-sm border-0 bg-card">
-              <CardContent className="p-4 md:p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-2 md:p-2.5 rounded-xl bg-teal-100">
-                    <MapPin className="w-4 h-4 md:w-5 md:h-5 text-teal-600" />
-                  </div>
-                </div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Buscas na sua região</p>
-                <p className="text-xl md:text-2xl font-bold text-foreground">{mockInsights.buscas_proximas_30d}</p>
-                <p className="text-xs text-muted-foreground mt-1 mb-3">nos últimos 30 dias</p>
-                {/* TODO: wire to opportunities page when available */}
-                <Button variant="outline" size="sm" className="w-full text-xs h-8" asChild>
-                  <Link to="/caregiver/appointments">
-                    <MapPin className="w-3.5 h-3.5 mr-1.5" />
-                    Ver oportunidades
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Card 6 — Dica da semana */}
+            {/* Dica da semana */}
             <Card className="shadow-sm border-0 bg-gradient-to-br from-primary/5 to-accent/5">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -471,11 +482,14 @@ const CaregiverDashboard = () => {
           </div>
         </div>
 
-        {/* Ações recomendadas */}
+        {/* 7. Ações recomendadas */}
         {recommendedActions.length > 0 && (
           <Card className="mb-6 md:mb-8 shadow-sm border-0">
             <CardHeader className="pb-3 md:pb-4">
               <CardTitle className="text-base md:text-lg font-semibold">Ações recomendadas</CardTitle>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Complete estes itens para aumentar suas chances de ser encontrado pelas famílias.
+              </p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
@@ -487,7 +501,7 @@ const CaregiverDashboard = () => {
                   >
                     <div className="flex items-center gap-2 md:gap-3 min-w-0">
                       <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 text-primary shrink-0">
-                        {React.createElement(action.icon, { className: "w-3.5 h-3.5 md:w-4 md:h-4" })}
+                        <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />
                       </div>
                       <span className="text-xs font-medium text-left leading-snug">{action.label}</span>
                     </div>
@@ -499,140 +513,26 @@ const CaregiverDashboard = () => {
           </Card>
         )}
 
-        <div className="mb-6 md:mb-8">
-          {/* Seção 3 — Como as Famílias Veem Você */}
-          <Card className="shadow-sm border-0">
-            <CardHeader className="pb-3 md:pb-4">
-              <CardTitle className="text-base md:text-lg font-semibold">Como as famílias veem você</CardTitle>
-              <p className="text-xs md:text-sm text-muted-foreground">
-                Esta é uma visualização aproximada de como seu perfil pode aparecer para as famílias.
+        {/* 8. Como as famílias veem você — card idêntico ao da busca */}
+        {caregiverPublicView && (
+          <div className="mb-6 md:mb-8">
+            <div className="mb-3 md:mb-4">
+              <h2 className="text-base md:text-lg font-semibold text-foreground">Como as famílias veem você</h2>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
+                Este é o seu card exato na busca de cuidadores — mesma ordem, mesma informação.
               </p>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 md:p-6 rounded-2xl bg-muted/50 border border-border">
-                <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
-                  <div className="flex-shrink-0">
-                    <img
-                      src={currentUser.photo}
-                      alt={currentUser.name}
-                      className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover shadow-md"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-2 md:space-y-3">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-lg md:text-xl font-bold text-foreground">{currentUser.name}</h3>
-                      </div>
-                      {currentUser.profissaoFormacao && (
-                        <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
-                          {currentUser.profissaoFormacao}
-                        </span>
-                      )}
-                      <div className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground mt-1">
-                        <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
-                        <span>
-                          {currentUser.address.neighborhood}, {currentUser.address.city} - {currentUser.address.state}
-                        </span>
-                      </div>
-                    </div>
-                    {/* Specialties */}
-                    <div className="flex flex-wrap gap-1.5 md:gap-2">
-                      {currentUser.specialties.map((specialty, index) => (
-                        <Badge key={index} variant="outline" className="bg-background text-xs">
-                          {specialty}
-                        </Badge>
-                      ))}
-                    </div>
-                    {/* Idiomas */}
-                    {currentUser.idiomas?.length > 0 && (
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Languages className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                        <div className="flex flex-wrap gap-1.5">
-                          {currentUser.idiomas.map((idioma, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {idioma}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {/* Valores */}
-                    <div className="flex flex-wrap gap-2 md:gap-3">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-foreground text-xs font-medium">
-                        <ClockIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">Hora:</span>
-                        <span>R$ {currentUser.pricePerHour}/h</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-muted text-foreground text-xs font-medium">
-                        <Sunset className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span className="text-muted-foreground">Plantão:</span>
-                        <span>R$ {currentUser.pricePerDay}</span>
-                      </div>
-                    </div>
-                    {/* Rating */}
-                    <div className="flex items-center gap-2">
-                      <StarRating rating={currentUser.rating} size="sm" />
-                      <span className="text-xs md:text-sm text-muted-foreground">({currentUser.reviewCount} avaliações)</span>
-                    </div>
-                    {/* Badges */}
-                    <div className="flex flex-wrap gap-1.5 md:gap-2 pt-1 md:pt-2">
-                      {hasDocsEnviados && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium">
-                          <FileText className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Documentos enviados
-                        </div>
-                      )}
-                      {hasCertificados && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
-                          <BadgeCheck className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Certificados informados
-                        </div>
-                      )}
-                      {hasAntecedentes && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-medium">
-                          <Shield className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Certidão de antecedentes anexada
-                        </div>
-                      )}
-                      {hasReferencias && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium">
-                          <User className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Referências profissionais
-                        </div>
-                      )}
-                      {hasPhoto && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-50 text-sky-700 text-xs font-medium">
-                          <Eye className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Perfil com foto
-                        </div>
-                      )}
-                      {currentUser.hasCNH && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium">
-                          <Car className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Possui CNH
-                        </div>
-                      )}
-                      {currentUser.hasInsurance && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">
-                          <Shield className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Seguro informado
-                        </div>
-                      )}
-                      {currentUser.emergencyAvailable && (
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 text-xs font-medium">
-                          <Zap className="w-3 h-3 md:w-3.5 md:h-3.5" />
-                          Disponível para emergência
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <CaregiverCard
+              caregiver={caregiverPublicView}
+              hasDocsSent={caregiverPublicView.has_rg_cnh}
+              hasAntecedentes={caregiverPublicView.has_antecedentes}
+              hasCertificados={caregiverPublicView.has_certificado}
+              hasReferencias={caregiverPublicView.has_references}
+            />
+          </div>
+        )}
 
-        {/* Seção 4 — Avaliações Recentes */}
+        {/* 9. Avaliações recentes */}
         <Card className="shadow-sm border-0">
           <CardHeader className="pb-3 md:pb-4">
             <div className="flex items-center justify-between">
@@ -643,32 +543,46 @@ const CaregiverDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {userReviews.length > 0 ? (
+            {reviews.length > 0 ? (
               <div className="space-y-4">
+                {/* Resumo da nota */}
                 <div className="flex items-center gap-4 p-4 rounded-xl bg-amber-50">
-                  <div className="text-3xl md:text-4xl font-bold text-amber-600">{currentUser.rating.toFixed(1)}</div>
+                  <div className="text-3xl md:text-4xl font-bold text-amber-600">{avgRating.toFixed(1)}</div>
                   <div>
-                    <StarRating rating={currentUser.rating} showValue={false} size="md" />
-                    <p className="text-xs md:text-sm text-muted-foreground mt-1">Baseado em {currentUser.reviewCount} avaliações</p>
+                    <StarRating rating={avgRating} showValue={false} size="md" />
+                    <p className="text-xs md:text-sm text-muted-foreground mt-1">
+                      Baseado em {reviewCount} {reviewCount === 1 ? "avaliação" : "avaliações"}
+                    </p>
                   </div>
                 </div>
+                {/* Cards das últimas 3 avaliações */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
-                  {userReviews.slice(0, 3).map((review) => (
+                  {reviews.slice(0, 3).map((review) => (
                     <div key={review.id} className="p-3 md:p-4 rounded-xl bg-muted/50 border border-border">
                       <div className="flex items-center gap-2 md:gap-3 mb-3">
-                        <img
-                          src={review.familyPhoto}
-                          alt={review.familyName}
-                          className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover"
-                        />
+                        {review.family_photo ? (
+                          <img
+                            src={review.family_photo}
+                            alt={review.family_name ?? "Família"}
+                            className="w-9 h-9 md:w-10 md:h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        )}
                         <div className="flex-1">
-                          <p className="text-xs md:text-sm font-medium text-foreground">{review.familyName}</p>
+                          <p className="text-xs md:text-sm font-medium text-foreground">
+                            {review.family_name ?? "Família"}
+                          </p>
                           <StarRating rating={review.rating} size="sm" showValue={false} />
                         </div>
                       </div>
-                      <p className="text-xs md:text-sm text-muted-foreground line-clamp-3">{review.comment}</p>
+                      {review.comment && (
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-3">{review.comment}</p>
+                      )}
                       <p className="text-xs text-muted-foreground mt-2">
-                        {new Date(review.date).toLocaleDateString("pt-BR")}
+                        {new Date(review.created_at).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                   ))}

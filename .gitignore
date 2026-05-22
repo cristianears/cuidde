@@ -1,3 +1,12 @@
+# Secrets — nunca commitar
+.env
+.env.production
+.env.staging
+
+# Temp
+temp-skills/
+files.zip
+
 # Logs
 logs
 *.log

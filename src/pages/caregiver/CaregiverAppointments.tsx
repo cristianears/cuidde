@@ -5,99 +5,57 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Clock, FileText } from "lucide-react";
+import { Calendar, User, Clock, FileText, Loader2, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { mockCaregivers } from "@/data/mockData";
-
-interface Appointment {
-  id: string;
-  familyName: string;
-  elderlyName: string;
-  type: "plantão" | "contínuo" | "turno";
-  status: "ativo" | "finalizado" | "pendente";
-  startDate: string;
-  endDate?: string;
-}
-
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    familyName: "Família Silva",
-    elderlyName: "Maria Silva",
-    type: "contínuo",
-    status: "ativo",
-    startDate: "2025-01-15",
-  },
-  {
-    id: "2",
-    familyName: "Família Santos",
-    elderlyName: "José Santos",
-    type: "plantão",
-    status: "ativo",
-    startDate: "2025-01-20",
-  },
-  {
-    id: "3",
-    familyName: "Família Oliveira",
-    elderlyName: "Ana Oliveira",
-    type: "turno",
-    status: "finalizado",
-    startDate: "2024-11-01",
-    endDate: "2024-12-15",
-  },
-  {
-    id: "4",
-    familyName: "Família Costa",
-    elderlyName: "Pedro Costa",
-    type: "contínuo",
-    status: "pendente",
-    startDate: "2025-02-01",
-  },
-];
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
+import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useUnreadCounts } from "@/hooks/useUnreadCounts";
+import type { AppointmentStatus, AppointmentType } from "@/types/database";
+import { appointmentStatusConfig } from "@/lib/labels";
 
 const CaregiverAppointments = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"ativos" | "finalizados" | "pendentes">("ativos");
-
-  const currentUser = mockCaregivers[0];
+  const { user } = useAuth();
+  const { data: profileData } = useCaregiverProfile();
+  const { data: appointments, isLoading } = useAppointments("caregiver");
+  const { data: unread } = useUnreadCounts("caregiver");
+  const [activeTab, setActiveTab] = useState<"ativos" | "finalizados">("ativos");
 
   const appointmentsByTab = useMemo(() => {
-    const ativos = mockAppointments.filter((a) => a.status === "ativo");
-    const finalizados = mockAppointments.filter((a) => a.status === "finalizado");
-    const pendentes = mockAppointments.filter((a) => a.status === "pendente");
-    return { ativos, finalizados, pendentes };
-  }, []);
+    const list = appointments ?? [];
+    const ativos = list.filter((a) => a.status === "ativo");
+    const finalizados = list.filter((a) => a.status === "finalizado");
+    return { ativos, finalizados };
+  }, [appointments]);
 
-  const getStatusBadge = (status: Appointment["status"]) => {
-    const variants: Record<Appointment["status"], { label: string; className: string }> = {
-      ativo: { label: "Ativo", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-      finalizado: { label: "Finalizado", className: "bg-muted text-muted-foreground border-border" },
-      pendente: { label: "Pendente", className: "bg-amber-100 text-amber-700 border-amber-200" },
-    };
-    return variants[status];
+  const getStatusBadge = (status: AppointmentStatus) => {
+    return appointmentStatusConfig[status] ?? appointmentStatusConfig.pendente;
   };
 
-  const getTypeLabel = (type: Appointment["type"]) => {
-    const labels: Record<Appointment["type"], string> = {
-      plantão: "Plantão",
-      contínuo: "Contínuo",
-      turno: "Turno",
+  const getTypeLabel = (type: AppointmentType) => {
+    const labels: Record<AppointmentType, string> = {
+      "plantão": "Plantão",
+      "contínuo": "Contínuo",
+      "turno": "Turno",
     };
-    return labels[type];
+    return labels[type] ?? type;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("pt-BR", {
+    return new Date(dateString + "T00:00:00").toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   };
 
-  const AppointmentCard = ({ appointment }: { appointment: Appointment }) => {
+  const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const statusBadge = getStatusBadge(appointment.status);
+    const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className={cn("hover:shadow-md transition-shadow", unreadCount > 0 && "border-l-4 border-l-primary bg-primary/[0.02]")}>
         <CardContent className="p-4 md:p-5">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 md:gap-4">
             <div className="flex-1 space-y-2.5 md:space-y-3">
@@ -118,36 +76,65 @@ const CaregiverAppointments = () => {
               <div className="space-y-1.5 md:space-y-2">
                 <div className="flex items-center gap-2 text-foreground">
                   <User className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm md:text-base font-medium">{appointment.elderlyName}</span>
+                  <div className="flex flex-col">
+                    <span className="text-sm md:text-base font-medium">
+                      {appointment.family_name ?? "Família"}
+                    </span>
+                    {appointment.elderly_name && (
+                      <span className="text-xs text-muted-foreground">
+                        Idoso(a): {appointment.elderly_name}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <FileText className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
-                  <span className="text-xs md:text-sm">{appointment.familyName}</span>
-                </div>
+                {appointment.description && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <FileText className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
+                    <span className="text-xs md:text-sm line-clamp-1">{appointment.description}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 md:gap-4 text-xs md:text-sm text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
-                  <span>Início: {formatDate(appointment.startDate)}</span>
+                  <span>Início: {formatDate(appointment.start_date)}</span>
                 </div>
-                {appointment.endDate && (
+                {appointment.end_date && (
                   <div className="flex items-center gap-1.5">
                     <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 shrink-0" />
-                    <span>Fim: {formatDate(appointment.endDate)}</span>
+                    <span>Fim: {formatDate(appointment.end_date)}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 self-start sm:self-auto text-xs md:text-sm"
-              onClick={() => navigate(`/caregiver/appointments/${appointment.id}`)}
-            >
-              Ver detalhes
-            </Button>
+            <div className="flex gap-2 shrink-0 self-start sm:self-auto">
+              {appointment.status === "ativo" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs md:text-sm gap-1.5 relative"
+                  onClick={() => navigate(`/chat/${appointment.id}`)}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-destructive-foreground">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs md:text-sm"
+                onClick={() => navigate(`/caregiver/appointments/${appointment.id}`)}
+              >
+                Ver detalhes
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -177,27 +164,25 @@ const CaregiverAppointments = () => {
     </div>
   );
 
-  const renderTabContent = (key: "ativos" | "finalizados" | "pendentes") => {
-    const appointments = appointmentsByTab[key];
+  const renderTabContent = (key: "ativos" | "finalizados") => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
 
-    if (appointments.length === 0) {
+    const list = appointmentsByTab[key];
+
+    if (list.length === 0) {
       if (key === "ativos") {
         return (
           <EmptyState
             title="Nenhum atendimento ativo no momento"
-            description="Quando uma família iniciar uma combinação com você, seus atendimentos aparecerão aqui."
-            ctaLabel="Ajustar disponibilidade"
-            ctaHref="/caregiver/availability"
-          />
-        );
-      }
-      if (key === "pendentes") {
-        return (
-          <EmptyState
-            title="Nenhuma solicitação pendente"
-            description="Quando houver interesse de famílias, as solicitações aparecerão aqui para você responder com calma."
-            ctaLabel="Completar perfil para aumentar visibilidade"
-            ctaHref="/caregiver/profile"
+            description="Quando você aceitar uma solicitação de família, o atendimento aparecerá aqui."
+            ctaLabel="Ver solicitações"
+            ctaHref="/caregiver/solicitations"
           />
         );
       }
@@ -205,7 +190,7 @@ const CaregiverAppointments = () => {
         <EmptyState
           title="Ainda não há atendimentos finalizados"
           description="Assim que você concluir atendimentos, eles ficam registrados aqui como histórico."
-          ctaLabel="Registrar atendimentos"
+          ctaLabel="Ver atendimentos ativos"
           ctaHref="/caregiver/appointments"
         />
       );
@@ -213,7 +198,7 @@ const CaregiverAppointments = () => {
 
     return (
       <div className="space-y-3 md:space-y-4">
-        {appointments.map((appointment) => (
+        {list.map((appointment) => (
           <AppointmentCard key={appointment.id} appointment={appointment} />
         ))}
       </div>
@@ -222,7 +207,7 @@ const CaregiverAppointments = () => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar role="caregiver" userName={profileData?.profiles.full_name ?? user?.email ?? ""} userPhoto={profileData?.photo_url ?? undefined} />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader
@@ -248,17 +233,10 @@ const CaregiverAppointments = () => {
                 {appointmentsByTab.finalizados.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="pendentes" className="text-xs md:text-sm">
-              Pendentes
-              <Badge variant="secondary" className="ml-1.5 md:ml-2 h-4 md:h-5 px-1 md:px-1.5 text-xs">
-                {appointmentsByTab.pendentes.length}
-              </Badge>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="ativos">{renderTabContent("ativos")}</TabsContent>
           <TabsContent value="finalizados">{renderTabContent("finalizados")}</TabsContent>
-          <TabsContent value="pendentes">{renderTabContent("pendentes")}</TabsContent>
         </Tabs>
       </main>
     </div>

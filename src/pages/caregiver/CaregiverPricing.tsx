@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, DollarSign, Eye, AlertCircle, MessageSquare } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -8,33 +8,47 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { mockCaregivers } from "@/data/mockData";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCaregiverProfile, useUpdatePricing } from "@/hooks/useCaregiverProfile";
 
 const CaregiverPricing = () => {
-  const currentUser = mockCaregivers[0];
+  const { user } = useAuth()
+  const { data: profileData } = useCaregiverProfile()
+  const updatePricing = useUpdatePricing()
 
-  const [pricePerHour, setPricePerHour] = useState<number | "">(currentUser.pricePerHour || "");
-  const [pricePerDay, setPricePerDay] = useState<number | "">(currentUser.pricePerDay || "");
-  const [pricingNote, setPricingNote] = useState(
-    "Ex: valores podem variar conforme complexidade do cuidado, pernoite e deslocamento.",
-  );
+  const [pricePerHour, setPricePerHour] = useState<number | "">("");
+  const [pricePerDay, setPricePerDay] = useState<number | "">("");
+  const [pricingNote, setPricingNote] = useState("");
+
+  // Sincronizar com dados reais quando carregarem
+  useEffect(() => {
+    if (profileData) {
+      setPricePerHour(profileData.price_per_hour ?? "")
+      setPricePerDay(profileData.price_per_day ?? "")
+      setPricingNote(profileData.pricing_note ?? "")
+    }
+  }, [profileData])
 
   const isComplete = pricePerHour !== "" && pricePerDay !== "";
   const isValidNumber = (v: number | "") => v !== "" && Number.isFinite(v) && v > 0;
   const canSave = isValidNumber(pricePerHour) && isValidNumber(pricePerDay);
 
   const handleSave = () => {
-    if (!canSave) {
-      toast.error("Preencha valores válidos (maiores que zero) para salvar.");
-      return;
-    }
-    toast.success("Valores salvos com sucesso!");
+    if (!canSave) return
+    updatePricing.mutate({
+      price_per_hour: pricePerHour as number,
+      price_per_day: pricePerDay as number,
+      pricing_note: pricingNote,
+    })
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar role="caregiver" userName={currentUser.name} userPhoto={currentUser.photo} />
+      <AppSidebar
+        role="caregiver"
+        userName={profileData?.profiles.full_name ?? user?.email ?? ""}
+        userPhoto={profileData?.photo_url ?? undefined}
+      />
 
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader
@@ -157,11 +171,15 @@ const CaregiverPricing = () => {
           <div className="pb-4 md:pb-0">
             <Button
               onClick={handleSave}
-              disabled={!canSave}
+              disabled={!canSave || updatePricing.isPending}
               className="w-full sm:w-auto gap-2 bg-accent hover:bg-accent/90 text-accent-foreground disabled:opacity-60"
               size="lg"
             >
-              <Save className="w-4 h-4" />
+              {updatePricing.isPending ? (
+                <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
               Salvar valores
             </Button>
             {!canSave && (

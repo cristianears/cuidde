@@ -1,44 +1,54 @@
-import { useState } from "react";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import CaregiverCard from "@/components/shared/CaregiverCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { mockFamilies, mockCaregivers } from "@/data/mockData";
-import { Link } from "react-router-dom";
+import { useFavorites, useRemoveFavorite } from "@/hooks/useFavorites";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
+import { Link, useNavigate } from "react-router-dom";
 
 const Favorites = () => {
-  const currentUser = mockFamilies[0];
-  const [favorites, setFavorites] = useState(
-    mockCaregivers.filter(c => c.status === 'verified').slice(0, 3)
-  );
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: familyProfileData } = useFamilyProfile();
+  const { data: favorites = [], isLoading } = useFavorites();
+  const { mutate: removeFavorite } = useRemoveFavorite();
 
-  const handleRemoveFavorite = (id: string) => {
-    setFavorites(favorites.filter(f => f.id !== id));
+  const handleRemoveFavorite = (caregiverId: string) => {
+    removeFavorite(caregiverId);
   };
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar
-        role="family"
-        userName={currentUser.name}
-      />
+      <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
 
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-4 lg:p-6 min-w-0">
+        <div className="max-w-3xl">
         <PageHeader
           title="Favoritos"
           description="Cuidadores que você salvou"
         />
-
-        {favorites.length > 0 ? (
-          <div className="space-y-4">
-            {favorites.map((caregiver) => (
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="h-36 animate-pulse bg-muted" />
+            ))}
+          </div>
+        ) : favorites.length > 0 ? (
+          <div className="space-y-3">
+            {favorites.map(({ favorite_id, caregiver }) => (
               <CaregiverCard
-                key={caregiver.id}
+                key={favorite_id}
                 caregiver={caregiver}
                 isFavorite={true}
                 onFavorite={handleRemoveFavorite}
+                onContact={(id) => navigate(`/family/caregiver/${id}`)}
+                hasDocsSent={caregiver.has_rg_cnh}
+                hasAntecedentes={caregiver.has_antecedentes}
+                hasCertificados={caregiver.has_certificado}
+                hasReferencias={caregiver.has_references}
               />
             ))}
           </div>
@@ -56,6 +66,7 @@ const Favorites = () => {
             </Button>
           </Card>
         )}
+        </div>
       </main>
     </div>
   );

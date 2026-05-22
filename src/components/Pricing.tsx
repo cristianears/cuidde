@@ -31,9 +31,10 @@ const plans = [
       "Contato direto ilimitado via chat",
       "Filtros avançados por região e disponibilidade",
       "Favoritar perfis",
+      "Rotina de Cuidados e registro de ocorrências",
     ],
-    highlighted: true,
-    buttonVariant: "default" as const,
+    highlighted: false,
+    buttonVariant: "outline" as const,
     gradient: "from-amber-100/95 to-orange-50/80",
     cta: "Assinar mensal",
     badge: null,
@@ -45,10 +46,11 @@ const plans = [
     priceLabel: " (R$ 99/mês)",
     features: [
       "Todos os recursos do plano mensal",
+      "Rotina de Cuidados e registro de ocorrências",
       "Melhor custo mensal",
     ],
-    highlighted: false,
-    buttonVariant: "outline" as const,
+    highlighted: true,
+    buttonVariant: "default" as const,
     gradient: "from-indigo-100/95 to-purple-50/80",
     cta: "Assinar 3 meses",
     badge: "Melhor custo-benefício",
@@ -60,6 +62,7 @@ const plans = [
     priceLabel: " (R$ 83/mês)",
     features: [
       "Todos os recursos do plano completo",
+      "Rotina de Cuidados e registro de ocorrências",
       "Maior economia no longo prazo",
       "Acesso contínuo durante todo o ano",
     ],
@@ -88,12 +91,12 @@ const Pricing = () => {
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 max-w-5xl mx-auto items-stretch">
-          {plans.map((plan, index) => (
+          {plans.map((plan) => (
             <div
-              key={index}
-              className={`relative rounded-xl p-4 h-full flex flex-col bg-gradient-to-br ${plan.gradient} border transition-all duration-300 ${
+              key={plan.name}
+              className={`group relative rounded-xl p-4 h-full flex flex-col bg-gradient-to-br ${plan.gradient} border transition-all duration-300 hover:-translate-y-1.5 ${
                 plan.highlighted
-                  ? "ring-2 ring-primary shadow-xl border-primary/20"
+                  ? "ring-2 ring-primary shadow-xl border-primary/20 hover:shadow-2xl"
                   : "shadow-card border-border/30 hover:shadow-card-hover"
               }`}
             >
@@ -117,8 +120,8 @@ const Pricing = () => {
                 )}
               </div>
               <ul className="space-y-1.5 flex-grow">
-                {plan.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-1.5 text-foreground text-xs md:text-sm">
+                {plan.features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-1.5 text-foreground text-xs md:text-sm">
                     <Check className="w-3.5 h-3.5 text-accent flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
                   </li>
@@ -141,7 +144,7 @@ const Pricing = () => {
           ))}
         </div>
         <p className="text-center text-xs text-muted-foreground/60 mt-6">
-          A Cuidde é uma plataforma de conexão. A contratação e o pagamento do profissional são realizados diretamente
+          A ditti é uma plataforma de conexão. A contratação e o pagamento do profissional são realizados diretamente
           entre família e profissional.
         </p>
       </div>

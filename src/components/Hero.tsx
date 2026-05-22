@@ -1,32 +1,20 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
+import { cleanCep, formatCep } from "@/lib/formatters";
 import heroBg from "@/assets/hero-bg.jpg";
-function normalizeCep(input: string) {
-  return input.replace(/\D/g, "").slice(0, 8);
-}
-function formatCep(digits: string) {
-  if (digits.length <= 5) return digits;
-  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
-}
 const Hero = () => {
   const navigate = useNavigate();
   const [cepRaw, setCepRaw] = useState("");
   const [touched, setTouched] = useState(false);
-  const cepDigits = useMemo(() => normalizeCep(cepRaw), [cepRaw]);
-  const cepFormatted = useMemo(() => formatCep(cepDigits), [cepDigits]);
+  const cepDigits = cleanCep(cepRaw);
+  const cepFormatted = formatCep(cepDigits);
   const isCepValid = cepDigits.length === 8;
   const goFamilyFlow = () => {
     setTouched(true);
     if (!isCepValid) return;
     navigate(`/onboarding?type=family&cep=${encodeURIComponent(cepDigits)}`);
-  };
-  const goCaregiverFlow = () => {
-    navigate(`/onboarding?type=caregiver`);
-  };
-  const goLogin = () => {
-    navigate(`/onboarding`);
   };
   return (
     <section className="relative h-[100dvh] flex flex-col pt-16">
@@ -58,36 +46,34 @@ const Hero = () => {
             </p>
             {/* CEP Search */}
             <div className="mx-auto max-w-lg">
-              <div className="flex flex-col sm:flex-row items-stretch justify-center gap-2 md:gap-3 mb-2">
-                <div className="w-full">
-                  <label className="sr-only" htmlFor="cep">CEP</label>
-                  <input
-                    id="cep"
-                    inputMode="numeric"
-                    autoComplete="postal-code"
-                    placeholder="Digite seu CEP (ex: 12236-063)"
-                    value={cepFormatted}
-                    onChange={(e) => {
-                      setTouched(true);
-                      setCepRaw(e.target.value);
-                    }}
-                    className="w-full rounded-xl px-4 py-3 text-foreground bg-background/95 placeholder:text-muted-foreground/70 border border-white/10 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg text-sm"
-                  />
-                  {touched && !isCepValid && (
-                    <p className="text-xs mt-1.5 text-primary-foreground/70">
-                      Informe um CEP válido com 8 números.
-                    </p>
-                  )}
-                </div>
+              <div className="relative mb-2">
+                <label className="sr-only" htmlFor="cep">CEP</label>
+                <input
+                  id="cep"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  placeholder="Digite seu CEP (ex: 12236-063)"
+                  value={cepFormatted}
+                  onChange={(e) => {
+                    setTouched(true);
+                    setCepRaw(e.target.value);
+                  }}
+                  className="w-full rounded-xl pl-4 pr-2 py-2 text-foreground bg-background/95 placeholder:text-muted-foreground/70 border border-white/10 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg text-sm h-14 sm:pr-[200px]"
+                />
                 <Button
                   onClick={goFamilyFlow}
-                  className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-5 py-3 text-sm rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"
+                  className="mt-2 w-full sm:mt-0 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-5 text-sm rounded-lg shadow-md hover:shadow-lg transition-colors duration-300 h-11 group animate-soft-pulse"
                 >
-                  <CheckCircle className="w-4 h-4 mr-1.5" />
-                  Ver disponibilidade
+                  <CheckCircle className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform" />
+                  Buscar profissionais
                 </Button>
               </div>
-              <p className="text-xs text-primary-foreground/55 mb-4">
+              {touched && !isCepValid && (
+                <p className="text-xs mt-1.5 text-primary-foreground/70">
+                  Informe um CEP válido com 8 números.
+                </p>
+              )}
+              <p className="text-xs text-primary-foreground/55 mb-4 mt-2">
                 Usamos seu CEP para encontrar profissionais na sua região.
               </p>
             </div>
@@ -95,11 +81,11 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-3">
               <Button
                 variant="outline"
-                onClick={goCaregiverFlow}
-                className="w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border-white/50 font-semibold px-5 py-3 text-sm rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 shadow-md"
+                onClick={() => navigate("/onboarding?type=caregiver")}
+                className="group w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border-white/50 font-semibold px-5 py-3 text-sm rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg shadow-md"
               >
                 Sou Profissional — Criar Perfil Grátis
-                <ArrowRight className="w-4 h-4 ml-1.5" />
+                <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
             {/* Login Link */}
@@ -107,7 +93,7 @@ const Hero = () => {
               Já tem conta?{" "}
               <button
                 type="button"
-                onClick={goLogin}
+                onClick={() => navigate("/login")}
                 className="font-semibold text-primary-foreground/90 underline underline-offset-4 hover:no-underline transition-all"
               >
                 Entrar
