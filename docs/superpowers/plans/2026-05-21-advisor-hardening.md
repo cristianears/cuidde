@@ -274,6 +274,7 @@ git commit -m "Optimize RLS auth uid policies"
 - [x] Grupo D6: `family_profiles` consolidada em SELECT única para dono ou cuidador vinculado, sem auto-consulta da própria tabela; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Grupo D7: `profiles` consolidada em SELECT única e writes por comando; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Grupo D8: `appointments` separada em policies por comando para participantes; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
+- [x] Grupo D9: `messages` consolidada em SELECT/INSERT/UPDATE específicas para participantes, envio validado e marcação de lida; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 
 ---
 

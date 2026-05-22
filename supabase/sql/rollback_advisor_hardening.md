@@ -495,3 +495,100 @@ create policy "Participants update appointments"
     or caregiver_id = auth.uid()
   );
 ```
+
+## Bloco D: duplicate permissive policies - messages
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "messages: participantes leem" on public.messages;
+drop policy if exists "messages: participantes inserem" on public.messages;
+drop policy if exists "messages: destinatario marca como lida" on public.messages;
+
+create policy "messages: participantes"
+  on public.messages
+  for all
+  to public
+  using (
+    appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = (select auth.uid())
+         or appointments.caregiver_id = (select auth.uid())
+    )
+  )
+  with check (
+    appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = (select auth.uid())
+         or appointments.caregiver_id = (select auth.uid())
+    )
+  );
+
+create policy "messages: insert com sender_id validado"
+  on public.messages
+  for insert
+  to public
+  with check (
+    sender_id = auth.uid()
+    and appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = auth.uid()
+         or appointments.caregiver_id = auth.uid()
+    )
+    and (
+      exists (
+        select 1
+        from public.profiles
+        where profiles.id = auth.uid()
+          and profiles.role = 'caregiver'::text
+      )
+      or exists (
+        select 1
+        from public.family_profiles
+        where family_profiles.id = auth.uid()
+          and family_profiles.subscription_status = any (array['active'::text, 'past_due'::text])
+      )
+    )
+  );
+
+create policy "messages: select para participantes"
+  on public.messages
+  for select
+  to public
+  using (
+    appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = auth.uid()
+         or appointments.caregiver_id = auth.uid()
+    )
+  );
+
+create policy "messages: update read_at para destinatário"
+  on public.messages
+  for update
+  to public
+  using (
+    sender_id <> auth.uid()
+    and appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = auth.uid()
+         or appointments.caregiver_id = auth.uid()
+    )
+  )
+  with check (
+    sender_id <> auth.uid()
+    and appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = auth.uid()
+         or appointments.caregiver_id = auth.uid()
+    )
+  );
+```

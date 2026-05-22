@@ -277,3 +277,86 @@ create policy "appointments: participantes removem"
     family_id = (select auth.uid())
     or caregiver_id = (select auth.uid())
   );
+
+-- Group D9: messages participant policies split by command.
+
+drop policy if exists "messages: participantes" on public.messages;
+drop policy if exists "messages: insert com sender_id validado" on public.messages;
+drop policy if exists "messages: select para participantes" on public.messages;
+drop policy if exists "messages: update read_at para destinatário" on public.messages;
+
+create policy "messages: participantes leem"
+  on public.messages
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = messages.appointment_id
+        and (
+          a.family_id = (select auth.uid())
+          or a.caregiver_id = (select auth.uid())
+        )
+    )
+  );
+
+create policy "messages: participantes inserem"
+  on public.messages
+  for insert
+  to authenticated
+  with check (
+    sender_id = (select auth.uid())
+    and exists (
+      select 1
+      from public.appointments a
+      where a.id = messages.appointment_id
+        and (
+          a.family_id = (select auth.uid())
+          or a.caregiver_id = (select auth.uid())
+        )
+    )
+    and (
+      exists (
+        select 1
+        from public.profiles p
+        where p.id = (select auth.uid())
+          and p.role = 'caregiver'
+      )
+      or exists (
+        select 1
+        from public.family_profiles f
+        where f.id = (select auth.uid())
+          and f.subscription_status = any (array['active'::text, 'past_due'::text])
+      )
+    )
+  );
+
+create policy "messages: destinatario marca como lida"
+  on public.messages
+  for update
+  to authenticated
+  using (
+    sender_id <> (select auth.uid())
+    and exists (
+      select 1
+      from public.appointments a
+      where a.id = messages.appointment_id
+        and (
+          a.family_id = (select auth.uid())
+          or a.caregiver_id = (select auth.uid())
+        )
+    )
+  )
+  with check (
+    sender_id <> (select auth.uid())
+    and exists (
+      select 1
+      from public.appointments a
+      where a.id = messages.appointment_id
+        and (
+          a.family_id = (select auth.uid())
+          or a.caregiver_id = (select auth.uid())
+        )
+    )
+  );
