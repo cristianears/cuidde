@@ -17,8 +17,8 @@
 - [x] Baseline local e remoto capturado.
 - [x] Bloco A concluído: `SECURITY DEFINER` executável.
 - [x] Bloco B concluído: `search_path` fixo em functions.
-- [ ] Bloco C concluído: RLS `auth.uid()` otimizado.
-- [ ] Bloco D concluído: policies permissive duplicadas revisadas.
+- [x] Bloco C concluído: RLS `auth.uid()` otimizado.
+- [x] Bloco D concluído: policies permissive duplicadas revisadas.
 - [x] Bloco E concluído: Storage `avatars` sem listagem ampla.
 - [x] Bloco F concluído: índice faltante em `caregiver_events.family_id`.
 - [x] Bloco G concluído: decisões manuais de Auth/Dashboard documentadas.
@@ -275,6 +275,7 @@ git commit -m "Optimize RLS auth uid policies"
 - [x] Grupo D7: `profiles` consolidada em SELECT única e writes por comando; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Grupo D8: `appointments` separada em policies por comando para participantes; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 - [x] Grupo D9: `messages` consolidada em SELECT/INSERT/UPDATE específicas para participantes, envio validado e marcação de lida; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
+- [x] Grupo D10: `care_routines` consolidada em SELECT para participantes e writes do cuidador em atendimento ativo; advisor, `pg_policies`, `test`, `build`, `lint` e `test:e2e` passaram.
 
 ---
 

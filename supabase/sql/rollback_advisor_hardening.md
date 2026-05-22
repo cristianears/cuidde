@@ -592,3 +592,114 @@ create policy "messages: update read_at para destinatário"
     )
   );
 ```
+
+## Bloco D: duplicate permissive policies - care_routines
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "care_routines: participantes leem" on public.care_routines;
+drop policy if exists "care_routines: cuidador insere em atendimento ativo" on public.care_routines;
+drop policy if exists "care_routines: cuidador atualiza em atendimento ativo" on public.care_routines;
+drop policy if exists "care_routines: cuidador remove em atendimento ativo" on public.care_routines;
+
+create policy "Caregiver manages own care routines"
+  on public.care_routines
+  for all
+  to public
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = auth.uid()
+    )
+  );
+
+create policy "care_routines: participantes do agendamento"
+  on public.care_routines
+  for all
+  to public
+  using (
+    appointment_id in (
+      select appointments.id
+      from public.appointments
+      where appointments.family_id = auth.uid()
+         or appointments.caregiver_id = auth.uid()
+    )
+  );
+
+create policy "Caregiver deletes care routines"
+  on public.care_routines
+  for delete
+  to public
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = auth.uid()
+        and a.status = 'ativo'::text
+    )
+  );
+
+create policy "Caregiver inserts care routines"
+  on public.care_routines
+  for insert
+  to public
+  with check (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = auth.uid()
+        and a.status = 'ativo'::text
+    )
+  );
+
+create policy "Family views own care routines"
+  on public.care_routines
+  for select
+  to public
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.family_id = auth.uid()
+    )
+  );
+
+create policy "Caregiver updates care routines"
+  on public.care_routines
+  for update
+  to public
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = auth.uid()
+        and a.status = 'ativo'::text
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = auth.uid()
+        and a.status = 'ativo'::text
+    )
+  );
+```

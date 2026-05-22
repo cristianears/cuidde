@@ -357,6 +357,82 @@ create policy "messages: destinatario marca como lida"
         and (
           a.family_id = (select auth.uid())
           or a.caregiver_id = (select auth.uid())
+      )
+    )
+  );
+
+-- Group D10: care_routines participant read and caregiver writes split by command.
+
+drop policy if exists "Caregiver manages own care routines" on public.care_routines;
+drop policy if exists "care_routines: participantes do agendamento" on public.care_routines;
+drop policy if exists "Caregiver deletes care routines" on public.care_routines;
+drop policy if exists "Caregiver inserts care routines" on public.care_routines;
+drop policy if exists "Family views own care routines" on public.care_routines;
+drop policy if exists "Caregiver updates care routines" on public.care_routines;
+
+create policy "care_routines: participantes leem"
+  on public.care_routines
+  for select
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and (
+          a.family_id = (select auth.uid())
+          or a.caregiver_id = (select auth.uid())
         )
+    )
+  );
+
+create policy "care_routines: cuidador insere em atendimento ativo"
+  on public.care_routines
+  for insert
+  to authenticated
+  with check (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = (select auth.uid())
+        and a.status = 'ativo'::text
+    )
+  );
+
+create policy "care_routines: cuidador atualiza em atendimento ativo"
+  on public.care_routines
+  for update
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = (select auth.uid())
+        and a.status = 'ativo'::text
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = (select auth.uid())
+        and a.status = 'ativo'::text
+    )
+  );
+
+create policy "care_routines: cuidador remove em atendimento ativo"
+  on public.care_routines
+  for delete
+  to authenticated
+  using (
+    exists (
+      select 1
+      from public.appointments a
+      where a.id = care_routines.appointment_id
+        and a.caregiver_id = (select auth.uid())
+        and a.status = 'ativo'::text
     )
   );
