@@ -102,12 +102,12 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
 - [x] `pg_policies` e `pg_get_functiondef` exportados antes das alteracoes.
 - [x] Bloco A aplicado: grants de `SECURITY DEFINER` revisados.
 - [x] Bloco B aplicado: `search_path` fixo em functions alertadas.
-- [ ] Bloco C aplicado: RLS `auth.uid()` otimizado com initplan.
+- [x] Bloco C aplicado: RLS `auth.uid()` otimizado com initplan.
   - [x] Grupo C1: `support_tickets`, `caregiver_availability` e `caregiver_documents`.
   - [x] Grupo C2: `family_profiles`.
   - [x] Grupo C3: `favorites` e `invoices`.
   - [x] Grupo C4: `caregiver_profiles`.
-- [ ] Bloco D aplicado: policies permissive duplicadas revisadas.
+- [x] Bloco D aplicado: policies permissive duplicadas revisadas.
   - [x] Grupo D1: `reviews`.
   - [x] Grupo D2: `professional_references`.
   - [x] Grupo D3: `caregiver_profiles`.
@@ -121,6 +121,11 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
 - [x] Bloco E aplicado: bucket `avatars` sem listagem ampla.
 - [x] Bloco F aplicado: indice em `caregiver_events.family_id`.
 - [x] Bloco G documentado: Auth leaked password protection e URLs de redirect.
+- [x] Advisors finais reexecutados em 2026-05-22.
+  - [x] Performance Advisor: sem `auth_rls_initplan`, sem `multiple_permissive_policies`, sem `unindexed_foreign_keys`; restam apenas `unused_index` informativos.
+  - [x] Security Advisor: sem `function_search_path_mutable`, sem `anon_security_definer_function_executable`, sem `public_bucket_allows_listing`.
+  - [x] Restantes classificados: RPCs `SECURITY DEFINER` para `authenticated` sao intencionais; `system_logs` sem policy nao e acessado pelo cliente; `pg_trgm` em `public` e Auth leaked password protection ficam como acoes manuais/pos-launch.
+- [x] Validacao final local em 2026-05-22: `test` passou com 125 testes; `build` passou; `lint` passou com 10 warnings conhecidos; `test:e2e` passou com 2 testes.
 
 ### Auth Dashboard - decisoes manuais
 

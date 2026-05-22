@@ -22,7 +22,7 @@
 - [x] Bloco E concluído: Storage `avatars` sem listagem ampla.
 - [x] Bloco F concluído: índice faltante em `caregiver_events.family_id`.
 - [x] Bloco G concluído: decisões manuais de Auth/Dashboard documentadas.
-- [ ] Advisors reexecutados e checklist final atualizado.
+- [x] Advisors reexecutados e checklist final atualizado.
 - [ ] PR/push final feito.
 
 ## Estratégia De Segurança E Rollback
@@ -353,9 +353,9 @@ create index if not exists idx_caregiver_events_family_id
 
 ## Verificação Final
 
-- [ ] Rodar Supabase Security Advisor.
-- [ ] Rodar Supabase Performance Advisor.
-- [ ] Rodar comandos locais.
+- [x] Rodar Supabase Security Advisor.
+- [x] Rodar Supabase Performance Advisor.
+- [x] Rodar comandos locais.
 
 ```powershell
 npm.cmd run test
@@ -363,6 +363,12 @@ npm.cmd run build
 npm.cmd run lint
 npm.cmd run test:e2e
 ```
+
+Resultado final em 2026-05-22:
+- `npm.cmd run test`: 18 arquivos, 125 testes passaram.
+- `npm.cmd run build`: passou; manteve avisos conhecidos de Browserslist e chunk grande.
+- `npm.cmd run lint`: 0 errors, 10 warnings conhecidos.
+- `npm.cmd run test:e2e`: 2 testes passaram.
 
 - [ ] Smoke manual final:
   - [ ] Login família.
@@ -375,7 +381,14 @@ npm.cmd run test:e2e
   - [ ] Upload/exibição de avatar.
 
 - [ ] Atualizar `PRODUCTION_CHECKLIST.md`.
+- [x] Atualizar `PRODUCTION_CHECKLIST.md`.
 - [ ] Commit final, push e PR.
+
+### Resultado final dos Advisors - 2026-05-22
+
+- [x] Performance Advisor reexecutado: alertas de `auth_rls_initplan`, `multiple_permissive_policies` e `unindexed_foreign_keys` tratados neste sprint nao aparecem mais; restam apenas `unused_index` informativos para indices recem-criados/baixo uso.
+- [x] Security Advisor reexecutado: `function_search_path_mutable`, `anon_security_definer_function_executable` e `public_bucket_allows_listing` tratados neste sprint nao aparecem mais.
+- [x] Security Advisor restantes classificados: `authenticated_security_definer_function_executable` permanece intencional nas RPCs chamadas pelo frontend autenticado; `system_logs` sem policy permanece sem exposicao client-side; `pg_trgm` em `public` fica como ajuste pos-launch; `auth_leaked_password_protection` depende de acao manual no Dashboard.
 
 ```powershell
 git status -sb
