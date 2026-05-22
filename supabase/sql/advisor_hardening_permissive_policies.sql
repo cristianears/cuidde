@@ -181,3 +181,52 @@ create policy "family_profiles: leitura consolidada"
         and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
     )
   );
+
+-- Group D7: profiles SELECT policies consolidated and owner writes split by command.
+
+drop policy if exists "profiles: leitura contextual" on public.profiles;
+drop policy if exists "profiles: ver e editar próprio" on public.profiles;
+
+create policy "profiles: leitura consolidada"
+  on public.profiles
+  for select
+  to public
+  using (
+    id = (select auth.uid())
+    or id in (
+      select cp.id
+      from public.caregiver_profiles cp
+      where cp.profile_complete = true
+    )
+    or id in (
+      select a.family_id
+      from public.appointments a
+      where a.caregiver_id = (select auth.uid())
+        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text])
+    )
+    or id in (
+      select a.caregiver_id
+      from public.appointments a
+      where a.family_id = (select auth.uid())
+        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text])
+    )
+  );
+
+create policy "profiles: dono insere"
+  on public.profiles
+  for insert
+  to authenticated
+  with check (id = (select auth.uid()));
+
+create policy "profiles: dono atualiza"
+  on public.profiles
+  for update
+  to authenticated
+  using (id = (select auth.uid()))
+  with check (id = (select auth.uid()));
+
+create policy "profiles: dono remove"
+  on public.profiles
+  for delete
+  to authenticated
+  using (id = (select auth.uid()));

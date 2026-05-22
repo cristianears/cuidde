@@ -396,3 +396,48 @@ create policy "family_profiles: cuidador lê dados do idoso no atendimento"
     )
   );
 ```
+
+## Bloco D: duplicate permissive policies - profiles
+
+Applied migration: `supabase/sql/advisor_hardening_permissive_policies.sql`
+
+Rollback SQL:
+
+```sql
+drop policy if exists "profiles: leitura consolidada" on public.profiles;
+drop policy if exists "profiles: dono insere" on public.profiles;
+drop policy if exists "profiles: dono atualiza" on public.profiles;
+drop policy if exists "profiles: dono remove" on public.profiles;
+
+create policy "profiles: ver e editar próprio"
+  on public.profiles
+  for all
+  to public
+  using ((select auth.uid()) = id)
+  with check ((select auth.uid()) = id);
+
+create policy "profiles: leitura contextual"
+  on public.profiles
+  for select
+  to public
+  using (
+    auth.uid() = id
+    or id in (
+      select cp.id
+      from public.caregiver_profiles cp
+      where cp.profile_complete = true
+    )
+    or id in (
+      select a.family_id
+      from public.appointments a
+      where a.caregiver_id = auth.uid()
+        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text])
+    )
+    or id in (
+      select a.caregiver_id
+      from public.appointments a
+      where a.family_id = auth.uid()
+        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text])
+    )
+  );
+```
