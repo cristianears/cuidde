@@ -27,4 +27,50 @@ test.describe('PWA basic metadata', () => {
     expect(source).toContain('Authorization')
     expect(source).toContain('/offline.html')
   })
+
+  test('registers the service worker and caches only app shell assets', async ({ page }) => {
+    await page.goto('/')
+
+    const cacheSnapshot = await page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.ready
+      const cacheNames = await caches.keys()
+      const requests = (
+        await Promise.all(
+          cacheNames.map(async (cacheName) => {
+            const cache = await caches.open(cacheName)
+            return cache.keys()
+          }),
+        )
+      ).flat()
+
+      return {
+        scriptUrl: registration.active?.scriptURL ?? registration.installing?.scriptURL ?? '',
+        cacheNames,
+        cachedUrls: requests.map((request) => request.url),
+      }
+    })
+
+    expect(cacheSnapshot.scriptUrl).toContain('/sw.js')
+    expect(cacheSnapshot.cacheNames.some((cacheName) => cacheName.includes('app-shell'))).toBe(true)
+    expect(cacheSnapshot.cachedUrls.some((url) => url.endsWith('/offline.html'))).toBe(true)
+    expect(cacheSnapshot.cachedUrls.some((url) => url.endsWith('/manifest.webmanifest'))).toBe(true)
+
+    for (const blocked of [
+      'supabase.co',
+      'api.stripe.com',
+      'js.stripe.com',
+      'hooks.stripe.com',
+      'accounts.google.com',
+      'maps.googleapis.com',
+      'viacep.com.br',
+      'nominatim.openstreetmap.org',
+      '/auth',
+      '/rest/v1',
+      '/storage/v1',
+      '/functions/v1',
+      '/realtime',
+    ]) {
+      expect(cacheSnapshot.cachedUrls.some((url) => url.includes(blocked))).toBe(false)
+    }
+  })
 })

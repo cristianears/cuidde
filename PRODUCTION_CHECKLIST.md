@@ -135,6 +135,7 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
 - [ ] App instalavel no Chrome/Android.
 - [ ] App adicionavel a tela inicial no Safari/iOS.
 - [x] Tela offline simples disponivel em `/offline.html`.
+- [x] Validacao local em browser automatizada: manifest, service worker e Cache Storage verificados via Playwright em 2026-05-23.
 - [ ] Confirmar que dados privados nao ficam disponiveis offline apos logout.
 - [x] Push notifications ficam para fase futura.
 

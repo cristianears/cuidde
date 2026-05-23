@@ -146,6 +146,8 @@
 - **Privacidade:** service worker nao cacheia Supabase, Stripe, Auth, Storage, Realtime, Google, ViaCEP ou requests com `Authorization`.
 - **Fora de escopo:** push notifications, background sync, offline editing e cache de dados privados.
 - **Validacao do bloco:** `npm.cmd run test:e2e -- e2e/pwa-basic.spec.ts` passou com 2 testes.
+- **Validacao final local (2026-05-23):** `npm.cmd run test` passou com 21 arquivos e 133 testes; `build` passou; `lint` passou com 0 errors e 10 warnings conhecidos; `test:e2e` passou com 5 testes.
+- **Validacao de PWA em browser:** Playwright confirmou manifest, offline fallback, `/sw.js`, registro do service worker em localhost e Cache Storage sem Supabase, Stripe, Auth, Storage, Realtime, Google ou ViaCEP.
 
 ### Skill: idor-testing
 - **Data:** —
