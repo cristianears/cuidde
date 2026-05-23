@@ -140,6 +140,13 @@
 - **Validacao final local (2026-05-22):** `npm.cmd run test` passou com 18 arquivos e 125 testes; `build` passou; `lint` passou com 0 errors e 10 warnings conhecidos; `test:e2e` passou com 2 testes.
 - **Rollback:** documentado em `supabase/sql/rollback_advisor_hardening.md`.
 
+### 2026-05-23 - PWA basico
+
+- **Escopo:** manifest, icones, service worker, offline fallback e registro client-side.
+- **Privacidade:** service worker nao cacheia Supabase, Stripe, Auth, Storage, Realtime, Google, ViaCEP ou requests com `Authorization`.
+- **Fora de escopo:** push notifications, background sync, offline editing e cache de dados privados.
+- **Validacao do bloco:** `npm.cmd run test:e2e -- e2e/pwa-basic.spec.ts` passou com 2 testes.
+
 ### Skill: idor-testing
 - **Data:** —
 - **Commits:** —

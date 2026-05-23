@@ -127,6 +127,17 @@ Ambiente atual: local (`http://localhost:5173`) apontando para Supabase configur
   - [x] Restantes classificados: RPCs `SECURITY DEFINER` para `authenticated` sao intencionais; `system_logs` sem policy nao e acessado pelo cliente; `pg_trgm` em `public` e Auth leaked password protection ficam como acoes manuais/pos-launch.
 - [x] Validacao final local em 2026-05-22: `test` passou com 125 testes; `build` passou; `lint` passou com 10 warnings conhecidos; `test:e2e` passou com 2 testes.
 
+### PWA basico - 2026-05-23
+
+- [ ] Deploy em HTTPS antes de validar instalacao real em celular.
+- [x] Manifest publicado em `/manifest.webmanifest`.
+- [x] Service worker publicado em `/sw.js`.
+- [ ] App instalavel no Chrome/Android.
+- [ ] App adicionavel a tela inicial no Safari/iOS.
+- [x] Tela offline simples disponivel em `/offline.html`.
+- [ ] Confirmar que dados privados nao ficam disponiveis offline apos logout.
+- [x] Push notifications ficam para fase futura.
+
 ### Auth Dashboard - decisoes manuais
 
 - [ ] Supabase Dashboard: habilitar **Leaked Password Protection** em Authentication > Sign In / Password Security. Advisor 2026-05-21 ainda reporta `auth_leaked_password_protection`.
