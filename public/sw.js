@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'cuidde-pwa-v1'
+const CACHE_VERSION = 'cuidde-pwa-v2'
 const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`
 
 const APP_SHELL_ASSETS = [
@@ -77,7 +77,7 @@ self.addEventListener('fetch', (event) => {
           return response
         })
         .catch(async () => {
-          return (await caches.match('/index.html')) || caches.match('/offline.html')
+          return (await caches.match('/offline.html')) || caches.match('/index.html')
         }),
     )
     return

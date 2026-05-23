@@ -73,4 +73,19 @@ test.describe('PWA basic metadata', () => {
       expect(cacheSnapshot.cachedUrls.some((url) => url.includes(blocked))).toBe(false)
     }
   })
+
+  test('shows the offline fallback when a controlled page reloads without network', async ({ page, context }) => {
+    await page.goto('/')
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready
+    })
+
+    await page.reload()
+    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true)
+
+    await context.setOffline(true)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+
+    await expect(page.getByRole('heading', { name: 'Sem conexao' })).toBeVisible()
+  })
 })
