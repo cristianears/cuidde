@@ -5,6 +5,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import StarRating from "@/components/shared/StarRating";
 import type { CaregiverPublic } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
@@ -205,7 +206,7 @@ const CaregiverCard = ({
               )}
               {caregiver.review_count > 0 ? (
                 <span className="flex items-center gap-1 text-muted-foreground">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                  <StarRating rating={Number(caregiver.average_rating)} size="sm" showValue={false} />
                   <span className="font-semibold text-foreground">{Number(caregiver.average_rating).toFixed(1)}</span>
                   <span>({caregiver.review_count})</span>
                 </span>
@@ -219,7 +220,7 @@ const CaregiverCard = ({
 
             {/* Linha 4: Bio */}
             {caregiver.bio && (
-              <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed overflow-hidden break-words">
+              <p className="max-w-full text-xs text-muted-foreground line-clamp-2 leading-relaxed overflow-hidden break-all">
                 {caregiver.bio}
               </p>
             )}

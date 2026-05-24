@@ -7,6 +7,7 @@ import {
   GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock,
 } from "lucide-react"
 import AppSidebar from "@/components/shared/AppSidebar"
+import StarRating from "@/components/shared/StarRating"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -310,7 +311,7 @@ const CaregiverPublicProfile = () => {
                     )}
                     {caregiver.review_count > 0 ? (
                       <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <StarRating rating={Number(caregiver.average_rating)} size="sm" showValue={false} />
                         <span className="font-semibold">{Number(caregiver.average_rating).toFixed(1)}</span>
                         <span className="text-muted-foreground">({caregiver.review_count} avaliações)</span>
                       </span>
@@ -372,7 +373,7 @@ const CaregiverPublicProfile = () => {
                 {caregiver.bio && (
                   <div>
                     <h2 className="text-base font-semibold mb-2">Sobre</h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-all">
+                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-all">
                       {caregiver.bio}
                     </p>
                   </div>

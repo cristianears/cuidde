@@ -42,6 +42,33 @@ const caregiver: CaregiverPublic = {
 }
 
 describe('CaregiverCard', () => {
+  it('renders the rating with five star icons when the caregiver has reviews', () => {
+    render(
+      <CaregiverCard
+        caregiver={{ ...caregiver, average_rating: 4.2, review_count: 3 }}
+      />,
+    )
+
+    const ratingCount = screen.getByText('(3)')
+    const ratingContainer = ratingCount.parentElement
+
+    expect(ratingContainer?.querySelectorAll('svg')).toHaveLength(5)
+    expect(screen.getByText('4.2')).toBeInTheDocument()
+  })
+
+  it('keeps long bio text contained inside the card preview', () => {
+    const longBio = 'Experiencia'.repeat(40)
+
+    render(<CaregiverCard caregiver={{ ...caregiver, bio: longBio }} />)
+
+    expect(screen.getByText(longBio)).toHaveClass(
+      'line-clamp-2',
+      'overflow-hidden',
+      'break-all',
+      'max-w-full',
+    )
+  })
+
   it('falls back to the first-name initial when the profile photo fails to load', () => {
     render(
       <CaregiverCard
