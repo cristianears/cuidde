@@ -26,7 +26,7 @@ import RequestAppointmentDialog from "@/components/shared/RequestAppointmentDial
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { canCreatePaidAppointment } from "@/lib/subscription-access"
+import { canCreatePaidAppointment, hasFullPaidAccess } from "@/lib/subscription-access"
 
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
@@ -150,9 +150,11 @@ const CaregiverPublicProfile = () => {
 
   const favoriteIds = new Set(favoriteIdsList)
   const isFavorite = id ? favoriteIds.has(id) : false
+  const canFavorite = hasFullPaidAccess(familyProfile)
 
   const handleFavorite = () => {
     if (!id || !user) return
+    if (!canFavorite) return
     if (isFavorite) {
       removeFavorite(id)
     } else {
@@ -347,9 +349,11 @@ const CaregiverPublicProfile = () => {
                     <Button
                       variant="outline"
                       onClick={handleFavorite}
+                      disabled={!canFavorite}
+                      title={!canFavorite ? "Assine um plano para favoritar perfis." : undefined}
                       className="gap-2"
                     >
-                      <Heart className={cn("w-4 h-4", isFavorite && "fill-red-500 text-red-500")} />
+                      <Heart className={cn("w-4 h-4", isFavorite && canFavorite && "fill-red-500 text-red-500")} />
                       {isFavorite ? "Favoritado" : "Favoritar"}
                     </Button>
                   </div>

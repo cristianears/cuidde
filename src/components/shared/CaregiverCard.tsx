@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { CaregiverPublic } from "@/types/database";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { getInitials } from "@/lib/display-name";
 
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
@@ -24,6 +24,8 @@ interface CaregiverCardProps {
   onFavorite?: (id: string) => void;
   onContact?: (id: string) => void;
   isFavorite?: boolean;
+  canFavorite?: boolean;
+  favoriteDisabledReason?: string;
   className?: string;
   hasDocsSent?: boolean;
   hasAntecedentes?: boolean;
@@ -63,6 +65,8 @@ const CaregiverCard = ({
   onFavorite,
   onContact,
   isFavorite = false,
+  canFavorite = true,
+  favoriteDisabledReason = "Assine um plano para favoritar perfis.",
   className,
   hasDocsSent = false,
   hasAntecedentes = false,
@@ -70,21 +74,19 @@ const CaregiverCard = ({
   hasCertificados = false,
   distanceKm,
 }: CaregiverCardProps) => {
-  const [favorite, setFavorite] = useState(isFavorite);
-
   const handleFavorite = () => {
-    setFavorite(!favorite);
+    if (!canFavorite) return;
     onFavorite?.(caregiver.id);
-  };
-
-  const getInitials = (name: string | null) => {
-    if (!name) return "?";
-    return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
   };
 
   const profissaoLabel = caregiver.profissao_formacao
     ? (PROFISSAO_LABELS[caregiver.profissao_formacao] ?? caregiver.profissao_formacao)
     : null;
+  const favoriteLabel = !canFavorite
+    ? favoriteDisabledReason
+    : isFavorite
+      ? "Remover dos favoritos"
+      : "Adicionar aos favoritos";
 
   const idiomasDisplay = (caregiver.idiomas ?? []).filter((i) => i.toLowerCase() !== "outro");
 
@@ -117,22 +119,25 @@ const CaregiverCard = ({
                 <Avatar className="w-16 h-16">
                   <AvatarImage src={undefined} />
                   <AvatarFallback className="text-xl bg-primary/10 text-primary">
-                    {getInitials(caregiver.full_name)}
+                    {getInitials(caregiver.full_name) || "?"}
                   </AvatarFallback>
                 </Avatar>
               </div>
             )}
             <button
               onClick={handleFavorite}
-              aria-label={favorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+              disabled={!canFavorite}
+              aria-label={favoriteLabel}
+              title={!canFavorite ? favoriteDisabledReason : undefined}
               className={cn(
-                "absolute top-2 right-2 p-2 rounded-full transition-all z-10 cursor-pointer",
-                favorite
+                "absolute top-2 right-2 p-2 rounded-full transition-all z-10",
+                canFavorite ? "cursor-pointer" : "cursor-not-allowed opacity-70",
+                isFavorite && canFavorite
                   ? "bg-destructive text-destructive-foreground"
                   : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:bg-background"
               )}
             >
-              <Heart className={cn("w-4 h-4", favorite && "fill-current")} />
+              <Heart className={cn("w-4 h-4", isFavorite && canFavorite && "fill-current")} />
             </button>
           </div>
 

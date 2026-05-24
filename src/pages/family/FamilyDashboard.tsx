@@ -11,6 +11,7 @@ import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFa
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useAuth } from "@/contexts/AuthContext";
+import { hasFullPaidAccess } from "@/lib/subscription-access";
 
 const FamilyDashboard = () => {
   const navigate = useNavigate();
@@ -23,9 +24,11 @@ const FamilyDashboard = () => {
   const favoriteIds = new Set(favoriteIdsList);
   const { mutate: addFavorite } = useAddFavorite();
   const { mutate: removeFavorite } = useRemoveFavorite();
+  const canFavorite = hasFullPaidAccess(familyProfile);
 
   const handleFavorite = (caregiverId: string) => {
     if (!user) return;
+    if (!canFavorite) return;
     if (favoriteIds.has(caregiverId)) {
       removeFavorite(caregiverId);
     } else {
@@ -103,6 +106,8 @@ const FamilyDashboard = () => {
                     key={caregiver.id}
                     caregiver={caregiver}
                     isFavorite={favoriteIds.has(caregiver.id)}
+                    canFavorite={canFavorite}
+                    favoriteDisabledReason="Assine um plano para favoritar perfis."
                     onFavorite={handleFavorite}
                     onContact={(id) => navigate(`/family/caregiver/${id}`)}
                     hasDocsSent={caregiver.has_rg_cnh}

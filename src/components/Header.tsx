@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { getFirstName } from "@/lib/display-name";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const displayName = profile?.full_name ?? user?.user_metadata?.full_name ?? null;
+  const displayName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name, 'Meu painel');
   const dashboardPath = role === 'admin' ? '/admin' : role === 'family' ? '/family' : role === 'caregiver' ? '/caregiver' : '/login';
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -100,7 +101,7 @@ const Header = () => {
                 className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold gap-2"
               >
                 <User className="w-4 h-4" />
-                {displayName ?? 'Meu painel'}
+                {displayName}
               </Button>
             ) : (
               <>
@@ -195,7 +196,7 @@ const Header = () => {
                   className="flex-1 bg-accent hover:bg-accent/90 font-semibold gap-2"
                 >
                   <User className="w-4 h-4" />
-                  {displayName ?? 'Meu painel'}
+                  {displayName}
                 </Button>
               ) : (
                 <>

@@ -99,7 +99,7 @@ export function useAddFavorite() {
     mutationFn: async (caregiverId: string) => {
       if (!user) throw new Error('Não autenticado')
       if (!hasFullPaidAccess(familyProfile)) {
-        throw new Error('Regularize sua assinatura para favoritar perfis.')
+        throw new Error('Assine um plano para favoritar perfis.')
       }
 
       const { error } = await supabase

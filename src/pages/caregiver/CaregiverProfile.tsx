@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAddressByCep } from "@/lib/viacep";
 import { formatPhone } from "@/lib/formatters";
+import { getInitials } from "@/lib/display-name";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ProfessionalReference } from "@/types/database";
@@ -50,6 +51,8 @@ const profileSteps = [
 ];
 
 type NewRef = Omit<ProfessionalReference, 'id' | 'caregiver_id' | 'created_at'>
+type ProfessionFormValue = "" | "cuidador" | "tecnico_enfermagem" | "auxiliar_enfermagem" | "enfermeiro" | "fisioterapeuta" | "terapeuta_ocupacional" | "outro"
+type CnhCategoryFormValue = "" | "A" | "B" | "AB" | "C" | "D" | "E"
 
 const CaregiverProfile = () => {
   const { user } = useAuth()
@@ -63,9 +66,11 @@ const CaregiverProfile = () => {
   const uploadPhoto = useUploadCaregiverPhoto()
 
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const hydratedProfileIdRef = useRef<string | null>(null)
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isFetchingCep, setIsFetchingCep] = useState(false)
+  const [photoFailed, setPhotoFailed] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -82,7 +87,7 @@ const CaregiverProfile = () => {
     state: "",
     bio: "",
     hasInsurance: false,
-    profissaoFormacao: "" as "" | "cuidador" | "tecnico_enfermagem" | "auxiliar_enfermagem" | "enfermeiro" | "fisioterapeuta" | "terapeuta_ocupacional" | "outro",
+    profissaoFormacao: "" as ProfessionFormValue,
     profissaoOutro: "",
     formacaoComplementar: "",
     idiomas: ["Português"] as string[],
@@ -92,7 +97,7 @@ const CaregiverProfile = () => {
     yearsExperience: "",
     emergencyAvailable: false,
     possuiCNH: false,
-    categoriaCNH: "" as "" | "A" | "B" | "AB" | "C" | "D" | "E",
+    categoriaCNH: "" as CnhCategoryFormValue,
     showReferencesToSubscribers: true,
     maskReferencePhones: true,
     showReferenceFullNames: false,
@@ -116,6 +121,9 @@ const CaregiverProfile = () => {
 
   // Sincronizar form com dados do Supabase quando carregarem
   useEffect(() => {
+    if (!profileData || hydratedProfileIdRef.current === profileData.id) return
+    hydratedProfileIdRef.current = profileData.id
+    setPhotoFailed(false)
     if (profileData) {
       setFormData({
         name: profileData.profiles.full_name ?? "",
@@ -132,7 +140,7 @@ const CaregiverProfile = () => {
         state: profileData.state ?? "",
         bio: profileData.bio ?? "",
         hasInsurance: profileData.has_insurance,
-        profissaoFormacao: (profileData.profissao_formacao ?? "") as typeof formData.profissaoFormacao,
+        profissaoFormacao: (profileData.profissao_formacao ?? "") as ProfessionFormValue,
         profissaoOutro: "",
         formacaoComplementar: profileData.formacao_complementar ?? "",
         ...(() => {
@@ -149,13 +157,19 @@ const CaregiverProfile = () => {
         yearsExperience: profileData.experience_years ? String(profileData.experience_years) : "",
         emergencyAvailable: profileData.emergency_available,
         possuiCNH: profileData.possui_cnh,
-        categoriaCNH: (profileData.categoria_cnh ?? "") as typeof formData.categoriaCNH,
+        categoriaCNH: (profileData.categoria_cnh ?? "") as CnhCategoryFormValue,
         showReferencesToSubscribers: profileData.show_refs_to_subscribers,
         maskReferencePhones: profileData.mask_reference_phones,
         showReferenceFullNames: profileData.show_reference_full_names,
       })
     }
   }, [profileData, user?.email])
+
+  useEffect(() => {
+    if (!profileData?.photo_url) return
+    setPhotoFailed(false)
+    setFormData((prev) => ({ ...prev, photo: profileData.photo_url ?? "" }))
+  }, [profileData?.photo_url])
 
   useEffect(() => {
     if (refsData) setReferences(refsData)
@@ -188,21 +202,46 @@ const CaregiverProfile = () => {
     if (file) uploadPhoto.mutate(file)
   }
 
-  const handleSave = () => {
-    if (currentStep === 1) {
-      if (!formData.name.trim()) {
-        toast.error("Nome completo é obrigatório.")
-        return
-      }
-      if (!formData.whatsapp.trim() && !formData.phone.trim()) {
-        toast.error("Informe pelo menos um número de contato (telefone ou WhatsApp).")
-        return
-      }
-      if (!formData.cep.trim() || !formData.street.trim() || !formData.number.trim() || !formData.neighborhood.trim() || !formData.city.trim() || !formData.state.trim()) {
-        toast.error("CEP, rua, número, bairro, cidade e estado são obrigatórios.")
-        return
-      }
-      updateBasic.mutate({
+  const validateBasicStep = () => {
+    if (!formData.name.trim()) {
+      toast.error("Nome completo é obrigatório.")
+      return false
+    }
+    if (!formData.whatsapp.trim() && !formData.phone.trim()) {
+      toast.error("Informe pelo menos um número de contato (telefone ou WhatsApp).")
+      return false
+    }
+    if (!formData.cep.trim() || !formData.street.trim() || !formData.number.trim() || !formData.neighborhood.trim() || !formData.city.trim() || !formData.state.trim()) {
+      toast.error("CEP, rua, número, bairro, cidade e estado são obrigatórios.")
+      return false
+    }
+    return true
+  }
+
+  const validateBioStep = () => {
+    if (!formData.bio.trim()) {
+      toast.error("A biografia é obrigatória.")
+      return false
+    }
+    if (formData.bio.trim().length < 150) {
+      toast.error("A biografia deve ter pelo menos 150 caracteres.")
+      return false
+    }
+    return true
+  }
+
+  const idiomasPayload = () =>
+    formData.idiomas.flatMap((idioma) =>
+      idioma === "Outro"
+        ? formData.idiomaOutro.trim() ? [formData.idiomaOutro.trim()] : []
+        : [idioma]
+    )
+
+  const handleSaveAllVisibleSteps = async () => {
+    try {
+      if (!validateBasicStep()) return
+
+      await updateBasic.mutateAsync({
         full_name: formData.name,
         phone: formData.phone,
         whatsapp: formData.whatsapp,
@@ -213,52 +252,48 @@ const CaregiverProfile = () => {
         neighborhood: formData.neighborhood,
         city: formData.city,
         state: formData.state,
+        zona: null,
         possui_cnh: formData.possuiCNH,
         categoria_cnh: formData.possuiCNH ? formData.categoriaCNH || null : null,
       })
-    } else if (currentStep === 2) {
-      if (!formData.bio.trim()) {
-        toast.error("A biografia é obrigatória.")
-        return
+
+      if (currentStep >= 2) {
+        if (!validateBioStep()) return
+        await updateBio.mutateAsync({
+          bio: formData.bio,
+          profissao_formacao: formData.profissaoFormacao || null,
+          formacao_complementar: formData.formacaoComplementar,
+          idiomas: idiomasPayload(),
+          has_insurance: formData.hasInsurance,
+        })
       }
-      if (formData.bio.trim().length < 150) {
-        toast.error("A biografia deve ter pelo menos 150 caracteres.")
-        return
+
+      if (currentStep >= 3) {
+        await updateSpecialties.mutateAsync({
+          specialties: formData.specialties,
+          modalities: formData.modalities,
+          experience_years: formData.yearsExperience ? Number(formData.yearsExperience) : 0,
+          emergency_available: formData.emergencyAvailable,
+        })
       }
-      // Substitui "Outro" pelo texto digitado; remove se o campo estiver vazio
-      const idiomasToSave = formData.idiomas.flatMap((i) =>
-        i === "Outro"
-          ? formData.idiomaOutro.trim() ? [formData.idiomaOutro.trim()] : []
-          : [i]
-      )
-      updateBio.mutate({
-        bio: formData.bio,
-        profissao_formacao: formData.profissaoFormacao || null,
-        formacao_complementar: formData.formacaoComplementar,
-        idiomas: idiomasToSave,
-        has_insurance: formData.hasInsurance,
-      })
-    } else if (currentStep === 3) {
-      updateSpecialties.mutate({
-        specialties: formData.specialties,
-        modalities: formData.modalities,
-        experience_years: formData.yearsExperience ? Number(formData.yearsExperience) : 0,
-        emergency_available: formData.emergencyAvailable,
-      })
-    } else if (currentStep === 4) {
-      updateReferences.mutate({
-        references: references.map((r) => ({
-          name: r.name,
-          phone: r.phone,
-          workplace: r.workplace,
-          position: r.position,
-          work_duration: r.work_duration,
-          notes: r.notes,
-        })),
-        show_refs_to_subscribers: formData.showReferencesToSubscribers,
-        mask_reference_phones: formData.maskReferencePhones,
-        show_reference_full_names: formData.showReferenceFullNames,
-      })
+
+      if (currentStep >= 4) {
+        await updateReferences.mutateAsync({
+          references: references.map((r) => ({
+            name: r.name,
+            phone: r.phone,
+            workplace: r.workplace,
+            position: r.position,
+            work_duration: r.work_duration,
+            notes: r.notes,
+          })),
+          show_refs_to_subscribers: formData.showReferencesToSubscribers,
+          mask_reference_phones: formData.maskReferencePhones,
+          show_reference_full_names: formData.showReferenceFullNames,
+        })
+      }
+    } catch {
+      // Cada mutation ja exibe o toast de erro especifico.
     }
   }
 
@@ -388,15 +423,22 @@ const CaregiverProfile = () => {
                 {/* Photo */}
                 <div className="flex items-center gap-4 md:gap-6">
                   <div className="relative shrink-0">
-                    {formData.photo ? (
+                    {formData.photo && !photoFailed ? (
                       <img
                         src={formData.photo}
                         alt={formData.name}
                         className="w-20 h-20 md:w-24 md:h-24 rounded-2xl object-cover"
+                        onError={() => setPhotoFailed(true)}
                       />
                     ) : (
                       <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-muted flex items-center justify-center">
-                        <Camera className="w-6 h-6 text-muted-foreground" />
+                        {getInitials(formData.name || user?.email) ? (
+                          <span className="text-xl font-semibold text-primary">
+                            {getInitials(formData.name || user?.email)}
+                          </span>
+                        ) : (
+                          <Camera className="w-6 h-6 text-muted-foreground" />
+                        )}
                       </div>
                     )}
                     <button
@@ -1041,7 +1083,7 @@ const CaregiverProfile = () => {
             </Button>
 
             <Button
-              onClick={handleSave}
+              onClick={handleSaveAllVisibleSteps}
               disabled={isSaving}
               className="gap-2 bg-accent hover:bg-accent/90 text-xs md:text-sm"
             >
