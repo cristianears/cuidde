@@ -154,7 +154,10 @@ const CaregiverPublicProfile = () => {
 
   const handleFavorite = () => {
     if (!id || !user) return
-    if (!canFavorite) return
+    if (!canFavorite) {
+      toast.error("Assine um plano para favoritar perfis.")
+      return
+    }
     if (isFavorite) {
       removeFavorite(id)
     } else {
@@ -349,9 +352,9 @@ const CaregiverPublicProfile = () => {
                     <Button
                       variant="outline"
                       onClick={handleFavorite}
-                      disabled={!canFavorite}
+                      aria-disabled={!canFavorite}
                       title={!canFavorite ? "Assine um plano para favoritar perfis." : undefined}
-                      className="gap-2"
+                      className={cn("gap-2", !canFavorite && "opacity-70")}
                     >
                       <Heart className={cn("w-4 h-4", isFavorite && canFavorite && "fill-red-500 text-red-500")} />
                       {isFavorite ? "Favoritado" : "Favoritar"}

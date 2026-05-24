@@ -2,6 +2,13 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import CaregiverCard from '../CaregiverCard'
 import type { CaregiverPublic } from '@/types/database'
+import { toast } from 'sonner'
+
+vi.mock('sonner', () => ({
+  toast: {
+    error: vi.fn(),
+  },
+}))
 
 const caregiver: CaregiverPublic = {
   id: 'caregiver-1',
@@ -47,7 +54,7 @@ describe('CaregiverCard', () => {
     expect(screen.getByText('M')).toBeInTheDocument()
   })
 
-  it('does not allow favoriting when favorites are disabled', () => {
+  it('shows the subscription message without favoriting when favorites are disabled', () => {
     const onFavorite = vi.fn()
 
     render(
@@ -59,8 +66,9 @@ describe('CaregiverCard', () => {
     )
 
     const button = screen.getByLabelText('Assine um plano para favoritar perfis.')
-    expect(button).toBeDisabled()
+    expect(button).not.toBeDisabled()
     fireEvent.click(button)
     expect(onFavorite).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith('Assine um plano para favoritar perfis.')
   })
 })

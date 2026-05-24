@@ -9,6 +9,7 @@ import type { CaregiverPublic } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
@@ -82,7 +83,10 @@ const CaregiverCard = ({
   }, [caregiver.photo_url]);
 
   const handleFavorite = () => {
-    if (!canFavorite) return;
+    if (!canFavorite) {
+      toast.error(favoriteDisabledReason);
+      return;
+    }
     onFavorite?.(caregiver.id);
   };
 
@@ -134,12 +138,12 @@ const CaregiverCard = ({
             )}
             <button
               onClick={handleFavorite}
-              disabled={!canFavorite}
               aria-label={favoriteLabel}
+              aria-disabled={!canFavorite}
               title={!canFavorite ? favoriteDisabledReason : undefined}
               className={cn(
                 "absolute top-2 right-2 p-2 rounded-full transition-all z-10",
-                canFavorite ? "cursor-pointer" : "cursor-not-allowed opacity-70",
+                canFavorite ? "cursor-pointer" : "cursor-pointer opacity-70",
                 isFavorite && canFavorite
                   ? "bg-destructive text-destructive-foreground"
                   : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:bg-background"
