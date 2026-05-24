@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { CaregiverPublic } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
+import { useEffect, useState } from "react";
 
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
@@ -74,6 +75,12 @@ const CaregiverCard = ({
   hasCertificados = false,
   distanceKm,
 }: CaregiverCardProps) => {
+  const [photoFailed, setPhotoFailed] = useState(false);
+
+  useEffect(() => {
+    setPhotoFailed(false);
+  }, [caregiver.photo_url]);
+
   const handleFavorite = () => {
     if (!canFavorite) return;
     onFavorite?.(caregiver.id);
@@ -108,11 +115,12 @@ const CaregiverCard = ({
 
           {/* ── Foto ── */}
           <div className="relative w-28 sm:w-40 flex-shrink-0 bg-muted self-stretch">
-            {caregiver.photo_url ? (
+            {caregiver.photo_url && !photoFailed ? (
               <img
                 src={caregiver.photo_url}
                 alt={caregiver.full_name ?? "Cuidador"}
                 className="absolute inset-0 w-full h-full object-cover object-top"
+                onError={() => setPhotoFailed(true)}
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">

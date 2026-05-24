@@ -35,6 +35,18 @@ const caregiver: CaregiverPublic = {
 }
 
 describe('CaregiverCard', () => {
+  it('falls back to the first-name initial when the profile photo fails to load', () => {
+    render(
+      <CaregiverCard
+        caregiver={{ ...caregiver, full_name: 'Maria Silva', photo_url: 'https://example.invalid/avatar.jpg' }}
+      />,
+    )
+
+    fireEvent.error(screen.getByAltText('Maria Silva'))
+
+    expect(screen.getByText('M')).toBeInTheDocument()
+  })
+
   it('does not allow favoriting when favorites are disabled', () => {
     const onFavorite = vi.fn()
 
