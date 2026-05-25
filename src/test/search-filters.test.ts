@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import type { SearchFilters } from '@/hooks/useSearchCaregivers'
-import { hasFamilyCoordinates, hasLocationTextFilters } from '@/lib/search-filter-logic'
+import {
+  hasFamilyCoordinates,
+  hasLocationTextFilters,
+  textIncludesNormalized,
+} from '@/lib/search-filter-logic'
 
 // Testes dos tipos e lógica de filtros de busca (sem Supabase/React)
 
@@ -42,6 +46,11 @@ describe('SearchFilters', () => {
 
     expect(hasFamilyCoordinates(filters)).toBe(true)
     expect(hasLocationTextFilters(filters)).toBe(true)
+  })
+
+  it('compara cidade e bairro sem diferenciar acentos', () => {
+    expect(textIncludesNormalized('Taubaté', 'taubate')).toBe(true)
+    expect(textIncludesNormalized('Jardim São José', 'sao jose')).toBe(true)
   })
 
   it('usa DEFAULT_RADIUS_KM quando radiusKm não informado', () => {

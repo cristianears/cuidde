@@ -7,13 +7,8 @@ import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
 import { abbreviateName } from '@/lib/privacy-masks'
-import { hasFamilyCoordinates } from '@/lib/search-filter-logic'
+import { hasFamilyCoordinates, textIncludesNormalized } from '@/lib/search-filter-logic'
 import type { CaregiverPublic } from '@/types/database'
-
-// Escapa caracteres especiais do operador LIKE para evitar wildcard injection
-function escapeLike(s: string): string {
-  return s.replace(/%/g, '\\%').replace(/_/g, '\\_')
-}
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -88,14 +83,6 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         q = q.in('id', ids)
       }
 
-      // Cidade/bairro refinam a busca mesmo quando o raio por proximidade esta ativo.
-      if (filters.city && filters.city.trim()) {
-        q = q.ilike('city', `%${escapeLike(filters.city.trim())}%`)
-      }
-      if (filters.neighborhood && filters.neighborhood.trim()) {
-        q = q.ilike('neighborhood', `%${escapeLike(filters.neighborhood.trim())}%`)
-      }
-
       if (filters.modalities && filters.modalities.length > 0) {
         q = q.contains('modalities', filters.modalities)
       }
@@ -133,14 +120,21 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         }
       })
 
+      if (filters.city && filters.city.trim()) {
+        rows = rows.filter((c) => textIncludesNormalized(c.city, filters.city))
+      }
+
+      if (filters.neighborhood && filters.neighborhood.trim()) {
+        rows = rows.filter((c) => textIncludesNormalized(c.neighborhood, filters.neighborhood))
+      }
+
       // Busca textual client-side
       if (filters.query && filters.query.trim()) {
-        const term = filters.query.trim().toLowerCase()
         rows = rows.filter(
           (c) =>
-            c.full_name?.toLowerCase().includes(term) ||
-            c.neighborhood?.toLowerCase().includes(term) ||
-            c.city?.toLowerCase().includes(term)
+            textIncludesNormalized(c.full_name, filters.query) ||
+            textIncludesNormalized(c.neighborhood, filters.query) ||
+            textIncludesNormalized(c.city, filters.query)
         )
       }
 
