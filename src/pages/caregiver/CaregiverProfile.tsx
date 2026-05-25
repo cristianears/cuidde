@@ -159,7 +159,7 @@ const CaregiverProfile = () => {
         possuiCNH: profileData.possui_cnh,
         categoriaCNH: (profileData.categoria_cnh ?? "") as CnhCategoryFormValue,
         showReferencesToSubscribers: profileData.show_refs_to_subscribers,
-        maskReferencePhones: profileData.mask_reference_phones,
+        maskReferencePhones: true,
         showReferenceFullNames: profileData.show_reference_full_names,
       })
     }
@@ -288,7 +288,7 @@ const CaregiverProfile = () => {
             notes: r.notes,
           })),
           show_refs_to_subscribers: formData.showReferencesToSubscribers,
-          mask_reference_phones: formData.maskReferencePhones,
+          mask_reference_phones: true,
           show_reference_full_names: formData.showReferenceFullNames,
         })
       }
@@ -869,13 +869,12 @@ const CaregiverProfile = () => {
                     </div>
                     <div className={cn("flex items-center justify-between gap-4", !formData.showReferencesToSubscribers && "opacity-50")}>
                       <div>
-                        <p className="text-sm font-medium text-foreground">Mascarar telefone</p>
-                        <p className="text-xs md:text-sm text-muted-foreground">Exibe apenas os últimos dígitos (ex: *****-1234).</p>
+                        <p className="text-sm font-medium text-foreground">Telefone protegido</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Por segurança, famílias veem apenas os últimos dígitos (ex: *****-1234).</p>
                       </div>
                       <Switch
-                        checked={formData.maskReferencePhones}
-                        onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, maskReferencePhones: checked }))}
-                        disabled={!formData.showReferencesToSubscribers}
+                        checked
+                        disabled
                       />
                     </div>
                     <div className={cn("flex items-center justify-between gap-4", !formData.showReferencesToSubscribers && "opacity-50")}>

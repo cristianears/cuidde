@@ -159,7 +159,7 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         if (refsResult.data) {
           references = refsResult.data.map((ref) => ({
             ...ref,
-            phone: row.mask_reference_phones ? maskPhoneBrazilian(ref.phone) : ref.phone,
+            phone: maskPhoneBrazilian(ref.phone),
             name: row.show_reference_full_names ? ref.name : abbreviateName(ref.name),
           }))
           referenceCount = references.length

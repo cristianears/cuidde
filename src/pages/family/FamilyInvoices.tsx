@@ -18,12 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useSubscription } from "@/hooks/useSubscription";
-
-const planNames: Record<string, string> = {
-  monthly: "Mensal",
-  quarterly: "Trimestral",
-  annual: "Anual",
-};
+import { getInvoicePlanLabel } from "@/lib/invoice-plan";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   draft:         { label: "Cancelada",  className: "bg-red-100 text-red-700" },
@@ -132,7 +127,7 @@ const FamilyInvoices = () => {
                         <TableCell className="font-medium">
                           {invoice.period ?? "—"}
                         </TableCell>
-                        <TableCell>{invoice.plan ? (planNames[invoice.plan] ?? invoice.plan) : "—"}</TableCell>
+                        <TableCell>{getInvoicePlanLabel(invoice.plan, invoice.amount)}</TableCell>
                         <TableCell>{formatCurrency(invoice.amount)}</TableCell>
                         <TableCell>
                           {invoice.due_date ? formatDate(invoice.due_date) : "—"}

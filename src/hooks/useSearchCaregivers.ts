@@ -7,6 +7,7 @@ import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
 import { abbreviateName } from '@/lib/privacy-masks'
+import { hasFamilyCoordinates } from '@/lib/search-filter-logic'
 import type { CaregiverPublic } from '@/types/database'
 
 // Escapa caracteres especiais do operador LIKE para evitar wildcard injection
@@ -48,7 +49,7 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
   const query = useQuery({
     queryKey: [...queryKeys.searchCaregivers(filters as Record<string, unknown>), isSubscriber],
     queryFn: async (): Promise<CaregiverPublicWithDistance[]> => {
-      const useProximity = filters.familyLat != null && filters.familyLng != null
+      const useProximity = hasFamilyCoordinates(filters)
 
       // Se tem lat/lng da família, buscar IDs por proximidade primeiro
       let proximityMap: Map<string, number> | null = null
@@ -87,14 +88,12 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         q = q.in('id', ids)
       }
 
-      // Filtros de cidade/bairro: usados quando não há proximidade OU como fallback
-      if (!proximityMap) {
-        if (filters.city && filters.city.trim()) {
-          q = q.ilike('city', `%${escapeLike(filters.city.trim())}%`)
-        }
-        if (filters.neighborhood && filters.neighborhood.trim()) {
-          q = q.ilike('neighborhood', `%${escapeLike(filters.neighborhood.trim())}%`)
-        }
+      // Cidade/bairro refinam a busca mesmo quando o raio por proximidade esta ativo.
+      if (filters.city && filters.city.trim()) {
+        q = q.ilike('city', `%${escapeLike(filters.city.trim())}%`)
+      }
+      if (filters.neighborhood && filters.neighborhood.trim()) {
+        q = q.ilike('neighborhood', `%${escapeLike(filters.neighborhood.trim())}%`)
       }
 
       if (filters.modalities && filters.modalities.length > 0) {
