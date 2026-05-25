@@ -56,17 +56,20 @@ describe('CaregiverCard', () => {
     expect(screen.getByText('4.2')).toBeInTheDocument()
   })
 
-  it('keeps long bio text contained inside the card preview', () => {
+  it('keeps long bio text contained without splitting normal words letter by letter', () => {
     const longBio = 'Experiencia'.repeat(40)
 
     render(<CaregiverCard caregiver={{ ...caregiver, bio: longBio }} />)
 
-    expect(screen.getByText(longBio)).toHaveClass(
+    const bio = screen.getByText(longBio)
+
+    expect(bio).toHaveClass(
       'line-clamp-2',
       'overflow-hidden',
-      'break-all',
+      'break-words',
       'max-w-full',
     )
+    expect(bio).not.toHaveClass('break-all')
   })
 
   it('falls back to the first-name initial when the profile photo fails to load', () => {

@@ -373,7 +373,7 @@ const CaregiverPublicProfile = () => {
                 {caregiver.bio && (
                   <div>
                     <h2 className="text-base font-semibold mb-2">Sobre</h2>
-                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-all">
+                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
                       {caregiver.bio}
                     </p>
                   </div>
