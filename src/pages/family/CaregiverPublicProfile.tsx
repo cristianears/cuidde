@@ -263,8 +263,8 @@ const CaregiverPublicProfile = () => {
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                  <Avatar className="w-28 h-28 sm:w-32 sm:h-32">
-                    <AvatarImage src={caregiver.photo_url ?? undefined} />
+                  <Avatar className="w-28 h-28 sm:w-32 sm:h-32 bg-muted p-1 ring-1 ring-border">
+                    <AvatarImage src={caregiver.photo_url ?? undefined} className="rounded-full object-cover object-center" />
                     <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                       {getInitials(caregiver.full_name)}
                     </AvatarFallback>
@@ -387,7 +387,7 @@ const CaregiverPublicProfile = () => {
                       <GraduationCap className="w-4 h-4" />
                       Formação complementar
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
+                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
                       {caregiver.formacao_complementar}
                     </p>
                   </div>
