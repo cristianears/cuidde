@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import { maskPhoneBrazilian, abbreviateName } from '@/lib/privacy-masks'
+import { formatReferencePhoneForFamily, abbreviateName } from '@/lib/privacy-masks'
 import type { CaregiverPublic, ProfessionalReference, CaregiverDocument, Review, ProfessionalRegType } from '@/types/database'
 
 // ─── Tipo estendido para página de detalhe ──────────────────────────────────
@@ -159,7 +159,7 @@ export function usePublicCaregiverProfile(caregiverId: string | undefined) {
         if (refsResult.data) {
           references = refsResult.data.map((ref) => ({
             ...ref,
-            phone: maskPhoneBrazilian(ref.phone),
+            phone: formatReferencePhoneForFamily(ref.phone, row.mask_reference_phones),
             name: row.show_reference_full_names ? ref.name : abbreviateName(ref.name),
           }))
           referenceCount = references.length

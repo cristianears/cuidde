@@ -10,6 +10,10 @@ export function maskPhoneBrazilian(phone: string): string {
   return lastFour ? `*****-${lastFour}` : '*****'
 }
 
+export function formatReferencePhoneForFamily(phone: string, shouldMask: boolean): string {
+  return shouldMask ? maskPhoneBrazilian(phone) : phone
+}
+
 /** Abrevia nome: "Maria Aparecida Santos" → "Maria A. S." */
 export function abbreviateName(fullName: string): string {
   const parts = fullName.split(' ')
