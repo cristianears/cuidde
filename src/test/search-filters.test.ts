@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import type { SearchFilters } from '@/hooks/useSearchCaregivers'
+import {
+  hasFamilyCoordinates,
+  hasLocationTextFilters,
+  textIncludesNormalized,
+} from '@/lib/search-filter-logic'
 
 // Testes dos tipos e lógica de filtros de busca (sem Supabase/React)
 
@@ -17,7 +22,7 @@ describe('SearchFilters', () => {
       familyLng: -46.63,
       radiusKm: 20,
     }
-    const useProximity = filters.familyLat != null && filters.familyLng != null
+    const useProximity = hasFamilyCoordinates(filters)
     expect(useProximity).toBe(true)
   })
 
@@ -26,8 +31,26 @@ describe('SearchFilters', () => {
       city: 'São Paulo',
       radiusKm: 20,
     }
-    const useProximity = filters.familyLat != null && filters.familyLng != null
+    const useProximity = hasFamilyCoordinates(filters)
     expect(useProximity).toBe(false)
+  })
+
+  it('permite combinar raio por proximidade com filtros de cidade e bairro', () => {
+    const filters: SearchFilters = {
+      familyLat: -23.55,
+      familyLng: -46.63,
+      radiusKm: 20,
+      city: 'Sao Jose dos Campos',
+      neighborhood: 'Centro',
+    }
+
+    expect(hasFamilyCoordinates(filters)).toBe(true)
+    expect(hasLocationTextFilters(filters)).toBe(true)
+  })
+
+  it('compara cidade e bairro sem diferenciar acentos', () => {
+    expect(textIncludesNormalized('Taubaté', 'taubate')).toBe(true)
+    expect(textIncludesNormalized('Jardim São José', 'sao jose')).toBe(true)
   })
 
   it('usa DEFAULT_RADIUS_KM quando radiusKm não informado', () => {

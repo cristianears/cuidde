@@ -3,9 +3,15 @@
  * Usado no perfil público do cuidador (referências profissionais).
  */
 
-/** Mascara telefone brasileiro: (11)99999-1234 → (11)*****1234 */
+/** Mascara telefone brasileiro: (11)99999-1234 -> *****-1234 */
 export function maskPhoneBrazilian(phone: string): string {
-  return phone.replace(/(\d{2})\d{4,5}(\d{4})/, '$1*****$2')
+  const digits = phone.replace(/\D/g, '')
+  const lastFour = digits.slice(-4)
+  return lastFour ? `*****-${lastFour}` : '*****'
+}
+
+export function formatReferencePhoneForFamily(phone: string, shouldMask: boolean): string {
+  return shouldMask ? maskPhoneBrazilian(phone) : phone
 }
 
 /** Abrevia nome: "Maria Aparecida Santos" → "Maria A. S." */

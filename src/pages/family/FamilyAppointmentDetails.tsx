@@ -323,16 +323,16 @@ const FamilyAppointmentDetails = () => {
 
       {/* Header card */}
       <div className="border bg-card rounded-xl">
-        <div className="px-4 py-4">
+        <div className="p-4 md:p-5">
           {/* Appointment Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="space-y-2">
+          <div className="flex flex-col gap-4">
+            <div className="min-w-0 flex-1 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Heart className="h-6 w-6 text-primary" />
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Heart className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground">
+                  <h1 className="text-lg md:text-xl font-semibold text-foreground">
                     {appointment.caregiver_name ?? "Cuidador"}
                   </h1>
                   <p className="text-muted-foreground text-sm">{appointment.type}</p>

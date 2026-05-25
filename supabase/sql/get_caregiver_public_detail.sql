@@ -11,7 +11,7 @@ create or replace function public.get_caregiver_public_detail(p_caregiver_id uui
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   v_caller uuid := auth.uid();
@@ -20,6 +20,8 @@ declare
   v_can_see_sensitive boolean := false;
   v_row record;
   v_full_name text;
+  v_masked_name text;
+  v_name_parts text[];
 begin
   if v_caller is null then
     return null;
@@ -52,6 +54,16 @@ begin
   end if;
 
   v_full_name := v_row.profile_full_name;
+  if v_full_name is not null and btrim(v_full_name) <> '' then
+    v_name_parts := regexp_split_to_array(btrim(v_full_name), '\s+');
+    if array_length(v_name_parts, 1) > 1 then
+      select v_name_parts[1] || ' ' || string_agg(left(part_name, 1) || '.', ' ')
+        into v_masked_name
+        from unnest(v_name_parts[2:array_length(v_name_parts, 1)]) as suffix(part_name);
+    else
+      v_masked_name := v_name_parts[1];
+    end if;
+  end if;
 
   return jsonb_build_object(
     'id', v_row.id,
@@ -94,7 +106,7 @@ begin
     'mask_reference_phones', v_row.mask_reference_phones,
     'show_reference_full_names', v_row.show_reference_full_names,
     -- SENSÍVEL: só para assinantes/admin
-    'full_name', case when v_can_see_sensitive then v_full_name else null end,
+    'full_name', case when v_can_see_sensitive then v_full_name else v_masked_name end,
     'is_subscriber', v_is_subscriber,
     'is_admin', v_is_admin
   );

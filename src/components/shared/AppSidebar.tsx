@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useUnreadCounts, useUnreadRealtime } from "@/hooks/useUnreadCounts";
 import BrandMark from "@/components/shared/BrandMark";
+import { getFirstName, getInitials } from "@/lib/display-name";
 
 import type { UserRole } from '@/types/database';
 
@@ -72,19 +73,14 @@ interface AppSidebarProps {
   userPhoto?: string;
 }
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return '';
-  if (parts.length === 1) return parts[0][0].toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const items = sidebarItems[role];
+  const compactUserName = getFirstName(userName, 'Usuário');
+  const fallbackInitial = getInitials(userName);
 
   useEffect(() => {
     setPhotoFailed(false);
@@ -158,9 +154,9 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
                   loading="lazy"
                   onError={() => setPhotoFailed(true)}
                 />
-              ) : getInitials(userName) ? (
+              ) : fallbackInitial ? (
                 <div className="w-full h-full flex items-center justify-center bg-primary/10">
-                  <span className="text-sm font-semibold text-primary">{getInitials(userName)}</span>
+                  <span className="text-sm font-semibold text-primary">{fallbackInitial}</span>
                 </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -169,7 +165,7 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{userName}</p>
+              <p className="text-sm font-semibold text-foreground truncate">{compactUserName}</p>
             </div>
           </div>
         </div>

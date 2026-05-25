@@ -77,9 +77,10 @@ describe('AppSidebar', () => {
     expect(screen.getByText('ditti')).toBeInTheDocument()
   })
 
-  it('exibe o nome do usuário', () => {
+  it('exibe apenas o primeiro nome do usuário', () => {
     renderSidebar({ userName: 'João Costa' })
-    expect(screen.getByText('João Costa')).toBeInTheDocument()
+    expect(screen.getByText('João')).toBeInTheDocument()
+    expect(screen.queryByText('João Costa')).not.toBeInTheDocument()
   })
 
   it('exibe nome padrão "Usuário" quando userName não é fornecido', () => {
@@ -122,7 +123,7 @@ describe('AppSidebar', () => {
     fireEvent.click(toggleButton)
 
     // Após colapsar, nome do usuário e wordmark devem sumir
-    expect(screen.queryByText('Maria Silva')).not.toBeInTheDocument()
+    expect(screen.queryByText('Maria')).not.toBeInTheDocument()
     expect(screen.queryByText('ditti')).not.toBeInTheDocument()
   })
 
@@ -134,7 +135,7 @@ describe('AppSidebar', () => {
     const expandButton = screen.getByLabelText('Expandir menu')
     fireEvent.click(expandButton) // expande
 
-    expect(screen.getByText('Maria Silva')).toBeInTheDocument()
+    expect(screen.getByText('Maria')).toBeInTheDocument()
     expect(screen.getByText('ditti')).toBeInTheDocument()
   })
 

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useInvoice } from "@/hooks/useInvoices";
+import { getInvoicePlanLabel } from "@/lib/invoice-plan";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   draft:         { label: "Cancelada",  className: "bg-red-100 text-red-700" },
@@ -19,12 +20,6 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 };
 
 const fallbackStatus = { label: "—", className: "bg-gray-100 text-gray-500" };
-
-const planNames: Record<string, string> = {
-  monthly: "Mensal",
-  quarterly: "Trimestral",
-  annual: "Anual",
-};
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -132,7 +127,7 @@ const FamilyInvoiceDetails = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Plano contratado</p>
-                  <p className="font-medium">{invoice.plan ? (planNames[invoice.plan] ?? invoice.plan) : "—"}</p>
+                  <p className="font-medium">{getInvoicePlanLabel(invoice.plan, invoice.amount)}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Período</p>

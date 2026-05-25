@@ -74,6 +74,14 @@ function getPaymentIntentId(paymentIntent: string | Stripe.PaymentIntent | null)
     : paymentIntent?.id ?? null
 }
 
+function getPlanFromInvoiceLine(
+  line: Stripe.InvoiceLineItem | undefined,
+): 'monthly' | 'quarterly' | 'annual' | null {
+  const recurring = line?.price?.recurring
+  if (!recurring) return null
+  return getPlan(recurring.interval, recurring.interval_count)
+}
+
 // ─── Helper com dependência do cliente Supabase ───────────────────────────────
 
 async function getFamilyId(
@@ -246,6 +254,7 @@ serve(async (req) => {
 
       // Cobranças automáticas não têm due_date — usar period_end da assinatura
       const dueDate = periodEnd ? toISODate(periodEnd) : null
+      const linePlan = getPlanFromInvoiceLine(line)
 
       // Busca plano já salvo em family_profiles (definido pelo subscription.created)
       const { data: fp } = await supabase
@@ -253,7 +262,7 @@ serve(async (req) => {
         .select('plan')
         .eq('id', familyId)
         .single()
-      const plan = fp?.plan ?? null
+      const plan = linePlan ?? fp?.plan ?? null
 
       await supabase.from('invoices').upsert(
         {
@@ -285,6 +294,10 @@ serve(async (req) => {
       const familyId = await getFamilyId(supabase, inv.customer as string)
       if (!familyId) break
 
+      const line = inv.lines.data.find(l => l.amount > 0)
+        ?? inv.lines.data[inv.lines.data.length - 1]
+      const plan = getPlanFromInvoiceLine(line)
+
       await supabase.from('invoices').upsert(
         {
           family_id: familyId,
@@ -292,6 +305,7 @@ serve(async (req) => {
           stripe_payment_intent_id: getPaymentIntentId(inv.payment_intent),
           amount: inv.amount_due / 100,
           status: 'overdue',
+          plan,
           due_date: inv.due_date
             ? new Date(inv.due_date * 1000).toISOString().split('T')[0]
             : null,

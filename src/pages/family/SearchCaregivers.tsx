@@ -22,6 +22,7 @@ import { queryKeys } from "@/lib/query-keys";
 import { geocodeAddress, geocodeByCity } from "@/lib/geocode";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from "@/lib/constants";
+import { hasFullPaidAccess } from "@/lib/subscription-access";
 import { cn } from "@/lib/utils";
 
 // Idiomas exibíveis no filtro (sem "Outro")
@@ -148,6 +149,7 @@ const SearchCaregivers = () => {
   const favoriteIds = new Set(favoriteIdsList);
   const { mutate: addFavorite } = useAddFavorite();
   const { mutate: removeFavorite } = useRemoveFavorite();
+  const canFavorite = hasFullPaidAccess(familyProfileData);
 
   const toggle = <T extends string>(
     list: T[],
@@ -188,6 +190,7 @@ const SearchCaregivers = () => {
 
   const handleFavorite = (caregiverId: string) => {
     if (!user) return;
+    if (!canFavorite) return;
     if (favoriteIds.has(caregiverId)) {
       removeFavorite(caregiverId);
     } else {
@@ -441,6 +444,8 @@ const SearchCaregivers = () => {
                     key={caregiver.id}
                     caregiver={caregiver}
                     isFavorite={favoriteIds.has(caregiver.id)}
+                    canFavorite={canFavorite}
+                    favoriteDisabledReason="Assine um plano para favoritar perfis."
                     onFavorite={handleFavorite}
                     onContact={(id) => navigate(`/family/caregiver/${id}`)}
                     hasDocsSent={caregiver.has_rg_cnh}

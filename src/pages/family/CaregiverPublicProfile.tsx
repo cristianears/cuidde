@@ -7,6 +7,7 @@ import {
   GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock,
 } from "lucide-react"
 import AppSidebar from "@/components/shared/AppSidebar"
+import StarRating from "@/components/shared/StarRating"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -26,7 +27,7 @@ import RequestAppointmentDialog from "@/components/shared/RequestAppointmentDial
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
-import { canCreatePaidAppointment } from "@/lib/subscription-access"
+import { canCreatePaidAppointment, hasFullPaidAccess } from "@/lib/subscription-access"
 
 const PROFISSAO_LABELS: Record<string, string> = {
   cuidador: "Cuidador(a)",
@@ -150,9 +151,14 @@ const CaregiverPublicProfile = () => {
 
   const favoriteIds = new Set(favoriteIdsList)
   const isFavorite = id ? favoriteIds.has(id) : false
+  const canFavorite = hasFullPaidAccess(familyProfile)
 
   const handleFavorite = () => {
     if (!id || !user) return
+    if (!canFavorite) {
+      toast.error("Assine um plano para favoritar perfis.")
+      return
+    }
     if (isFavorite) {
       removeFavorite(id)
     } else {
@@ -305,7 +311,7 @@ const CaregiverPublicProfile = () => {
                     )}
                     {caregiver.review_count > 0 ? (
                       <span className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        <StarRating rating={Number(caregiver.average_rating)} size="sm" showValue={false} />
                         <span className="font-semibold">{Number(caregiver.average_rating).toFixed(1)}</span>
                         <span className="text-muted-foreground">({caregiver.review_count} avaliações)</span>
                       </span>
@@ -347,9 +353,11 @@ const CaregiverPublicProfile = () => {
                     <Button
                       variant="outline"
                       onClick={handleFavorite}
-                      className="gap-2"
+                      aria-disabled={!canFavorite}
+                      title={!canFavorite ? "Assine um plano para favoritar perfis." : undefined}
+                      className={cn("gap-2", !canFavorite && "opacity-70")}
                     >
-                      <Heart className={cn("w-4 h-4", isFavorite && "fill-red-500 text-red-500")} />
+                      <Heart className={cn("w-4 h-4", isFavorite && canFavorite && "fill-red-500 text-red-500")} />
                       {isFavorite ? "Favoritado" : "Favoritar"}
                     </Button>
                   </div>
@@ -365,7 +373,7 @@ const CaregiverPublicProfile = () => {
                 {caregiver.bio && (
                   <div>
                     <h2 className="text-base font-semibold mb-2">Sobre</h2>
-                    <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-all">
+                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
                       {caregiver.bio}
                     </p>
                   </div>

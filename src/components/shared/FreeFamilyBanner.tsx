@@ -2,13 +2,14 @@ import { Link } from 'react-router-dom'
 import { Heart, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFamilyProfile } from '@/hooks/useFamilyProfile'
+import { hasFullPaidAccess } from '@/lib/subscription-access'
 
 export default function FreeFamilyBanner() {
   const { role } = useAuth()
   const { data: family } = useFamilyProfile()
 
   if (role !== 'family') return null
-  if (!family || family.subscription_status !== 'free') return null
+  if (!family || hasFullPaidAccess(family)) return null
 
   return (
     <div className="w-full bg-red-600 text-white">
