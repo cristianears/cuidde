@@ -397,7 +397,7 @@ const AppointmentDetails = () => {
           {/* Header Card */}
           <Card className="mb-6">
             <CardContent className="p-4 md:p-5">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+              <div className="flex flex-col gap-4">
                 <div className="min-w-0 flex-1 space-y-3">
                   <div className="flex items-center gap-3">
                     <Badge variant={statusInfo.variant} className="text-sm">
@@ -444,7 +444,7 @@ const AppointmentDetails = () => {
                 </div>
 
                 {/* Action buttons based on status */}
-                <div className="flex flex-col sm:flex-row lg:justify-end gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {appointment.status === "pendente" && (
                     <>
                       <Button size="sm" onClick={handleAccept} disabled={isUpdating} className="gap-2">

@@ -325,7 +325,7 @@ const FamilyAppointmentDetails = () => {
       <div className="border bg-card rounded-xl">
         <div className="p-4 md:p-5">
           {/* Appointment Header */}
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <div className="flex flex-col gap-4">
             <div className="min-w-0 flex-1 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -371,7 +371,7 @@ const FamilyAppointmentDetails = () => {
             </div>
 
             {isActive && (
-              <div className="flex flex-col sm:flex-row lg:justify-end gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button
                   className="gap-2 relative"
                   onClick={() => navigate(`/chat/${id}?role=family`)}
