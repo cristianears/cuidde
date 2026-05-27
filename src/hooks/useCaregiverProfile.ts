@@ -300,7 +300,7 @@ export function useUploadCaregiverPhoto() {
 
   return useMutation({
     mutationFn: async (file: File) => {
-      return uploadAvatar(file, user!.id, 'caregiver_profiles')
+      return uploadAvatar(file, user!.id, 'caregiver_profiles', { cacheBust: true })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
