@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const Footer = () => {
   const navigate = useNavigate();
   const goTo = (hash: string) => {
-    window.location.hash = hash;
+    navigate(`/${hash}`);
   };
   return (
     <footer className="bg-footer text-footer-foreground py-14">
@@ -80,6 +80,15 @@ const Footer = () => {
               <li>
                 <button
                   type="button"
+                  onClick={() => navigate("/blog")}
+                  className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
+                >
+                  Guias e blog
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
                   onClick={() => goTo("#faq")}
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
@@ -95,7 +104,7 @@ const Footer = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => navigate("/onboarding?type=caregiver")}
+                  onClick={() => navigate("/para-cuidadores")}
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Criar perfil grátis
@@ -113,7 +122,7 @@ const Footer = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => goTo("#beneficios")}
+                  onClick={() => navigate("/blog/como-montar-perfil-de-cuidador")}
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Dicas para seu perfil

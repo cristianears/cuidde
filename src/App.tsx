@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Index from './pages/Index'
+import CaregiversLanding from './pages/CaregiversLanding'
+import BlogIndex from './pages/BlogIndex'
+import BlogPost from './pages/BlogPost'
 import NotFound from './pages/NotFound'
 import Login from './pages/auth/Login'
 import VerifyEmail from './pages/auth/VerifyEmail'
@@ -62,6 +65,9 @@ const App = () => (
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
+            <Route path="/para-cuidadores" element={<CaregiversLanding />} />
+            <Route path="/blog" element={<BlogIndex />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/login" element={<Login />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/auth/callback" element={<AuthCallback />} />

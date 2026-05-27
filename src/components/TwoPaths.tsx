@@ -105,7 +105,7 @@ const TwoPaths = () => {
                 </p>
                 <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
                   <Button
-                    onClick={() => navigate("/onboarding?type=caregiver")}
+                    onClick={() => navigate("/para-cuidadores")}
                     variant="outline"
                     className="border-2 border-accent text-accent hover:bg-accent hover:text-accent-foreground rounded-xl py-2.5 px-5 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5"
                   >

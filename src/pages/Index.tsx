@@ -8,6 +8,7 @@ import HowItWorks from "@/components/HowItWorks";
 import CareRoutinePreview from "@/components/CareRoutinePreview";
 import Pricing from "@/components/Pricing";
 import WhyItMatters from "@/components/WhyItMatters";
+import LatestBlogPosts from "@/components/LatestBlogPosts";
 import CaregiverCTA from "@/components/CaregiverCTA";
 
 import FinalCTA from "@/components/FinalCTA";
@@ -27,6 +28,7 @@ const Index = () => {
       <CareRoutinePreview />
       <Pricing />
       <WhyItMatters />
+      <LatestBlogPosts />
       <CaregiverCTA />
       
       <FinalCTA />
