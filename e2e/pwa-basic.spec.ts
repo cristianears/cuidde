@@ -12,6 +12,11 @@ test.describe('PWA basic metadata', () => {
     const manifest = await manifestResponse.json()
     expect(manifest.display).toBe('standalone')
     expect(manifest.icons.length).toBeGreaterThanOrEqual(3)
+    expect(manifest.shortcuts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Criar perfil de cuidador', url: '/para-cuidadores' }),
+      ]),
+    )
 
     const offlineResponse = await page.request.get('/offline.html')
     expect(offlineResponse.ok()).toBe(true)
@@ -26,6 +31,18 @@ test.describe('PWA basic metadata', () => {
     expect(source).toContain('supabase.co')
     expect(source).toContain('Authorization')
     expect(source).toContain('/offline.html')
+    expect(source).toContain('/para-cuidadores')
+  })
+
+  test('serves the public caregivers landing route directly', async ({ page }) => {
+    await page.goto('/para-cuidadores')
+
+    await expect(
+      page.getByRole('heading', {
+        name: 'Crie seu perfil gratuito e seja encontrado por famílias da sua região',
+      }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Criar perfil grátis' }).first()).toBeVisible()
   })
 
   test('registers the service worker and caches only app shell assets', async ({ page }) => {

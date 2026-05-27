@@ -9,6 +9,7 @@ describe('PWA service worker', () => {
 
     const source = readServiceWorker()
 
+    expect(source).toContain("'/para-cuidadores'")
     expect(source).toContain("'/offline.html'")
     expect(source).toContain("'/manifest.webmanifest'")
     expect(source).toContain("'/logo.png'")

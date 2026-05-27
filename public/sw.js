@@ -1,8 +1,10 @@
-const CACHE_VERSION = 'cuidde-pwa-v2'
+const CACHE_VERSION = 'cuidde-pwa-v3'
 const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`
 
 const APP_SHELL_ASSETS = [
   '/',
+  '/para-cuidadores',
+  '/blog',
   '/offline.html',
   '/manifest.webmanifest',
   '/logo.png',
