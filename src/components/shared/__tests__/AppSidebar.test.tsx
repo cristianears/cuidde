@@ -72,9 +72,9 @@ describe('AppSidebar', () => {
     mockUnreadCounts.data = undefined
   })
 
-  it('renderiza o logo ditti', () => {
+  it('renderiza o logo icuide', () => {
     renderSidebar()
-    expect(screen.getByText('ditti')).toBeInTheDocument()
+    expect(screen.getByText('icuide')).toBeInTheDocument()
   })
 
   it('exibe apenas o primeiro nome do usuário', () => {
@@ -124,7 +124,7 @@ describe('AppSidebar', () => {
 
     // Após colapsar, nome do usuário e wordmark devem sumir
     expect(screen.queryByText('Maria')).not.toBeInTheDocument()
-    expect(screen.queryByText('ditti')).not.toBeInTheDocument()
+    expect(screen.queryByText('icuide')).not.toBeInTheDocument()
   })
 
   it('expande sidebar ao clicar no botão de toggle quando colapsada', () => {
@@ -136,7 +136,7 @@ describe('AppSidebar', () => {
     fireEvent.click(expandButton) // expande
 
     expect(screen.getByText('Maria')).toBeInTheDocument()
-    expect(screen.getByText('ditti')).toBeInTheDocument()
+    expect(screen.getByText('icuide')).toBeInTheDocument()
   })
 
   it('chama signOut e navega para /login ao clicar em Sair', async () => {

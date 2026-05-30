@@ -37,7 +37,7 @@ const CaregiverCTA = () => {
           <p className="text-xs text-primary-foreground/60 mb-8 max-w-sm mx-auto">
             Você define sua região, jornada e formato. A negociação é direta — sem comissão sobre seus ganhos.
           </p>
-          <Link to="/onboarding?role=caregiver">
+          <Link to="/para-cuidadores">
             <Button
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-8 py-3 text-sm rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-0.5"

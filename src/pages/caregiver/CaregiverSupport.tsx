@@ -10,17 +10,17 @@ const faqItems = [
   {
     question: "Como funciona a visibilidade do meu perfil para as famílias?",
     answer:
-      "Seu perfil pode aparecer nas buscas de famílias na ditti. Você controla quais informações ficam visíveis nas configurações de Visibilidade, inclusive por atendimento (quando aplicável).",
+      "Seu perfil pode aparecer nas buscas de famílias na icuide. Você controla quais informações ficam visíveis nas configurações de Visibilidade, inclusive por atendimento (quando aplicável).",
   },
   {
-    question: "A ditti é responsável pela contratação?",
+    question: "A icuide é responsável pela contratação?",
     answer:
-      "Não. A ditti é uma plataforma de conexão entre profissionais e famílias. A contratação, termos e vínculo são definidos diretamente entre as partes. A plataforma não intermedia relações trabalhistas.",
+      "Não. A icuide é uma plataforma de conexão entre profissionais e famílias. A contratação, termos e vínculo são definidos diretamente entre as partes. A plataforma não intermedia relações trabalhistas.",
   },
   {
     question: "Quem define valores e pagamentos do serviço?",
     answer:
-      "Você define seus valores na página de Valores. A negociação e a forma de pagamento são acordadas diretamente com a família. A ditti não processa pagamentos de serviços entre profissionais e famílias.",
+      "Você define seus valores na página de Valores. A negociação e a forma de pagamento são acordadas diretamente com a família. A icuide não processa pagamentos de serviços entre profissionais e famílias.",
   },
   {
     question: "Como atualizo meus documentos?",
@@ -53,7 +53,7 @@ const CaregiverSupport = () => {
       <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto">
         <PageHeader
           title="Suporte"
-          description="Canal exclusivo para suporte sobre o uso da plataforma ditti."
+          description="Canal exclusivo para suporte sobre o uso da plataforma icuide."
         />
 
         <div className="space-y-4 md:space-y-6 max-w-4xl">
@@ -63,7 +63,7 @@ const CaregiverSupport = () => {
               <Shield className="h-4 w-4" />
             </div>
             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-              A ditti facilita a conexão. Contratação, pagamento e vínculo profissional são definidos diretamente entre
+              A icuide facilita a conexão. Contratação, pagamento e vínculo profissional são definidos diretamente entre
               você e a família — sem intermediação da plataforma.
             </p>
           </div>
@@ -115,10 +115,10 @@ const CaregiverSupport = () => {
                 <span>
                   Entre em contato pelo e-mail{" "}
                   <a
-                    href="mailto:suporte@ditti.app.br"
+                    href="mailto:suporte@icuide.com.br"
                     className="font-medium text-foreground hover:underline"
                   >
-                    suporte@ditti.app.br
+                    suporte@icuide.com.br
                   </a>
                 </span>
               </div>

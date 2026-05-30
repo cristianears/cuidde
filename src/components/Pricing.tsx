@@ -144,7 +144,7 @@ const Pricing = () => {
           ))}
         </div>
         <p className="text-center text-xs text-muted-foreground/60 mt-6">
-          A ditti é uma plataforma de conexão. A contratação e o pagamento do profissional são realizados diretamente
+          A icuide é uma plataforma de conexão. A contratação e o pagamento do profissional são realizados diretamente
           entre família e profissional.
         </p>
       </div>

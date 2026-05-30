@@ -1,7 +1,7 @@
 {
-  "name": "ditti - Cuidadores de idosos",
-  "short_name": "ditti",
-  "description": "ditti conecta familias a cuidadores de idosos de confianca.",
+  "name": "icuide - Cuidadores de idosos",
+  "short_name": "icuide",
+  "description": "icuide conecta familias a cuidadores de idosos de confianca.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -10,6 +10,34 @@
   "theme_color": "#0f766e",
   "lang": "pt-BR",
   "categories": ["health", "lifestyle", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Criar perfil de cuidador",
+      "short_name": "Sou cuidador",
+      "description": "Crie um perfil profissional gratuito na icuide.",
+      "url": "/para-cuidadores",
+      "icons": [
+        {
+          "src": "/pwa-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Buscar cuidadores",
+      "short_name": "Buscar",
+      "description": "Encontre profissionais de cuidado na sua regiao.",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/pwa-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "/pwa-icon-192.png",

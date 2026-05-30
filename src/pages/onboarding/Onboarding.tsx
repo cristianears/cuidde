@@ -472,7 +472,7 @@ const Onboarding = () => {
             {currentStepId === 2 && (
               <div className="space-y-5 animate-fade-in">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a ditti?</h2>
+                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Como você quer usar a icuide?</h2>
                   <p className="text-muted-foreground mt-2">Escolha o perfil que melhor representa você</p>
                 </div>
                 <div className="grid gap-4">

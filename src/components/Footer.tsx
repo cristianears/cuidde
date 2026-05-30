@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 const Footer = () => {
   const navigate = useNavigate();
   const goTo = (hash: string) => {
-    window.location.hash = hash;
+    navigate(`/${hash}`);
   };
   return (
     <footer className="bg-footer text-footer-foreground py-14">
@@ -80,6 +80,15 @@ const Footer = () => {
               <li>
                 <button
                   type="button"
+                  onClick={() => navigate("/blog")}
+                  className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
+                >
+                  Guias e blog
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
                   onClick={() => goTo("#faq")}
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
@@ -95,7 +104,7 @@ const Footer = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => navigate("/onboarding?type=caregiver")}
+                  onClick={() => navigate("/para-cuidadores")}
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Criar perfil grátis
@@ -113,7 +122,7 @@ const Footer = () => {
               <li>
                 <button
                   type="button"
-                  onClick={() => goTo("#beneficios")}
+                  onClick={() => navigate("/blog/como-montar-perfil-de-cuidador")}
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Dicas para seu perfil
@@ -136,7 +145,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center gap-2.5 text-xs text-footer-foreground/70">
                 <Mail className="w-4 h-4 flex-shrink-0" />
-                contato@ditti.app.br
+                contato@icuide.com.br
               </li>
               <li className="flex items-center gap-2.5 text-xs text-footer-foreground/70">
                 <Phone className="w-4 h-4 flex-shrink-0" />
@@ -151,7 +160,7 @@ const Footer = () => {
         </div>
         {/* Bottom */}
         <div className="pt-6 border-t border-footer-foreground/10 flex flex-col md:flex-row justify-between items-center gap-3">
-          <p className="text-xs text-footer-foreground/60 text-center md:text-left">© 2026 ditti. Todos os direitos reservados.</p>
+          <p className="text-xs text-footer-foreground/60 text-center md:text-left">© 2026 icuide. Todos os direitos reservados.</p>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             <button
               type="button"

@@ -155,7 +155,7 @@ export default function Login() {
           {view === 'email' && (
             <div className="space-y-6 animate-fade-in">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na ditti</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na icuide</h1>
                 <p className="text-muted-foreground mt-2 text-sm">Acesse sua conta</p>
               </div>
 
@@ -233,7 +233,7 @@ export default function Login() {
           {view === 'password' && (
             <div className="space-y-6 animate-fade-in">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na ditti</h1>
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">Entrar na icuide</h1>
                 <p className="mt-2 text-sm text-muted-foreground truncate max-w-xs mx-auto">{email}</p>
               </div>
 

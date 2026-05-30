@@ -348,7 +348,7 @@ const CareReportPDF = ({
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text>ditti — Relatorio de Cuidados</Text>
+          <Text>icuide — Relatorio de Cuidados</Text>
           <Text>Gerado em {generatedAt}</Text>
         </View>
       </Page>

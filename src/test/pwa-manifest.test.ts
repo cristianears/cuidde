@@ -9,8 +9,8 @@ describe('PWA manifest', () => {
 
     const manifest = readManifest()
 
-    expect(manifest.name).toBe('ditti - Cuidadores de idosos')
-    expect(manifest.short_name).toBe('ditti')
+    expect(manifest.name).toBe('icuide - Cuidadores de idosos')
+    expect(manifest.short_name).toBe('icuide')
     expect(manifest.start_url).toBe('/')
     expect(manifest.scope).toBe('/')
     expect(manifest.display).toBe('standalone')
@@ -39,6 +39,35 @@ describe('PWA manifest', () => {
 
     for (const icon of manifest.icons) {
       expect(existsSync(`public/${icon.src.replace(/^\//, '')}`)).toBe(true)
+    }
+  })
+
+  it('offers shortcuts for families and caregivers', () => {
+    expect(existsSync('public/manifest.webmanifest')).toBe(true)
+
+    const manifest = readManifest()
+
+    expect(manifest.shortcuts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'Criar perfil de cuidador',
+          short_name: 'Sou cuidador',
+          url: '/para-cuidadores',
+        }),
+        expect.objectContaining({
+          name: 'Buscar cuidadores',
+          short_name: 'Buscar',
+          url: '/',
+        }),
+      ]),
+    )
+
+    for (const shortcut of manifest.shortcuts) {
+      expect(shortcut.icons).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ src: '/pwa-icon-192.png', sizes: '192x192', type: 'image/png' }),
+        ]),
+      )
     }
   })
 })

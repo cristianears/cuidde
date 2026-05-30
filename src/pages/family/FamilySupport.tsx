@@ -11,15 +11,15 @@ import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 const faqItems = [
   {
     question: "O cadastro do profissional é realmente gratuito?",
-    answer: "Sim. Profissionais de cuidado podem criar seu perfil gratuitamente, adicionar certificações, cursos e informações relevantes. A ditti não cobra comissão sobre os atendimentos realizados."
+    answer: "Sim. Profissionais de cuidado podem criar seu perfil gratuitamente, adicionar certificações, cursos e informações relevantes. A icuide não cobra comissão sobre os atendimentos realizados."
   },
   {
     question: "Quem faz a contratação do profissional?",
-    answer: "A contratação é sempre feita diretamente pela família. A ditti é uma plataforma de conexão — facilitamos a busca e o contato, mas a negociação de valores, forma de trabalho e vínculo são definidos exclusivamente entre família e profissional, sem intermediação nossa."
+    answer: "A contratação é sempre feita diretamente pela família. A icuide é uma plataforma de conexão — facilitamos a busca e o contato, mas a negociação de valores, forma de trabalho e vínculo são definidos exclusivamente entre família e profissional, sem intermediação nossa."
   },
   {
     question: "Como funcionam os documentos e informações do perfil?",
-    answer: "Cada profissional preenche seu próprio perfil e pode anexar documentos e declarações (como certificações e certidões, quando desejar). A ditti organiza essas informações para facilitar a avaliação da família. A responsabilidade pela veracidade e atualização do que é enviado é do profissional, e a decisão final é sempre da família."
+    answer: "Cada profissional preenche seu próprio perfil e pode anexar documentos e declarações (como certificações e certidões, quando desejar). A icuide organiza essas informações para facilitar a avaliação da família. A responsabilidade pela veracidade e atualização do que é enviado é do profissional, e a decisão final é sempre da família."
   },
   {
     question: "O que consigo ver no plano gratuito?",
@@ -30,12 +30,12 @@ const faqItems = [
     answer: "Sim. Não há fidelidade. Você pode cancelar quando quiser, sem multa. O acesso continua ativo até o fim do período já pago (mensal, trimestral ou anual)."
   },
   {
-    question: "A ditti é responsável pelo vínculo empregatício?",
-    answer: "Não. A ditti é uma plataforma de conexão entre famílias e profissionais de cuidado. A contratação, o vínculo e o pagamento pelo serviço são definidos e realizados diretamente entre as partes. A ditti não é empregadora e não intermedia contratos."
+    question: "A icuide é responsável pelo vínculo empregatício?",
+    answer: "Não. A icuide é uma plataforma de conexão entre famílias e profissionais de cuidado. A contratação, o vínculo e o pagamento pelo serviço são definidos e realizados diretamente entre as partes. A icuide não é empregadora e não intermedia contratos."
   },
   {
     question: "Como funcionam os pagamentos?",
-    answer: "A família paga à ditti apenas a assinatura do plano escolhido para uso da plataforma. O pagamento pelo serviço prestado pelo profissional é feito diretamente a ele, nos valores e condições acordados entre as partes. A ditti não intermedia nem processa pagamentos de serviços de cuidado."
+    answer: "A família paga à icuide apenas a assinatura do plano escolhido para uso da plataforma. O pagamento pelo serviço prestado pelo profissional é feito diretamente a ele, nos valores e condições acordados entre as partes. A icuide não intermedia nem processa pagamentos de serviços de cuidado."
   }
 ];
 
@@ -51,7 +51,7 @@ const FamilySupport = () => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           <PageHeader
             title="Suporte"
-            description="Tire suas dúvidas e entre em contato com a equipe ditti."
+            description="Tire suas dúvidas e entre em contato com a equipe icuide."
           />
 
           <div className="space-y-6 max-w-4xl">
@@ -106,10 +106,10 @@ const FamilySupport = () => {
                   <span>
                     Entre em contato pelo e-mail{" "}
                     <a
-                      href="mailto:suporte@ditti.app.br"
+                      href="mailto:suporte@icuide.com.br"
                       className="font-medium text-foreground hover:underline"
                     >
-                      suporte@ditti.app.br
+                      suporte@icuide.com.br
                     </a>
                   </span>
                 </div>

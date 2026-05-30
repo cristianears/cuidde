@@ -81,7 +81,7 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-3">
               <Button
                 variant="outline"
-                onClick={() => navigate("/onboarding?type=caregiver")}
+                onClick={() => navigate("/para-cuidadores")}
                 className="group w-full sm:w-auto bg-white/20 hover:bg-white/30 text-white border-white/50 font-semibold px-5 py-3 text-sm rounded-xl backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg shadow-md"
               >
                 Sou Profissional — Criar Perfil Grátis
