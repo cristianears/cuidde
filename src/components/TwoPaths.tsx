@@ -26,7 +26,7 @@ const TwoPaths = () => {
       <div className="container mx-auto px-6 md:px-10 relative">
         <div className="text-center mb-10 md:mb-12">
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-3 tracking-tight">
-            Para quem é a ditti?
+            Para quem é a icuide?
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
             Famílias que buscam tranquilidade. Profissionais que buscam reconhecimento.

@@ -8,7 +8,7 @@ import { useSeo } from '@/hooks/useSeo'
 
 const BlogIndex = () => {
   useSeo({
-    title: 'Guias para famílias e cuidadores | ditti',
+    title: 'Guias para famílias e cuidadores | icuide',
     description:
       'Conteúdos práticos para escolher cuidadores de idosos, comparar perfis e criar uma rotina de cuidado com mais clareza.',
   })
@@ -22,7 +22,7 @@ const BlogIndex = () => {
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary mb-4">
                 <BookOpen className="w-4 h-4" />
-                Blog da ditti
+                Blog da icuide
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight mb-4">
                 Guias para decidir sobre cuidado com mais calma

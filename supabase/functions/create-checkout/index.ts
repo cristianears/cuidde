@@ -7,8 +7,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
 })
 
 const ALLOWED_ORIGINS = [
-  'https://ditti.app.br',
-  'https://www.ditti.app.br',
+  'https://icuide.com.br',
+  'https://www.icuide.com.br',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:4173',
@@ -337,7 +337,7 @@ serve(async (req) => {
   }
 
   const rawOrigin = req.headers.get('origin') ?? ''
-  const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : 'https://ditti.app.br'
+  const origin = ALLOWED_ORIGINS.includes(rawOrigin) ? rawOrigin : 'https://icuide.com.br'
 
   const session = await stripe.checkout.sessions.create({
     customer: customerId,

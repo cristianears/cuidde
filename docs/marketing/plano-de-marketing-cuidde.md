@@ -1,4 +1,4 @@
-# Plano de Marketing - Cuidde/ditti
+# Plano de Marketing - Cuidde/icuide
 
 Data: 2026-05-26  
 Produto: marketplace que conecta familias a profissionais de cuidado para idosos.  
@@ -6,7 +6,7 @@ Modelo atual: familia paga assinatura para acessar perfis completos, documentos,
 
 ## 1. Diagnostico rapido
 
-A Cuidde/ditti tem um desafio de marketplace de dois lados:
+A Cuidde/icuide tem um desafio de marketplace de dois lados:
 
 - Precisa de oferta qualificada: cuidadores, tecnicos de enfermagem, auxiliares, enfermeiros, fisioterapeutas, terapeutas ocupacionais e outros profissionais.
 - Precisa de demanda pagante: familias que estao buscando um profissional confiavel, geralmente com urgencia, inseguranca e medo de escolher errado.
@@ -37,7 +37,7 @@ Crie um perfil profissional gratuito, mostre suas experiencias e seja encontrado
 
 ### Frase curta
 
-Cuidde/ditti organiza a busca por cuidadores para idosos, reunindo perfis, documentos, referencias, avaliacoes e contato direto em um so lugar.
+Cuidde/icuide organiza a busca por cuidadores para idosos, reunindo perfis, documentos, referencias, avaliacoes e contato direto em um so lugar.
 
 ### O que evitar prometer
 
@@ -290,7 +290,7 @@ Objetivo: preparar mensagem, instrumentacao e oferta minima local.
 Acao:
 
 - Definir praca piloto.
-- Ajustar consistencia de marca: o projeto usa Cuidde no PRD, mas a interface publica mostra ditti. Decidir nome comercial antes de divulgar.
+- Ajustar consistencia de marca: o projeto usa Cuidde no PRD, mas a interface publica mostra icuide. Decidir nome comercial antes de divulgar.
 - Criar pagina de profissional com CTA "Criar perfil gratis".
 - Criar pagina local da familia com busca por CEP.
 - Criar checklist de cadastro do cuidador.
@@ -427,7 +427,7 @@ CTA: Criar perfil gratis
 
 ### Post educativo para familia
 
-Antes de contratar um cuidador para idosos, compare mais do que o preco. Veja experiencia, disponibilidade, referencias, documentos enviados, tipo de cuidado atendido e avaliacoes de outras familias. A Cuidde/ditti ajuda voce a organizar essa decisao pelo CEP.
+Antes de contratar um cuidador para idosos, compare mais do que o preco. Veja experiencia, disponibilidade, referencias, documentos enviados, tipo de cuidado atendido e avaliacoes de outras familias. A Cuidde/icuide ajuda voce a organizar essa decisao pelo CEP.
 
 ### Post para cuidador
 
@@ -435,7 +435,7 @@ Familias escolhem com mais confianca quando encontram um perfil completo. Foto, 
 
 ## 12. Pontos de produto que podem melhorar marketing
 
-- Resolver a inconsistencia de marca entre Cuidde e ditti antes de campanhas.
+- Resolver a inconsistencia de marca entre Cuidde e icuide antes de campanhas.
 - Se houver poucas opcoes no CEP, criar lista de espera por regiao e captar demanda sem frustrar.
 - Exibir contagem real de profissionais por cidade apenas quando houver volume.
 - Criar pagina publica especifica para cuidadores, separada da landing de familias.

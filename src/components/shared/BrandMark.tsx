@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 interface BrandMarkProps {
   /** Tamanho do logo em px (default 40). O wordmark escala proporcionalmente. */
   size?: number
-  /** Exibir a palavra "ditti" ao lado do logo. */
+  /** Exibir a palavra "icuide" ao lado do logo. */
   showWordmark?: boolean
   /** Classe do container. */
   className?: string
@@ -23,7 +23,7 @@ export default function BrandMark({
     <div className={cn("flex items-center gap-2.5", className)}>
       <img
         src="/logo.png"
-        alt="ditti"
+        alt="icuide"
         className="shrink-0 object-contain"
         style={{ width: size, height: size }}
       />
@@ -35,7 +35,7 @@ export default function BrandMark({
           )}
           style={{ fontSize, letterSpacing: "0" }}
         >
-          ditti
+          icuide
         </span>
       )}
     </div>

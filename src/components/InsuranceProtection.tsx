@@ -24,7 +24,7 @@ const stats = [
     icon: Heart,
     number: "1ª decisão",
     label: "que a maioria das famílias toma no desespero",
-    detail: "Quando a necessidade surge, não há tempo para pesquisar. Quem já tem a ditti, já está pronto.",
+    detail: "Quando a necessidade surge, não há tempo para pesquisar. Quem já tem a icuide, já está pronto.",
   },
 ];
 
@@ -43,7 +43,7 @@ const WhyItMatters = () => {
             A maioria das famílias só percebe o problema quando ele já chegou
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Encontrar um cuidador confiável no Brasil ainda é uma loteria. A ditti existe para mudar isso.
+            Encontrar um cuidador confiável no Brasil ainda é uma loteria. A icuide existe para mudar isso.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ const WhyItMatters = () => {
             Não espere a urgência chegar para se preparar
           </h3>
           <p className="text-muted-foreground mb-8 leading-relaxed">
-            Criar uma conta na ditti é gratuito. Quando você precisar, as informações que importam já estarão na sua
+            Criar uma conta na icuide é gratuito. Quando você precisar, as informações que importam já estarão na sua
             mão.
           </p>
           <Button className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-10 py-6 text-base rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5">

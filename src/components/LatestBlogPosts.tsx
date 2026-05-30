@@ -12,7 +12,7 @@ const LatestBlogPosts = () => {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-primary mb-3">
               <BookOpen className="w-4 h-4" />
-              Guias da ditti
+              Guias da icuide
             </div>
             <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-3 tracking-tight">
               Conteúdos para contratar cuidado com mais confiança

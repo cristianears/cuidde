@@ -73,7 +73,7 @@ export async function geocodeByCity(city: string, state: string): Promise<Geocod
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}&country=Brazil&limit=1`
     const response = await fetch(url, {
-      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'ditti/1.0' },
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'icuide/1.0' },
     })
     if (!response.ok) return null
     const data = await response.json()
@@ -152,7 +152,7 @@ async function geocodeNominatimStructured(params: {
 
     const url = `https://nominatim.openstreetmap.org/search?${parts.join('&')}`
     const response = await fetch(url, {
-      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'ditti/1.0' },
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'icuide/1.0' },
     })
     if (!response.ok) return null
     const data = await response.json()
@@ -174,7 +174,7 @@ async function geocodeWithNominatim(query: string): Promise<GeocodeResult | null
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=1`
     const response = await fetch(url, {
-      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'ditti/1.0' },
+      headers: { 'Accept-Language': 'pt-BR', 'User-Agent': 'icuide/1.0' },
     })
     if (!response.ok) return null
     const data = await response.json()

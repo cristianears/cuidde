@@ -11,8 +11,8 @@ const BlogPost = () => {
   const post = slug ? getBlogPost(slug) : undefined
 
   useSeo({
-    title: post ? `${post.title} | ditti` : 'Guia não encontrado | ditti',
-    description: post?.description ?? 'Conteúdos práticos da ditti sobre cuidado para idosos.',
+    title: post ? `${post.title} | icuide` : 'Guia não encontrado | icuide',
+    description: post?.description ?? 'Conteúdos práticos da icuide sobre cuidado para idosos.',
   })
 
   if (!post) return <Navigate to="/blog" replace />

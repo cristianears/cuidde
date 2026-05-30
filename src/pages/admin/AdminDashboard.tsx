@@ -13,7 +13,7 @@ const AdminDashboard = () => {
       <AppSidebar role="admin" userName="Administrador" />
 
       <main className="flex-1 p-6 lg:p-8">
-        <PageHeader title="Painel Administrativo" description="Visão geral da plataforma ditti" />
+        <PageHeader title="Painel Administrativo" description="Visão geral da plataforma icuide" />
 
         {/* ─── Métricas principais ─────────────────────────────────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

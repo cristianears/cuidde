@@ -9,8 +9,8 @@ describe('PWA manifest', () => {
 
     const manifest = readManifest()
 
-    expect(manifest.name).toBe('ditti - Cuidadores de idosos')
-    expect(manifest.short_name).toBe('ditti')
+    expect(manifest.name).toBe('icuide - Cuidadores de idosos')
+    expect(manifest.short_name).toBe('icuide')
     expect(manifest.start_url).toBe('/')
     expect(manifest.scope).toBe('/')
     expect(manifest.display).toBe('standalone')

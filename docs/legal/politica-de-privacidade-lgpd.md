@@ -1,4 +1,4 @@
-# Política de Privacidade e Proteção de Dados da Ditti
+# Política de Privacidade e Proteção de Dados da icuide
 
 Versão: 1.0  
 Data da última atualização: 25/05/2026
@@ -7,7 +7,7 @@ Data da última atualização: 25/05/2026
 
 ## 1. Quem somos
 
-A Ditti é uma plataforma digital operada por **[RAZÃO SOCIAL]**, CNPJ nº **[CNPJ]**, com sede em **[ENDEREÇO]**, criada para aproximar Famílias e Cuidadores independentes.
+A icuide é uma plataforma digital operada por **[RAZÃO SOCIAL]**, CNPJ nº **[CNPJ]**, com sede em **[ENDEREÇO]**, criada para aproximar Famílias e Cuidadores independentes.
 
 Esta Política explica como coletamos, usamos, armazenamos, compartilhamos e protegemos dados pessoais no contexto da plataforma, em conformidade com a Lei Geral de Proteção de Dados Pessoais, Lei nº 13.709/2018 ("LGPD").
 
@@ -29,11 +29,11 @@ Para esta Política:
 
 ## 3. Nosso papel no tratamento de dados
 
-A Ditti atua como controladora dos dados tratados para cadastro, autenticação, funcionamento da plataforma, assinatura, segurança, prevenção a fraudes, suporte, comunicação, melhoria do serviço e cumprimento de obrigações legais.
+A icuide atua como controladora dos dados tratados para cadastro, autenticação, funcionamento da plataforma, assinatura, segurança, prevenção a fraudes, suporte, comunicação, melhoria do serviço e cumprimento de obrigações legais.
 
 Quando usuários trocam informações diretamente entre si, como mensagens, documentos, referências, dados de idosos, dados de saúde, rotinas ou condições de atendimento, cada usuário também é responsável por usar essas informações de forma lícita, segura, proporcional e compatível com a finalidade da conexão.
 
-A Ditti não é prestadora de serviços de saúde, não é empregadora de Cuidadores e não audita integralmente a veracidade de documentos enviados por usuários.
+A icuide não é prestadora de serviços de saúde, não é empregadora de Cuidadores e não audita integralmente a veracidade de documentos enviados por usuários.
 
 ## 4. Dados que podemos coletar
 
@@ -70,7 +70,7 @@ Podemos coletar os seguintes dados, conforme o perfil e uso da plataforma.
 
 ### 4.4 Dados de pagamento
 
-Pagamentos e assinaturas podem ser processados por terceiros, como Stripe. A Ditti poderá receber identificadores de cliente, status da assinatura, plano, faturas e eventos de pagamento necessários para liberar ou restringir funcionalidades.
+Pagamentos e assinaturas podem ser processados por terceiros, como Stripe. A icuide poderá receber identificadores de cliente, status da assinatura, plano, faturas e eventos de pagamento necessários para liberar ou restringir funcionalidades.
 
 Dados completos de cartão, quando houver, são tratados pelo intermediador de pagamento, conforme suas próprias políticas.
 
@@ -90,7 +90,7 @@ Ao fornecer dados de terceiros, o usuário declara que possui autorização, res
 
 Dados de saúde, mobilidade, rotina de cuidado, medicamentos, condições clínicas, laudos, atestados, documentos de identidade, registros profissionais, dados biométricos em imagens e informações semelhantes podem ser dados sensíveis ou exigir cuidado reforçado.
 
-A Ditti recomenda que usuários compartilhem apenas as informações necessárias para a finalidade de conexão, avaliação e prestação do atendimento, evitando exposição excessiva de dados pessoais ou sensíveis.
+A icuide recomenda que usuários compartilhem apenas as informações necessárias para a finalidade de conexão, avaliação e prestação do atendimento, evitando exposição excessiva de dados pessoais ou sensíveis.
 
 ## 6. Finalidades e bases legais
 
@@ -123,19 +123,19 @@ Podemos compartilhar dados pessoais apenas quando necessário e proporcional, in
 - com autoridades públicas, judiciais, policiais, regulatórias ou administrativas, quando houver obrigação legal, ordem válida ou necessidade de exercício regular de direitos;
 - em operações societárias, fusão, aquisição, investimento, reorganização ou venda de ativos, observadas salvaguardas adequadas.
 
-A Ditti não vende dados pessoais.
+A icuide não vende dados pessoais.
 
 ## 8. Documentos de Cuidadores e responsabilidade sobre autenticidade
 
 Documentos enviados por Cuidadores podem conter dados pessoais, dados sensíveis, números de registro, certificados, imagens, assinaturas, datas e outras informações relevantes.
 
-A Ditti armazena e exibe esses documentos apenas conforme funcionalidades, regras de acesso, assinatura e preferências de visibilidade. A Ditti não garante autenticidade, validade, completude, regularidade, ausência de fraude, vigência, aceitação por órgãos oficiais ou suficiência jurídica desses documentos.
+A icuide armazena e exibe esses documentos apenas conforme funcionalidades, regras de acesso, assinatura e preferências de visibilidade. A icuide não garante autenticidade, validade, completude, regularidade, ausência de fraude, vigência, aceitação por órgãos oficiais ou suficiência jurídica desses documentos.
 
 Famílias devem realizar verificação própria antes de contratar qualquer Cuidador, inclusive solicitando documentos originais, referências, certidões, registros e confirmações externas quando necessário.
 
 ## 9. Transferência internacional
 
-Alguns provedores utilizados pela Ditti podem estar localizados fora do Brasil ou armazenar/processar dados em outros países.
+Alguns provedores utilizados pela icuide podem estar localizados fora do Brasil ou armazenar/processar dados em outros países.
 
 Quando houver transferência internacional, adotaremos medidas compatíveis com a LGPD, como uso de provedores com padrões adequados de segurança, contratos, políticas de proteção de dados e salvaguardas razoáveis.
 
@@ -197,7 +197,7 @@ O usuário pode gerenciar cookies no navegador, mas a desativação de certas te
 
 ## 14. Crianças, adolescentes e pessoas incapazes
 
-A Ditti não é destinada a cadastro livre por crianças ou adolescentes.
+A icuide não é destinada a cadastro livre por crianças ou adolescentes.
 
 Quando a Família inserir dados de idoso, paciente, pessoa incapaz ou terceiro sob sua responsabilidade, declara possuir autorização, responsabilidade legal ou base legal adequada para fornecer tais dados.
 
@@ -205,7 +205,7 @@ Dados de crianças, adolescentes ou incapazes, quando eventualmente tratados, de
 
 ## 15. Decisões automatizadas
 
-A Ditti pode usar critérios técnicos para ordenação, busca, filtros, cálculo de distância, completude de perfil, segurança, prevenção a fraude e exibição de perfis.
+A icuide pode usar critérios técnicos para ordenação, busca, filtros, cálculo de distância, completude de perfil, segurança, prevenção a fraude e exibição de perfis.
 
 Esses critérios não substituem a avaliação humana da Família e não garantem qualidade, idoneidade ou adequação de Cuidadores.
 

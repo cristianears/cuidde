@@ -226,7 +226,7 @@ const Finance = () => {
     printWindow.document.write(`
       <!DOCTYPE html>
       <html><head>
-        <title>Relatório Financeiro — ditti</title>
+        <title>Relatório Financeiro — icuide</title>
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #111; }
           h1 { font-size: 20px; margin-bottom: 4px; }
@@ -249,7 +249,7 @@ const Finance = () => {
           @media print { body { padding: 0; } }
         </style>
       </head><body>
-        <h1>Relatório Financeiro — ditti</h1>
+        <h1>Relatório Financeiro — icuide</h1>
         <p class="sub">Gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</p>
 
         <div class="metrics">

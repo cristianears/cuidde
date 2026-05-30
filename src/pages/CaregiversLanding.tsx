@@ -65,7 +65,7 @@ const faqs = [
   {
     question: "O cadastro de profissionais é gratuito?",
     answer:
-      "Sim. O cuidador cria o perfil gratuitamente e a ditti não cobra comissão sobre os atendimentos combinados diretamente com as famílias.",
+      "Sim. O cuidador cria o perfil gratuitamente e a icuide não cobra comissão sobre os atendimentos combinados diretamente com as famílias.",
   },
   {
     question: "Sou obrigado a aceitar toda solicitação?",
@@ -73,9 +73,9 @@ const faqs = [
       "Não. Você pode conversar com a família, entender a necessidade, avaliar agenda, valores e condições antes de aceitar ou recusar uma solicitação.",
   },
   {
-    question: "A ditti define meus valores ou meu vínculo de trabalho?",
+    question: "A icuide define meus valores ou meu vínculo de trabalho?",
     answer:
-      "Não. Você informa valores de referência e negocia diretamente com a família. A ditti organiza a conexão, mas não intermedia contrato, vínculo ou pagamento do atendimento.",
+      "Não. Você informa valores de referência e negocia diretamente com a família. A icuide organiza a conexão, mas não intermedia contrato, vínculo ou pagamento do atendimento.",
   },
   {
     question: "Por que completar documentos e referências?",
@@ -108,7 +108,7 @@ const CaregiversLanding = () => {
                 Crie seu perfil gratuito e seja encontrado por famílias da sua região
               </h1>
               <p className="text-sm md:text-base text-primary-foreground/85 mb-7 max-w-xl leading-relaxed">
-                A ditti ajuda profissionais de cuidado a apresentar experiência, documentos,
+                A icuide ajuda profissionais de cuidado a apresentar experiência, documentos,
                 referências, disponibilidade e valores em um perfil claro. Você conversa com a
                 família antes de aceitar solicitações e não paga comissão sobre atendimentos.
               </p>
@@ -171,7 +171,7 @@ const CaregiversLanding = () => {
                   Como o fluxo funciona para profissionais
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground mb-6 leading-relaxed">
-                  A ditti organiza sua apresentação e o contato inicial. A decisão de aceitar
+                  A icuide organiza sua apresentação e o contato inicial. A decisão de aceitar
                   atendimento, negociar valores e combinar detalhes continua sendo sua.
                 </p>
                 <div className="space-y-3">
@@ -287,7 +287,7 @@ const CaregiversLanding = () => {
                   Dúvidas de profissionais
                 </h2>
                 <p className="text-sm md:text-base text-muted-foreground">
-                  O essencial para entender como a ditti funciona para cuidadores.
+                  O essencial para entender como a icuide funciona para cuidadores.
                 </p>
               </div>
               <div className="space-y-3">

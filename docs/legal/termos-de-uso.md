@@ -1,4 +1,4 @@
-# Termos de Uso da Plataforma Ditti
+# Termos de Uso da Plataforma icuide
 
 Versão: 1.0  
 Data da última atualização: 25/05/2026
@@ -7,21 +7,21 @@ Data da última atualização: 25/05/2026
 
 ## 1. Identificação da plataforma
 
-Estes Termos de Uso regulam o acesso e uso da plataforma Ditti, disponibilizada por **[RAZÃO SOCIAL]**, pessoa jurídica inscrita no CNPJ sob nº **[CNPJ]**, com sede em **[ENDEREÇO]**, e contato pelo e-mail **[E-MAIL DE CONTATO]**.
+Estes Termos de Uso regulam o acesso e uso da plataforma icuide, disponibilizada por **[RAZÃO SOCIAL]**, pessoa jurídica inscrita no CNPJ sob nº **[CNPJ]**, com sede em **[ENDEREÇO]**, e contato pelo e-mail **[E-MAIL DE CONTATO]**.
 
-Para fins destes Termos, a Ditti é uma plataforma digital destinada a aproximar famílias, responsáveis e pessoas interessadas em contratar serviços de cuidado de idosos ou apoio domiciliar ("Famílias") de profissionais independentes que se anunciam como cuidadores ou prestadores de serviços relacionados ("Cuidadores").
+Para fins destes Termos, a icuide é uma plataforma digital destinada a aproximar famílias, responsáveis e pessoas interessadas em contratar serviços de cuidado de idosos ou apoio domiciliar ("Famílias") de profissionais independentes que se anunciam como cuidadores ou prestadores de serviços relacionados ("Cuidadores").
 
 ## 2. Aceitação dos Termos
 
-Ao criar conta, navegar, assinar plano, enviar solicitação, conversar pelo chat, publicar informações, anexar documentos ou utilizar qualquer funcionalidade da Ditti, o usuário declara que leu, compreendeu e concorda com estes Termos de Uso, com a Política de Privacidade/LGPD e com os demais avisos aplicáveis.
+Ao criar conta, navegar, assinar plano, enviar solicitação, conversar pelo chat, publicar informações, anexar documentos ou utilizar qualquer funcionalidade da icuide, o usuário declara que leu, compreendeu e concorda com estes Termos de Uso, com a Política de Privacidade/LGPD e com os demais avisos aplicáveis.
 
 Se o usuário não concordar com estes Termos, não deverá usar a plataforma.
 
-## 3. Papel da Ditti: hub de conexão
+## 3. Papel da icuide: hub de conexão
 
-A Ditti atua exclusivamente como **hub tecnológico de conexão**, organização de informações, comunicação e apoio à aproximação entre Famílias e Cuidadores.
+A icuide atua exclusivamente como **hub tecnológico de conexão**, organização de informações, comunicação e apoio à aproximação entre Famílias e Cuidadores.
 
-A Ditti:
+A icuide:
 
 - não é agência de empregos, empresa de terceirização, cooperativa, home care, clínica, hospital, seguradora, operadora de saúde ou empregadora dos Cuidadores;
 - não presta serviços de cuidado, enfermagem, saúde, transporte, emergência ou acompanhamento presencial;
@@ -34,11 +34,11 @@ Qualquer relação contratual, civil, trabalhista, consumerista, tributária, pr
 
 ## 4. Perfis de usuários
 
-Podem utilizar a Ditti:
+Podem utilizar a icuide:
 
 - **Famílias:** pessoas físicas responsáveis por buscar, avaliar e eventualmente contratar Cuidadores para atendimento próprio, de familiar, idoso, paciente ou terceiro sob sua responsabilidade.
 - **Cuidadores:** profissionais independentes que desejam divulgar seu perfil, experiência, formação, disponibilidade, preços, referências, documentos e demais informações profissionais.
-- **Administradores:** pessoas autorizadas pela Ditti para operar, moderar e manter a plataforma.
+- **Administradores:** pessoas autorizadas pela icuide para operar, moderar e manter a plataforma.
 
 O usuário declara que possui capacidade legal para usar a plataforma e, quando agir em nome de terceiro, declara possuir autorização ou responsabilidade legítima para fornecer dados e contratar serviços em seu nome.
 
@@ -54,7 +54,7 @@ O usuário é responsável por manter dados completos, corretos, atualizados e c
 - publicar preços, formação, registro profissional, experiência, disponibilidade ou especialidades que não correspondam à realidade;
 - compartilhar dados sensíveis de terceiros sem autorização ou base legal adequada.
 
-A Ditti poderá suspender, ocultar, limitar ou excluir contas, perfis, documentos, mensagens, avaliações e conteúdos quando houver indícios de fraude, risco, violação legal, violação destes Termos ou uso indevido da plataforma.
+A icuide poderá suspender, ocultar, limitar ou excluir contas, perfis, documentos, mensagens, avaliações e conteúdos quando houver indícios de fraude, risco, violação legal, violação destes Termos ou uso indevido da plataforma.
 
 ## 6. Documentos, certificados, registros e referências de Cuidadores
 
@@ -68,7 +68,7 @@ O Cuidador declara e garante que:
 - é o único responsável por obter, manter e comprovar habilitações, registros, cursos, autorizações, certidões e requisitos legais eventualmente necessários para sua atuação;
 - responderá integralmente por danos, perdas, reclamações, autuações, processos ou prejuízos decorrentes de informações falsas, documentos inválidos ou conduta profissional inadequada.
 
-A Ditti poderá realizar checagens técnicas, manuais ou automáticas de formato, visibilidade, completude, coerência ou adequação de documentos. Essas checagens, quando existirem, **não equivalem a auditoria, autenticação, certificação, garantia de idoneidade, validação profissional ou aprovação definitiva**.
+A icuide poderá realizar checagens técnicas, manuais ou automáticas de formato, visibilidade, completude, coerência ou adequação de documentos. Essas checagens, quando existirem, **não equivalem a auditoria, autenticação, certificação, garantia de idoneidade, validação profissional ou aprovação definitiva**.
 
 A existência de selo, status, marcação, documento visível, referência ou campo preenchido na plataforma não substitui a diligência da Família.
 
@@ -92,7 +92,7 @@ A decisão de contratar, manter, substituir ou dispensar um Cuidador é da Famí
 
 Família e Cuidador negociam diretamente condições como valores, horários, local, duração, tarefas, forma de pagamento, cancelamentos, substituições, transporte, alimentação, folgas e demais obrigações.
 
-A Ditti não é parte dessa relação e não responde por:
+A icuide não é parte dessa relação e não responde por:
 
 - atrasos, faltas, abandonos, cancelamentos ou indisponibilidade;
 - danos materiais, morais, físicos, psicológicos, patrimoniais ou à saúde;
@@ -101,11 +101,11 @@ A Ditti não é parte dessa relação e não responde por:
 - conflitos, acordos, promessas ou descumprimentos entre usuários;
 - qualidade ou resultado dos serviços prestados.
 
-Nada nestes Termos cria vínculo de emprego, sociedade, representação, mandato, franquia, agência, parceria, subordinação ou solidariedade entre a Ditti e os usuários.
+Nada nestes Termos cria vínculo de emprego, sociedade, representação, mandato, franquia, agência, parceria, subordinação ou solidariedade entre a icuide e os usuários.
 
 ## 9. Serviços de saúde, emergência e limitações assistenciais
 
-A Ditti não fornece orientação médica, diagnóstico, prescrição, telemedicina, assistência emergencial ou serviço de saúde.
+A icuide não fornece orientação médica, diagnóstico, prescrição, telemedicina, assistência emergencial ou serviço de saúde.
 
 Em caso de urgência, emergência, risco à vida, queda, alteração súbita de saúde, sofrimento intenso, violência, suspeita de crime ou qualquer situação grave, o usuário deve acionar imediatamente serviços públicos ou privados competentes, como SAMU 192, Bombeiros 193, Polícia 190, médico responsável, hospital, plano de saúde ou autoridade aplicável.
 
@@ -113,11 +113,11 @@ Informações publicadas por Cuidadores ou Famílias não substituem orientaçã
 
 ## 10. Assinaturas, pagamentos e acesso a funcionalidades
 
-A Ditti poderá oferecer planos gratuitos e pagos para acesso a funcionalidades, como busca ampliada, visualização de perfis, documentos, referências, favoritos, mensagens ou outros recursos.
+A icuide poderá oferecer planos gratuitos e pagos para acesso a funcionalidades, como busca ampliada, visualização de perfis, documentos, referências, favoritos, mensagens ou outros recursos.
 
 Quando houver pagamento por assinatura, a cobrança poderá ser processada por provedor externo, como Stripe ou outro intermediador. O usuário concorda que dados de pagamento poderão ser tratados pelo intermediador conforme seus próprios termos e políticas.
 
-A Ditti poderá alterar planos, funcionalidades, preços, períodos promocionais e condições comerciais mediante comunicação quando exigido por lei ou quando aplicável.
+A icuide poderá alterar planos, funcionalidades, preços, períodos promocionais e condições comerciais mediante comunicação quando exigido por lei ou quando aplicável.
 
 Salvo previsão específica, a assinatura da plataforma remunera o acesso à tecnologia e às funcionalidades digitais, não a prestação de serviços de cuidado.
 
@@ -133,19 +133,19 @@ A plataforma poderá permitir envio de solicitações, mensagens e informações
 - burlar mecanismos de segurança, pagamento ou assinatura;
 - coletar dados de outros usuários para finalidades incompatíveis com a conexão pretendida.
 
-A Ditti poderá acessar, preservar, moderar ou remover mensagens e registros quando necessário para segurança, suporte, prevenção a fraudes, cumprimento legal, exercício de direitos ou investigação de violação destes Termos, observada a Política de Privacidade.
+A icuide poderá acessar, preservar, moderar ou remover mensagens e registros quando necessário para segurança, suporte, prevenção a fraudes, cumprimento legal, exercício de direitos ou investigação de violação destes Termos, observada a Política de Privacidade.
 
 ## 12. Avaliações e conteúdo gerado pelos usuários
 
 Usuários poderão publicar avaliações, comentários, fotos, descrições, documentos e outros conteúdos.
 
-O usuário declara ser responsável por todo conteúdo que publicar e concede à Ditti licença gratuita, não exclusiva, revogável nos limites da lei e mundial para armazenar, reproduzir, exibir, adaptar tecnicamente e disponibilizar o conteúdo dentro da plataforma, para operação, segurança, suporte, melhoria e divulgação dos serviços.
+O usuário declara ser responsável por todo conteúdo que publicar e concede à icuide licença gratuita, não exclusiva, revogável nos limites da lei e mundial para armazenar, reproduzir, exibir, adaptar tecnicamente e disponibilizar o conteúdo dentro da plataforma, para operação, segurança, suporte, melhoria e divulgação dos serviços.
 
-A Ditti poderá moderar, ocultar ou remover conteúdo ofensivo, discriminatório, falso, ilegal, sensível, publicitário indevido, difamatório ou contrário a estes Termos.
+A icuide poderá moderar, ocultar ou remover conteúdo ofensivo, discriminatório, falso, ilegal, sensível, publicitário indevido, difamatório ou contrário a estes Termos.
 
 ## 13. Privacidade e proteção de dados
 
-O tratamento de dados pessoais observará a Política de Privacidade/LGPD da Ditti, que integra estes Termos.
+O tratamento de dados pessoais observará a Política de Privacidade/LGPD da icuide, que integra estes Termos.
 
 Ao usar a plataforma, o usuário reconhece que determinados dados poderão ser tratados para cadastro, autenticação, operação da conta, busca, comunicação, assinatura, segurança, prevenção a fraudes, suporte, cumprimento legal e exercício regular de direitos.
 
@@ -155,7 +155,7 @@ O envio de documentos, informações de saúde, referências, dados de idosos, d
 
 O usuário é responsável por manter confidenciais seus dados de acesso, dispositivos, e-mail e credenciais.
 
-A Ditti não se responsabiliza por acessos decorrentes de:
+A icuide não se responsabiliza por acessos decorrentes de:
 
 - compartilhamento de senha;
 - uso de dispositivo inseguro;
@@ -167,13 +167,13 @@ O usuário deve comunicar imediatamente qualquer suspeita de uso indevido da con
 
 ## 15. Propriedade intelectual
 
-A marca, nome, layout, textos, código, banco de dados, identidade visual, funcionalidades, software e demais elementos da Ditti pertencem à Ditti ou a seus licenciantes.
+A marca, nome, layout, textos, código, banco de dados, identidade visual, funcionalidades, software e demais elementos da icuide pertencem à icuide ou a seus licenciantes.
 
 É proibido copiar, reproduzir, modificar, distribuir, vender, explorar, fazer engenharia reversa, acessar por meios automatizados não autorizados ou criar produto concorrente com base na plataforma, salvo autorização expressa.
 
 ## 16. Suspensão, exclusão e encerramento de conta
 
-A Ditti poderá suspender ou encerrar contas em caso de:
+A icuide poderá suspender ou encerrar contas em caso de:
 
 - violação destes Termos;
 - suspeita de fraude ou documento falso;
@@ -186,20 +186,20 @@ O usuário poderá solicitar encerramento da conta, observada a retenção de da
 
 ## 17. Limitação de responsabilidade
 
-Na máxima extensão permitida pela legislação aplicável, a Ditti não será responsável por danos diretos ou indiretos decorrentes de:
+Na máxima extensão permitida pela legislação aplicável, a icuide não será responsável por danos diretos ou indiretos decorrentes de:
 
 - contratação, atuação, conduta, omissão ou disponibilidade de Cuidadores;
 - informações, documentos, referências, registros ou certificados enviados por usuários;
 - decisões tomadas por Famílias com base em perfis, documentos, avaliações ou mensagens;
 - falhas de comunicação, internet, dispositivos, provedores, terceiros, Stripe, Supabase, serviços de mapas, e-mail, autenticação social ou infraestrutura externa;
-- perda de dados causada por uso inadequado, fraude, caso fortuito, força maior ou evento fora do controle razoável da Ditti;
+- perda de dados causada por uso inadequado, fraude, caso fortuito, força maior ou evento fora do controle razoável da icuide;
 - conflitos, acidentes, danos, crimes, atos ilícitos ou descumprimentos entre usuários.
 
 Nenhuma disposição destes Termos limita direitos que não possam ser renunciados por lei, especialmente direitos básicos do consumidor, proteção de dados, responsabilidade por dolo ou culpa grave quando aplicável, ou obrigações legais inderrogáveis.
 
 ## 18. Indenização
 
-O usuário concorda em indenizar e manter a Ditti, seus sócios, administradores, colaboradores, prestadores e parceiros livres de perdas, reclamações, danos, despesas, honorários, multas e responsabilidades decorrentes de:
+O usuário concorda em indenizar e manter a icuide, seus sócios, administradores, colaboradores, prestadores e parceiros livres de perdas, reclamações, danos, despesas, honorários, multas e responsabilidades decorrentes de:
 
 - violação destes Termos;
 - envio de informação falsa, documento inválido ou conteúdo ilegal;
@@ -210,7 +210,7 @@ O usuário concorda em indenizar e manter a Ditti, seus sócios, administradores
 
 ## 19. Alterações dos Termos
 
-A Ditti poderá alterar estes Termos para refletir mudanças legais, técnicas, comerciais, operacionais ou de segurança.
+A icuide poderá alterar estes Termos para refletir mudanças legais, técnicas, comerciais, operacionais ou de segurança.
 
 Alterações relevantes serão comunicadas por meio adequado. O uso continuado da plataforma após a atualização indicará concordância com a nova versão, salvo quando a lei exigir novo aceite específico.
 

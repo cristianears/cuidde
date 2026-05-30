@@ -1,4 +1,4 @@
-# Documentos Legais da Ditti
+# Documentos Legais da icuide
 
 Esta pasta contém rascunhos para publicação dos documentos legais da plataforma:
 
@@ -8,7 +8,7 @@ Esta pasta contém rascunhos para publicação dos documentos legais da platafor
 
 ## Antes de publicar
 
-Estes documentos devem ser revisados por advogado antes de irem para produção. Eles foram estruturados para o modelo atual da Ditti como plataforma digital de conexão entre Famílias e Cuidadores independentes, mas dependem de validação jurídica, societária, tributária, consumerista, trabalhista e de proteção de dados.
+Estes documentos devem ser revisados por advogado antes de irem para produção. Eles foram estruturados para o modelo atual da icuide como plataforma digital de conexão entre Famílias e Cuidadores independentes, mas dependem de validação jurídica, societária, tributária, consumerista, trabalhista e de proteção de dados.
 
 Preencher obrigatoriamente:
 
@@ -23,7 +23,7 @@ Preencher obrigatoriamente:
 
 ## Pontos críticos para revisão jurídica
 
-- A Ditti deve ser descrita como hub de conexão, não como empregadora, agência, home care, clínica ou prestadora de saúde.
+- A icuide deve ser descrita como hub de conexão, não como empregadora, agência, home care, clínica ou prestadora de saúde.
 - Cláusulas de limitação de responsabilidade devem respeitar direitos irrenunciáveis do consumidor e limites legais.
 - Dados de saúde, documentos, fotos e informações de idosos podem ser dados sensíveis ou exigir cuidado reforçado.
 - O aceite do termo de consentimento deve ser específico, destacado e registrável quando envolver dados sensíveis, documentos ou dados de terceiros.

@@ -1,7 +1,7 @@
 {
-  "name": "ditti - Cuidadores de idosos",
-  "short_name": "ditti",
-  "description": "ditti conecta familias a cuidadores de idosos de confianca.",
+  "name": "icuide - Cuidadores de idosos",
+  "short_name": "icuide",
+  "description": "icuide conecta familias a cuidadores de idosos de confianca.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -14,7 +14,7 @@
     {
       "name": "Criar perfil de cuidador",
       "short_name": "Sou cuidador",
-      "description": "Crie um perfil profissional gratuito na ditti.",
+      "description": "Crie um perfil profissional gratuito na icuide.",
       "url": "/para-cuidadores",
       "icons": [
         {

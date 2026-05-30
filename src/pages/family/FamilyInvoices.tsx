@@ -63,7 +63,7 @@ const FamilyInvoices = () => {
       />
 
       <main className="flex-1 p-6 lg:p-8">
-        <PageHeader title="Faturas" description="Histórico de cobranças da sua assinatura na ditti">
+        <PageHeader title="Faturas" description="Histórico de cobranças da sua assinatura na icuide">
           <Button variant="outline" asChild>
             <Link to="/family/billing">Ver planos</Link>
           </Button>

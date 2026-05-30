@@ -49,7 +49,7 @@ describe('Login', () => {
   it('renders initial email view', () => {
     renderLogin()
 
-    expect(screen.getByText('Entrar na ditti')).toBeInTheDocument()
+    expect(screen.getByText('Entrar na icuide')).toBeInTheDocument()
     expect(screen.getByLabelText('E-mail')).toBeInTheDocument()
     expect(screen.getByText('Avançar')).toBeInTheDocument()
     expect(screen.getByText('Cadastrar-se')).toBeInTheDocument()

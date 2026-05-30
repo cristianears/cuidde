@@ -64,7 +64,7 @@ const HowItWorks = () => {
         </div>
         <div className="max-w-3xl mx-auto mt-10 text-center">
           <p className="text-muted-foreground leading-relaxed text-xs md:text-sm">
-            A ditti facilita a conexão entre famílias e profissionais de cuidado. A negociação de valores, modelo de
+            A icuide facilita a conexão entre famílias e profissionais de cuidado. A negociação de valores, modelo de
             contratação e vínculo profissional acontece diretamente entre as partes — sem intermediação da plataforma.
           </p>
         </div>

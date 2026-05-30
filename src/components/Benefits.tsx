@@ -45,7 +45,7 @@ const Benefits = () => {
       <div className="container mx-auto px-6 md:px-10 relative">
         <div className="text-center mb-8">
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
-            Por que escolher a ditti?
+            Por que escolher a icuide?
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-3xl mx-auto">
             Mais informação e mais transparência para você tomar a decisão certa — com calma e autonomia.
