@@ -130,12 +130,12 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
   return (
     <aside
       className={cn(
-        "sticky top-0 h-screen bg-card border-r border-border flex flex-col transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        "app-shell-sidebar fixed inset-x-0 bottom-0 z-40 h-[calc(4.5rem+env(safe-area-inset-bottom))] bg-card border-t border-border flex transition-all duration-300 md:sticky md:inset-auto md:top-0 md:h-screen md:flex-col md:border-r md:border-t-0",
+        collapsed ? "md:w-16" : "md:w-64"
       )}
     >
       {/* Logo */}
-      <div className="p-4 border-b border-border">
+      <div className="hidden p-4 border-b border-border md:block">
         <Link to="/" className="flex items-center">
           <BrandMark size={36} showWordmark={!collapsed} />
         </Link>
@@ -143,7 +143,7 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
 
       {/* User Info Card */}
       {!collapsed && (
-        <div className="p-4 border-b border-border">
+        <div className="hidden p-4 border-b border-border md:block">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-full bg-muted overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
               {userPhoto && !photoFailed ? (
@@ -172,7 +172,8 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 overflow-x-auto overflow-y-hidden px-2 pb-[env(safe-area-inset-bottom)] pt-2 md:p-3 md:space-y-1 md:overflow-y-auto md:overflow-x-hidden">
+        <div className="flex min-w-max items-stretch gap-1 md:block md:min-w-0 md:space-y-1">
         {items.map((item) => {
           const isActive = location.pathname === item.href;
           const badgeCount = badgeCounts[item.href] ?? 0;
@@ -181,7 +182,7 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
               key={item.href}
               to={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors relative",
+                "relative flex w-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors md:w-auto md:flex-row md:justify-start md:gap-3 md:px-3 md:py-2.5 md:text-left",
                 isActive
                   ? "bg-primary/10 text-primary font-medium"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -189,27 +190,44 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
             >
               <div className="relative flex-shrink-0">
                 <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
-                {badgeCount > 0 && collapsed && (
-                  <span className="absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-destructive ring-2 ring-card" />
+                {badgeCount > 0 && (
+                  <span
+                    className={cn(
+                      "absolute -top-1.5 -right-1.5 w-2.5 h-2.5 rounded-full bg-destructive ring-2 ring-card md:hidden",
+                      collapsed && "md:block",
+                    )}
+                  />
                 )}
               </div>
-              {!collapsed && (
-                <>
-                  <span className="text-sm flex-1">{item.label}</span>
-                  {badgeCount > 0 && (
-                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground">
-                      {badgeCount > 99 ? '99+' : badgeCount}
-                    </span>
-                  )}
-                </>
+              <span
+                className={cn(
+                  "w-full truncate text-[10px] leading-tight md:w-auto md:text-sm md:leading-normal",
+                  collapsed ? "md:hidden" : "md:flex-1",
+                )}
+              >
+                {item.label}
+              </span>
+              {!collapsed && badgeCount > 0 && (
+                <span className="ml-auto hidden h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-semibold text-destructive-foreground md:flex">
+                  {badgeCount > 99 ? '99+' : badgeCount}
+                </span>
               )}
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={handleLogout}
+          aria-label="Sair"
+          className="relative flex w-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+        >
+          <LogOut className="w-5 h-5" />
+        </button>
+        </div>
       </nav>
 
       {/* Logout Section */}
-      <div className="p-3 border-t border-border">
+      <div className="hidden p-3 border-t border-border md:block">
         <Button
           variant="ghost"
           onClick={handleLogout}
@@ -227,7 +245,7 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
       <button
         onClick={() => setCollapsed(!collapsed)}
         aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-        className="absolute -right-3 top-20 w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm"
+        className="absolute -right-3 top-20 hidden w-8 h-8 rounded-full bg-card border border-border items-center justify-center text-muted-foreground hover:text-foreground transition-colors shadow-sm md:flex"
       >
         {collapsed ? (
           <ChevronRight className="w-4 h-4" />

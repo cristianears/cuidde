@@ -90,4 +90,12 @@
     -moz-osx-font-smoothing: grayscale;
     font-family: 'Inter', sans-serif;
   }
+
+  @media (max-width: 767px) {
+    .app-shell-sidebar + main {
+      min-width: 0;
+      width: 100%;
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+    }
+  }
 }

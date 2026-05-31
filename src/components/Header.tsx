@@ -1,4 +1,4 @@
-import { Menu, X, User } from "lucide-react";
+import { Download, Menu, X, User } from "lucide-react";
 import BrandMark from "@/components/shared/BrandMark";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -6,11 +6,14 @@ import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getFirstName } from "@/lib/display-name";
+import { useInstallApp } from "@/hooks/useInstallApp";
+import { toast } from "sonner";
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, profile, role } = useAuth();
+  const { canShowInstallAction, installApp } = useInstallApp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -59,6 +62,18 @@ const Header = () => {
     }
     navigate(`/${item.hash}`);
   };
+  const handleInstallApp = async () => {
+    const result = await installApp();
+
+    if (result === "ios-instructions") {
+      toast.info("No iPhone, toque em Compartilhar e escolha Adicionar à Tela de Início.");
+      return;
+    }
+
+    if (result === "browser-instructions") {
+      toast.info("Abra o menu do navegador e escolha Instalar app ou Adicionar à tela inicial.");
+    }
+  };
   return (
     <header
       className={cn(
@@ -101,6 +116,22 @@ const Header = () => {
             ))}
           </nav>
           <div className="hidden md:flex items-center gap-3">
+            {canShowInstallAction && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleInstallApp}
+                className={cn(
+                  "transition-colors gap-2",
+                  isSolid
+                    ? "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    : "text-white/80 hover:text-white hover:bg-white/10",
+                )}
+              >
+                <Download className="w-4 h-4" />
+                Instalar app
+              </Button>
+            )}
             {user ? (
               <Button
                 size="sm"
@@ -165,7 +196,26 @@ const Header = () => {
                 {item.label}
               </button>
             ))}
-            <div className="flex gap-2 pt-2">
+            <div className="flex flex-col gap-2 pt-2">
+              {canShowInstallAction && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    void handleInstallApp();
+                  }}
+                  className={cn(
+                    "flex-1 gap-2",
+                    isSolid
+                      ? "border-border text-foreground hover:bg-muted"
+                      : "border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white",
+                  )}
+                >
+                  <Download className="w-4 h-4" />
+                  Instalar app
+                </Button>
+              )}
               {user ? (
                 <Button
                   size="sm"
@@ -191,7 +241,7 @@ const Header = () => {
                       "flex-1",
                       isSolid
                         ? "border-border text-foreground hover:bg-muted"
-                        : "border-white/30 text-white hover:bg-white/10",
+                        : "border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white",
                     )}
                   >
                     Entrar
