@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'cuidde-pwa-v4'
+const CACHE_VERSION = 'cuidde-pwa-v5'
 const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`
 
 const APP_SHELL_ASSETS = [

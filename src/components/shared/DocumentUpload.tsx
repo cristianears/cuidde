@@ -53,15 +53,15 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
   };
 
   return (
-    <div className={cn("rounded-xl border p-4", config.borderColor, config.bgColor, className)}>
-      <div className="flex items-start gap-4">
-        <div className={cn("p-3 rounded-lg", config.bgColor)}>
+    <div className={cn("rounded-xl border p-3 md:p-4", config.borderColor, config.bgColor, className)}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <div className={cn("w-fit p-3 rounded-lg shrink-0", config.bgColor)}>
           <FileText className={cn("w-6 h-6", config.textColor)} />
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center flex-wrap gap-2">
-            <h4 className="font-medium text-foreground">{label}</h4>
+          <div className="flex items-center flex-wrap gap-2 min-w-0">
+            <h4 className="font-medium text-foreground break-words">{label}</h4>
             <span
               className={cn(
                 "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium",
@@ -92,7 +92,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
           )}
 
           {document.file_name && document.status !== 'pending' && (
-            <p className="text-sm text-muted-foreground mt-1">{document.file_name}</p>
+            <p className="text-sm text-muted-foreground mt-1 break-all">{document.file_name}</p>
           )}
 
           {document.uploaded_at && (
@@ -109,7 +109,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
           )}
         </div>
 
-        <div className="flex-shrink-0 flex flex-col gap-1.5">
+        <div className="flex shrink-0 flex-row gap-1.5 sm:flex-col">
           {(document.status === 'pending' || document.status === 'rejected') && (() => {
             const isRejected = document.status === 'rejected';
             const btnClass = isRejected

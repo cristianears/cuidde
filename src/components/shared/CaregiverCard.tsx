@@ -41,7 +41,7 @@ function Chip({ label, color = "gray" }: { label: string; color?: "gray" | "blue
   return (
     <span
       className={cn(
-        "inline-block px-2 py-0.5 rounded-full text-xs font-medium leading-tight whitespace-nowrap",
+        "inline-block max-w-full truncate px-2 py-0.5 rounded-full text-xs font-medium leading-tight",
         color === "blue"    && "bg-blue-50 text-blue-700",
         color === "emerald" && "bg-emerald-50 text-emerald-700",
         color === "gray"    && "bg-muted text-muted-foreground",
@@ -56,7 +56,7 @@ function ChipList({ items, color, max = 3 }: { items: string[]; color: "blue" | 
   const visible = items.slice(0, max);
   const extra = items.length - max;
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex min-w-0 flex-wrap gap-1">
       {visible.map((s) => <Chip key={s} label={s} color={color} />)}
       {extra > 0 && <Chip label={`+${extra}`} color="gray" />}
     </div>
@@ -119,7 +119,7 @@ const CaregiverCard = ({
         <div className="flex min-w-0">
 
           {/* ── Foto ── */}
-          <div className="relative w-28 sm:w-40 flex-shrink-0 bg-muted self-stretch">
+          <div className="relative w-24 sm:w-36 flex-shrink-0 bg-muted self-stretch">
             {caregiver.photo_url && !photoFailed ? (
               <img
                 src={caregiver.photo_url}
@@ -165,11 +165,11 @@ const CaregiverCard = ({
             {/* Linha 2: Profissão + exp + localização */}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
               {profissaoLabel && (
-                <span className="flex items-center gap-1 shrink-0">
+                <span className="flex min-w-0 items-center gap-1">
                   <Briefcase className="w-3 h-3" />
-                  {profissaoLabel}
+                  <span className="truncate">{profissaoLabel}</span>
                   {caregiver.experience_years > 0 && (
-                    <span className="text-muted-foreground/70">
+                    <span className="text-muted-foreground/70 shrink-0">
                       · {caregiver.experience_years}{caregiver.experience_years === 1 ? " ano" : " anos"} exp.
                     </span>
                   )}
@@ -228,13 +228,13 @@ const CaregiverCard = ({
             {/* Linha 5: Especialidades + Formatos lado a lado */}
             <div className="flex flex-col gap-1">
               {caregiver.specialties?.length > 0 && (
-                <div>
+                <div className="min-w-0">
                   <span className="text-xs font-medium text-foreground mr-1.5">Especialidades</span>
                   <ChipList items={caregiver.specialties} color="blue" max={3} />
                 </div>
               )}
               {caregiver.modalities?.length > 0 && (
-                <div>
+                <div className="min-w-0">
                   <span className="text-xs font-medium text-foreground mr-1.5">Formatos</span>
                   <ChipList items={caregiver.modalities} color="emerald" max={3} />
                 </div>
@@ -253,9 +253,9 @@ const CaregiverCard = ({
             {trustBadges.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {trustBadges.map(({ icon: Icon, label, cls }) => (
-                  <span key={label} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium", cls)}>
-                    <Icon className="w-3 h-3" />
-                    {label}
+                  <span key={label} className={cn("inline-flex max-w-full items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium", cls)}>
+                    <Icon className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{label}</span>
                   </span>
                 ))}
               </div>

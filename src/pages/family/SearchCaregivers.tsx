@@ -233,10 +233,10 @@ const SearchCaregivers = () => {
           </Button>
         </div>
 
-        <div className="flex gap-4 min-w-0 items-start">
+        <div className="flex flex-col gap-4 min-w-0 items-stretch lg:flex-row lg:items-start">
           {/* Painel de filtros — metade da tela */}
           {showFilters && (
-            <Card className="w-[317px] flex-shrink-0 h-fit sticky top-4">
+            <Card className="w-full flex-shrink-0 h-fit lg:sticky lg:top-4 lg:w-[300px]">
               <CardHeader className="flex flex-row items-center justify-between py-3 px-4">
                 <CardTitle className="text-sm font-semibold">Filtros</CardTitle>
                 {hasActiveFilters && (

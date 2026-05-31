@@ -72,6 +72,23 @@ describe('CaregiverCard', () => {
     expect(bio).not.toHaveClass('break-all')
   })
 
+  it('keeps long badges and chips contained inside narrow cards', () => {
+    render(
+      <CaregiverCard
+        caregiver={{
+          ...caregiver,
+          specialties: ['Especialidade com nome muito longo para validar truncamento'],
+          modalities: ['Atendimento com nome muito longo para validar truncamento'],
+        }}
+        hasAntecedentes
+        hasReferencias
+      />,
+    )
+
+    expect(screen.getByText('Especialidade com nome muito longo para validar truncamento')).toHaveClass('truncate')
+    expect(screen.getByText(/antecedentes/i)).toHaveClass('truncate')
+  })
+
   it('falls back to the first-name initial when the profile photo fails to load', () => {
     render(
       <CaregiverCard

@@ -17,9 +17,9 @@ interface StepperProps {
 const Stepper = ({ steps, currentStep, className, onStepClick }: StepperProps) => {
   return (
     <div className={cn("w-full", className)}>
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         {steps.map((step, index) => (
-          <div key={step.id} className="flex items-center flex-1">
+          <div key={step.id} className="flex items-start flex-1">
             {/* Step Circle */}
             <div className="flex flex-col items-center">
               <button
@@ -42,10 +42,10 @@ const Stepper = ({ steps, currentStep, className, onStepClick }: StepperProps) =
                   step.id
                 )}
               </button>
-              <div className="mt-2 text-center">
+              <div className="mt-2 flex min-h-9 items-center justify-center text-center">
                 <p
                   className={cn(
-                    "text-sm font-medium",
+                    "text-xs sm:text-sm font-medium leading-tight",
                     currentStep >= step.id
                       ? "text-foreground"
                       : "text-muted-foreground"
@@ -53,12 +53,12 @@ const Stepper = ({ steps, currentStep, className, onStepClick }: StepperProps) =
                 >
                   {step.title}
                 </p>
-                {step.description && (
-                  <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">
-                    {step.description}
-                  </p>
-                )}
               </div>
+              {step.description && (
+                <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block text-center">
+                  {step.description}
+                </p>
+              )}
             </div>
 
             {/* Connector Line */}

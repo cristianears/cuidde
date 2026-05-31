@@ -25,11 +25,11 @@ const MetricCard = ({
   const isNegative = change && change < 0;
 
   return (
-    <Card className={cn("", className)}>
+    <Card className={cn("min-w-0 overflow-hidden", className)}>
       <CardContent className={cn(compact ? "p-3" : "p-6")}>
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className={cn("font-medium text-muted-foreground", compact ? "text-xs" : "text-sm")}>{title}</p>
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className={cn("font-medium text-muted-foreground leading-tight", compact ? "text-[11px] sm:text-xs" : "text-sm")}>{title}</p>
             <p className={cn("font-bold text-foreground whitespace-nowrap", compact ? "text-base mt-0.5" : "text-lg mt-1")}>{value}</p>
             {change !== undefined && (
               <div className="flex items-center gap-1 mt-2">
@@ -53,7 +53,7 @@ const MetricCard = ({
             )}
           </div>
           {icon && (
-            <div className={cn("rounded-xl bg-primary/10 text-primary", compact ? "p-2" : "p-3")}>
+            <div className={cn("shrink-0 rounded-xl bg-primary/10 text-primary", compact ? "p-1.5 sm:p-2" : "p-3")}>
               {icon}
             </div>
           )}

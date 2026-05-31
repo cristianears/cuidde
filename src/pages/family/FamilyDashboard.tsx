@@ -47,7 +47,7 @@ const FamilyDashboard = () => {
         userPhoto={familyProfile?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture}
       />
 
-      <main className="flex-1 p-4 lg:p-6">
+      <main className="flex-1 min-w-0 p-4 lg:p-6">
         {/* Header compacto + métricas em linha */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
@@ -63,7 +63,7 @@ const FamilyDashboard = () => {
         </div>
 
         {/* Métricas rápidas compactas */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-4">
           <MetricCard
             title="Favoritos"
             value={favoriteIds.size}
