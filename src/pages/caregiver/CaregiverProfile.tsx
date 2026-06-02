@@ -128,7 +128,7 @@ const CaregiverProfile = () => {
       setFormData({
         name: profileData.profiles.full_name ?? "",
         email: user?.email ?? "",
-        phone: "",
+        phone: profileData.whatsapp ?? profileData.profiles.phone ?? "",
         whatsapp: profileData.whatsapp ?? profileData.profiles.phone ?? "",
         photo: profileData.photo_url ?? "",
         cep: profileData.cep ?? "",
@@ -207,8 +207,8 @@ const CaregiverProfile = () => {
       toast.error("Nome completo é obrigatório.")
       return false
     }
-    if (!formData.whatsapp.trim() && !formData.phone.trim()) {
-      toast.error("Informe pelo menos um número de contato (telefone ou WhatsApp).")
+    if (!formData.phone.trim()) {
+      toast.error("Informe seu WhatsApp / telefone.")
       return false
     }
     if (!formData.cep.trim() || !formData.street.trim() || !formData.number.trim() || !formData.neighborhood.trim() || !formData.city.trim() || !formData.state.trim()) {
@@ -241,10 +241,12 @@ const CaregiverProfile = () => {
     try {
       if (!validateBasicStep()) return
 
+      const contactPhone = formData.phone.trim()
+
       await updateBasic.mutateAsync({
         full_name: formData.name,
-        phone: formData.phone,
-        whatsapp: formData.whatsapp,
+        phone: contactPhone,
+        whatsapp: contactPhone,
         cep: formData.cep,
         street: formData.street,
         number: formData.number,
@@ -481,12 +483,17 @@ const CaregiverProfile = () => {
                     <Input id="email" type="email" value={formData.email} readOnly className="mt-1.5 text-sm bg-muted/40 cursor-not-allowed" />
                   </div>
                   <div>
-                    <Label htmlFor="phone" className="text-xs md:text-sm">Telefone</Label>
-                    <Input id="phone" value={formData.phone} onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))} className="mt-1.5 text-sm" />
-                  </div>
-                  <div>
-                    <Label htmlFor="whatsapp" className="text-xs md:text-sm">WhatsApp</Label>
-                    <Input id="whatsapp" value={formData.whatsapp} onChange={(e) => setFormData((prev) => ({ ...prev, whatsapp: e.target.value }))} className="mt-1.5 text-sm" />
+                    <Label htmlFor="contactPhone" className="text-xs md:text-sm">WhatsApp / Telefone</Label>
+                    <Input
+                      id="contactPhone"
+                      value={formData.phone}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setFormData((prev) => ({ ...prev, phone: value, whatsapp: value }))
+                      }}
+                      placeholder="(11) 99999-9999"
+                      className="mt-1.5 text-sm"
+                    />
                   </div>
                 </div>
 

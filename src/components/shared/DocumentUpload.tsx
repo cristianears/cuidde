@@ -12,6 +12,17 @@ interface DocumentUploadProps {
   className?: string;
 }
 
+function splitFileName(fileName: string) {
+  const extensionMatch = fileName.match(/(\.[^.\s]+)$/);
+  if (!extensionMatch) return { base: fileName, extension: "" };
+
+  const extension = extensionMatch[1];
+  return {
+    base: fileName.slice(0, -extension.length),
+    extension,
+  };
+}
+
 const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }: DocumentUploadProps) => {
   const statusConfig = {
     pending: {
@@ -42,6 +53,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
 
   const isRgCnh = document.type === 'rg_cnh';
   const config = statusConfig[document.status];
+  const fileNameParts = document.file_name ? splitFileName(document.file_name) : null;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,8 +103,13 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
             <p className="text-xs text-muted-foreground mt-1">{hint}</p>
           )}
 
-          {document.file_name && document.status !== 'pending' && (
-            <p className="text-sm text-muted-foreground mt-1 break-all">{document.file_name}</p>
+          {fileNameParts && document.status !== 'pending' && (
+            <p className="text-sm text-muted-foreground mt-1 min-w-0 break-words" title={document.file_name ?? undefined}>
+              <span className="break-all">{fileNameParts.base}</span>
+              {fileNameParts.extension && (
+                <span className="whitespace-nowrap">{fileNameParts.extension}</span>
+              )}
+            </p>
           )}
 
           {document.uploaded_at && (

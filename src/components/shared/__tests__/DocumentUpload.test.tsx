@@ -19,7 +19,7 @@ const documentBase: CaregiverDocument = {
 }
 
 describe('DocumentUpload', () => {
-  it('wraps long file names inside the document card', () => {
+  it('wraps long file names without splitting the file extension', () => {
     render(
       <DocumentUpload
         document={documentBase}
@@ -28,6 +28,6 @@ describe('DocumentUpload', () => {
       />,
     )
 
-    expect(screen.getByText(documentBase.file_name!)).toHaveClass('break-all')
+    expect(screen.getByText('.pdf')).toHaveClass('whitespace-nowrap')
   })
 })

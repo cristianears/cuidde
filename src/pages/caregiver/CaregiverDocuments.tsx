@@ -279,7 +279,6 @@ const CaregiverDocuments = () => {
                   <div className="flex items-start gap-3">
                     <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-amber-600 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs md:text-sm font-medium text-amber-800">Dica para aprovação rápida</p>
                       <p className="text-xs md:text-sm text-amber-700">
                         Envie documentos claros, legíveis e com todas as informações visíveis. Fotos escuras ou borradas podem atrasar a verificação.
                       </p>
@@ -477,16 +476,6 @@ const CaregiverDocuments = () => {
                   <span className="text-xs md:text-sm text-muted-foreground">{progressPercentage}%</span>
                 </div>
                 <Progress value={progressPercentage} className="h-2" />
-                {sentOrApproved === totalDocs && totalDocs > 0 && (
-                  <div className="p-3 md:p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 shrink-0" />
-                      <p className="text-xs md:text-sm text-emerald-700 font-medium">
-                        Todos os documentos foram enviados! Nossa equipe irá analisá-los em até 48 horas úteis.
-                      </p>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
