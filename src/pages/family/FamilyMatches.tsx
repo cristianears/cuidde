@@ -100,35 +100,35 @@ const FamilyMatches = () => {
 
     return (
       <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-4">
-          <Avatar className="w-14 h-14">
-            <AvatarFallback className="bg-primary/10 text-primary text-lg">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <Avatar className="w-12 h-12 sm:w-14 sm:h-14">
+            <AvatarFallback className="bg-primary/10 text-primary text-base sm:text-lg">
               {getInitials(appointment.caregiver_name)}
             </AvatarFallback>
           </Avatar>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="grid grid-cols-[1fr_auto] items-start gap-2">
               <h3 className="font-semibold text-foreground truncate">
                 {appointment.caregiver_name ?? "Cuidador"}
               </h3>
               {getStatusBadge(appointment.status)}
             </div>
 
-            <div className="flex flex-wrap gap-1.5 mb-2">
+            <div className="flex flex-wrap gap-1.5">
               <Badge variant="secondary" className="text-xs font-normal">
                 {TYPE_LABELS[appointment.type] ?? appointment.type}
               </Badge>
               {appointment.modality && (
-                <Badge variant="outline" className="text-xs font-normal gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {appointment.modality}
+                <Badge variant="outline" className="max-w-full text-xs font-normal gap-1 whitespace-normal">
+                  <MapPin className="w-3 h-3 shrink-0" />
+                  <span className="break-words">{appointment.modality}</span>
                 </Badge>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Início: {formatDate(appointment.start_date)}</span>
@@ -141,24 +141,24 @@ const FamilyMatches = () => {
               )}
             </div>
 
-            <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Calendar className="w-3 h-3" />
               <span>Solicitado em {formatDate(appointment.created_at)}</span>
             </div>
 
             {appointment.description && (
-              <div className="flex items-start gap-1.5 text-xs text-muted-foreground mb-2">
+              <div className="flex items-start gap-1.5 rounded-lg bg-muted/40 p-2 text-xs text-muted-foreground">
                 <FileText className="w-3 h-3 mt-0.5 shrink-0" />
                 <span className="line-clamp-2">{appointment.description}</span>
               </div>
             )}
 
             {appointment.status === "pendente" && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="grid grid-cols-[1fr_auto] items-center gap-2 pt-1">
                 <p className="text-xs text-muted-foreground">
                   Aguardando resposta do cuidador.
                 </p>
-                <Button asChild size="sm" variant="outline" className="gap-1.5 relative">
+                <Button asChild size="sm" variant="outline" className="gap-1.5 relative px-3">
                   <Link to={`/chat/${appointment.id}`}>
                     <MessageCircle className="w-4 h-4" />
                     Chat
@@ -172,14 +172,14 @@ const FamilyMatches = () => {
               </div>
             )}
             {appointment.status === "ativo" && (
-              <div className="flex gap-2 mt-3">
-                <Button asChild size="sm" className="gap-2">
+              <div className="grid grid-cols-[1fr_auto] gap-2 pt-1">
+                <Button asChild size="sm" className="gap-2 px-3">
                   <Link to={`/family/appointments/${appointment.id}`}>
                     <CheckCircle className="w-4 h-4" />
                     Acessar atendimento
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="gap-1.5 relative">
+                <Button asChild size="sm" variant="outline" className="gap-1.5 relative px-3">
                   <Link to={`/chat/${appointment.id}`}>
                     <MessageCircle className="w-4 h-4" />
                     Chat
@@ -268,40 +268,40 @@ const FamilyMatches = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar role="family" userName={familyProfileData?.profiles?.full_name ?? user?.email ?? ""} userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture} />
 
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
         <PageHeader
           title="Solicitações"
           description="Acompanhe o status das suas solicitações enviadas aos cuidadores"
         />
 
-        <Tabs defaultValue="todas" className="mt-6">
-          <TabsList>
-            <TabsTrigger value="todas">
+        <Tabs defaultValue="todas" className="mt-6 min-w-0">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="todas" className="min-w-0 px-1 text-[11px] sm:text-sm">
               Todas
-              <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+              <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px] sm:h-5 sm:px-1.5 sm:text-xs">
                 {allSolicitations.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="pendentes">
+            <TabsTrigger value="pendentes" className="min-w-0 px-1 text-[11px] sm:text-sm">
               Pendentes
               {pending.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px] sm:h-5 sm:px-1.5 sm:text-xs">
                   {pending.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="aceitas">
+            <TabsTrigger value="aceitas" className="min-w-0 px-1 text-[11px] sm:text-sm">
               Aceitas
               {accepted.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px] sm:h-5 sm:px-1.5 sm:text-xs">
                   {accepted.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="recusadas">
+            <TabsTrigger value="recusadas" className="min-w-0 px-1 text-[11px] sm:text-sm">
               Recusadas
               {rejected.length > 0 && (
-                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-1 h-4 px-1 text-[10px] sm:h-5 sm:px-1.5 sm:text-xs">
                   {rejected.length}
                 </Badge>
               )}

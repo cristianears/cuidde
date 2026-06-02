@@ -371,24 +371,27 @@ const CaregiverPublicProfile = () => {
             <Card className="mb-4">
               <CardContent className="p-4 sm:p-6 space-y-4">
                 {caregiver.bio && (
-                  <div>
-                    <h2 className="text-base font-semibold mb-2">Sobre</h2>
-                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
-                      {caregiver.bio}
-                    </p>
+                  <div className="grid grid-cols-[auto_1fr] items-start gap-x-1.5 text-left">
+                    <MessageSquare className="mt-0.5 w-4 h-4" />
+                    <div className="min-w-0">
+                      <h2 className="text-base font-semibold mb-2">Sobre</h2>
+                      <p className="max-w-full overflow-hidden text-left text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
+                        {caregiver.bio.trim()}
+                      </p>
+                    </div>
                   </div>
                 )}
 
                 {caregiver.bio && caregiver.formacao_complementar && <Separator />}
 
                 {caregiver.formacao_complementar && (
-                  <div>
+                  <div className="text-left">
                     <h3 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
                       <GraduationCap className="w-4 h-4" />
                       Formação complementar
                     </h3>
-                    <p className="max-w-full overflow-hidden text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
-                      {caregiver.formacao_complementar}
+                    <p className="max-w-full overflow-hidden text-left text-sm text-muted-foreground leading-relaxed whitespace-pre-line break-words">
+                      {caregiver.formacao_complementar.trim()}
                     </p>
                   </div>
                 )}

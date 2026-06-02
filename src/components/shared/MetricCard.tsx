@@ -26,7 +26,7 @@ const MetricCard = ({
 
   return (
     <Card className={cn("min-w-0 overflow-hidden", className)}>
-      <CardContent className={cn(compact ? "p-3" : "p-6")}>
+      <CardContent className={cn(compact ? "relative min-h-[72px] p-2.5 pr-9 sm:p-3 sm:pr-10" : "p-6")}>
         <div className="flex min-w-0 items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className={cn("font-medium text-muted-foreground leading-tight", compact ? "text-[11px] sm:text-xs" : "text-sm")}>{title}</p>
@@ -53,7 +53,7 @@ const MetricCard = ({
             )}
           </div>
           {icon && (
-            <div className={cn("shrink-0 rounded-xl bg-primary/10 text-primary", compact ? "p-1.5 sm:p-2" : "p-3")}>
+            <div className={cn("shrink-0 rounded-xl bg-primary/10 text-primary", compact ? "absolute right-2 top-2 p-1.5 sm:right-3 sm:top-3 sm:p-2" : "p-3")}>
               {icon}
             </div>
           )}

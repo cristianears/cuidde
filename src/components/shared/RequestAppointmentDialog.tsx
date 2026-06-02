@@ -118,12 +118,12 @@ export default function RequestAppointmentDialog({
               <SelectTrigger id="type">
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
                 {TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    <div>
-                      <span className="font-medium">{opt.label}</span>
-                      <span className="text-xs text-muted-foreground ml-2">{opt.description}</span>
+                  <SelectItem key={opt.value} value={opt.value} className="whitespace-normal py-2 pr-3">
+                    <div className="flex min-w-0 flex-col gap-0.5 whitespace-normal">
+                      <span className="font-medium leading-tight">{opt.label}</span>
+                      <span className="text-xs text-muted-foreground leading-snug break-words">{opt.description}</span>
                     </div>
                   </SelectItem>
                 ))}
