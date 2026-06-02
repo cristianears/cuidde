@@ -1,11 +1,11 @@
-import { Download, Menu, X, User } from "lucide-react";
+import { ChevronRight, Download, Menu, X, User } from "lucide-react";
 import BrandMark from "@/components/shared/BrandMark";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { getFirstName } from "@/lib/display-name";
+import { getFirstName, getInitials } from "@/lib/display-name";
 import { useInstallApp } from "@/hooks/useInstallApp";
 import { toast } from "sonner";
 
@@ -17,7 +17,17 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const displayName = getFirstName(profile?.full_name ?? user?.user_metadata?.full_name, 'Meu painel');
+  const fullName = profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email;
+  const displayName = getFirstName(fullName, 'Meu painel');
+  const userInitials = getInitials(fullName);
+  const roleLabel =
+    role === 'admin'
+      ? 'Area administrativa'
+      : role === 'family'
+        ? 'Area da familia'
+        : role === 'caregiver'
+          ? 'Area do cuidador'
+          : 'Conta icuide';
   const dashboardPath = role === 'admin' ? '/admin' : role === 'family' ? '/family' : role === 'caregiver' ? '/caregiver' : '/login';
   const isCaregiverLanding = location.pathname === "/para-cuidadores";
   const usesTransparentHero = location.pathname === "/" || isCaregiverLanding;
@@ -171,6 +181,7 @@ const Header = () => {
             className={cn("md:hidden p-2 transition-colors cursor-pointer", isSolid ? "text-foreground" : "text-white")}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             type="button"
+            aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -179,8 +190,10 @@ const Header = () => {
         {isMenuOpen && (
           <nav
             className={cn(
-              "md:hidden pt-4 pb-2 flex flex-col gap-3 -mx-4 px-4 mt-4 rounded-xl backdrop-blur-md",
-              isSolid ? "bg-muted/95" : "bg-primary/95",
+              "md:hidden -mx-2 mt-4 flex flex-col gap-2 rounded-2xl border p-3 shadow-xl backdrop-blur-md",
+              isSolid
+                ? "border-border bg-background/95"
+                : "border-white/20 bg-background/95",
             )}
           >
             {navItems.map((item) => (
@@ -188,15 +201,12 @@ const Header = () => {
                 key={item.hash ?? item.href}
                 type="button"
                 onClick={() => goTo(item)}
-                className={cn(
-                  "text-sm font-medium py-2 transition-colors text-left",
-                  isSolid ? "text-muted-foreground hover:text-foreground" : "text-white/80 hover:text-white",
-                )}
+                className="flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {item.label}
               </button>
             ))}
-            <div className="flex flex-col gap-2 pt-2">
+            <div className="mt-1 flex flex-col gap-2 border-t border-border pt-3">
               {canShowInstallAction && (
                 <Button
                   variant="outline"
@@ -205,29 +215,30 @@ const Header = () => {
                     setIsMenuOpen(false);
                     void handleInstallApp();
                   }}
-                  className={cn(
-                    "flex-1 gap-2",
-                    isSolid
-                      ? "border-border text-foreground hover:bg-muted"
-                      : "border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white",
-                  )}
+                  className="w-full justify-center gap-2 border-border text-foreground hover:bg-muted"
                 >
                   <Download className="w-4 h-4" />
                   Instalar app
                 </Button>
               )}
               {user ? (
-                <Button
-                  size="sm"
+                <button
+                  type="button"
                   onClick={() => {
                     setIsMenuOpen(false);
                     navigate(dashboardPath);
                   }}
-                  className="flex-1 bg-accent hover:bg-accent/90 font-semibold gap-2"
+                  className="flex w-full items-center gap-3 rounded-xl bg-accent/15 p-3 text-left text-foreground ring-1 ring-accent/30 transition-colors hover:bg-accent/20"
                 >
-                  <User className="w-4 h-4" />
-                  {displayName}
-                </Button>
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
+                    {userInitials || <User className="h-5 w-5" />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold leading-5">{displayName}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{roleLabel}</span>
+                  </span>
+                  <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
+                </button>
               ) : (
                 <>
                   <Button
@@ -237,12 +248,7 @@ const Header = () => {
                       setIsMenuOpen(false);
                       navigate("/login");
                     }}
-                    className={cn(
-                      "flex-1",
-                      isSolid
-                        ? "border-border text-foreground hover:bg-muted"
-                        : "border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white",
-                    )}
+                    className="w-full border-border text-foreground hover:bg-muted"
                   >
                     Entrar
                   </Button>
@@ -252,7 +258,7 @@ const Header = () => {
                       setIsMenuOpen(false);
                       navigate(signupPath);
                     }}
-                    className="flex-1 bg-accent hover:bg-accent/90 font-semibold"
+                    className="w-full bg-accent hover:bg-accent/90 font-semibold"
                   >
                     {signupLabel}
                   </Button>
