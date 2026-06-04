@@ -6,6 +6,7 @@ const metricCardSource = readFileSync(resolve(__dirname, '../../../components/sh
 const publicProfileSource = readFileSync(resolve(__dirname, '../CaregiverPublicProfile.tsx'), 'utf8')
 const requestDialogSource = readFileSync(resolve(__dirname, '../../../components/shared/RequestAppointmentDialog.tsx'), 'utf8')
 const matchesSource = readFileSync(resolve(__dirname, '../FamilyMatches.tsx'), 'utf8')
+const familyProfileSource = readFileSync(resolve(__dirname, '../FamilyProfile.tsx'), 'utf8')
 
 describe('family mobile layout regressions', () => {
   it('reserves space for compact dashboard metric icons on mobile', () => {
@@ -36,5 +37,12 @@ describe('family mobile layout regressions', () => {
   it('uses a stacked mobile solicitation card layout with balanced actions', () => {
     expect(matchesSource).toContain('flex flex-col gap-3 sm:flex-row')
     expect(matchesSource).toContain('grid grid-cols-[1fr_auto]')
+  })
+
+  it('uses a custom medication time field instead of the native mobile time picker', () => {
+    expect(familyProfileSource).toContain('handleMedicationTimeChange')
+    expect(familyProfileSource).toContain('placeholder="Horário da medicação (HH:MM)"')
+    expect(familyProfileSource).toContain('inputMode="numeric"')
+    expect(familyProfileSource).not.toContain('type="time"')
   })
 })

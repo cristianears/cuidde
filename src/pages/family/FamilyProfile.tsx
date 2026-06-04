@@ -156,9 +156,19 @@ const FamilyProfile = () => {
   const [newMedName, setNewMedName] = useState("");
   const [newMedTime, setNewMedTime] = useState("");
 
+  const handleMedicationTimeChange = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 4);
+    const formatted = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+    setNewMedTime(formatted);
+  };
+
   const handleAddMedication = () => {
     if (!newMedName.trim() || !newMedTime.trim()) {
       toast.error("Preencha o nome do medicamento e o horário.");
+      return;
+    }
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(newMedTime)) {
+      toast.error("Informe um horário válido no formato HH:MM.");
       return;
     }
     const existingTimes = elderlyMedications
@@ -565,26 +575,43 @@ const FamilyProfile = () => {
                 )}
 
                 {/* Formulário para adicionar medicamento */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Input
-                    value={newMedName}
-                    onChange={(e) => setNewMedName(e.target.value)}
-                    placeholder="Nome do medicamento (ex: Losartana 50mg)"
-                    className="text-sm flex-1"
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddMedication())}
-                  />
-                  <Input
-                    type="time"
-                    value={newMedTime}
-                    onChange={(e) => setNewMedTime(e.target.value)}
-                    className="text-sm w-full sm:w-32"
-                  />
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
+                  <div>
+                    <Label htmlFor="newMedName" className="sr-only">Nome do medicamento</Label>
+                    <Input
+                      id="newMedName"
+                      value={newMedName}
+                      onChange={(e) => setNewMedName(e.target.value)}
+                      placeholder="Nome do medicamento (ex: Losartana 50mg)"
+                      className="text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddMedication())}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="newMedTime" className="text-xs text-muted-foreground">
+                      Horário da medicação
+                    </Label>
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="newMedTime"
+                        type="text"
+                        inputMode="numeric"
+                        value={newMedTime}
+                        onChange={(e) => handleMedicationTimeChange(e.target.value)}
+                        placeholder="Horário da medicação (HH:MM)"
+                        maxLength={5}
+                        className="pl-9 text-sm"
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddMedication())}
+                      />
+                    </div>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleAddMedication}
-                    className="gap-1 shrink-0"
+                    className="h-10 gap-1 shrink-0"
                   >
                     <Plus className="w-4 h-4" />
                     Adicionar
