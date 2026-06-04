@@ -33,6 +33,7 @@ import { formatPhone } from "@/lib/formatters";
 import { getInitials } from "@/lib/display-name";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
 import type { ProfessionalReference } from "@/types/database";
 import {
   useCaregiverProfile,
@@ -59,6 +60,7 @@ type CnhCategoryFormValue = "" | "A" | "B" | "AB" | "C" | "D" | "E"
 
 const CaregiverProfile = () => {
   const { user } = useAuth()
+  const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(user?.id, "thirdPartyConsent")
   const { data: profileData, isLoading } = useCaregiverProfile()
   const { data: refsData } = useProfessionalReferences()
 
@@ -109,6 +111,7 @@ const CaregiverProfile = () => {
   const [references, setReferences] = useState<ProfessionalReference[]>([]);
   const [showAddReference, setShowAddReference] = useState(false);
   const [hasAcceptedReferenceConsent, setHasAcceptedReferenceConsent] = useState(false);
+  const [isSavingReferenceConsent, setIsSavingReferenceConsent] = useState(false);
   const [newReference, setNewReference] = useState<NewRef>({
     name: "",
     phone: "",
@@ -241,6 +244,28 @@ const CaregiverProfile = () => {
         : [idioma]
     )
 
+  const referenceConsentAccepted = hasAcceptedThirdPartyConsent || hasAcceptedReferenceConsent
+
+  const handleAcceptReferenceConsent = async (checked: boolean) => {
+    if (!checked || referenceConsentAccepted) return
+    if (!user?.id) return
+
+    setIsSavingReferenceConsent(true)
+    try {
+      await recordUserConsents({
+        userId: user.id,
+        documentKeys: ["thirdPartyConsent"],
+        context: "third_party_data",
+        metadata: { role: "caregiver", source: "caregiver_references" },
+      })
+      setHasAcceptedReferenceConsent(true)
+    } catch {
+      toast.error("Nao foi possivel registrar o aceite do termo. Tente novamente.")
+    } finally {
+      setIsSavingReferenceConsent(false)
+    }
+  }
+
   const handleSaveAllVisibleSteps = async () => {
     try {
       if (!validateBasicStep()) return
@@ -285,17 +310,10 @@ const CaregiverProfile = () => {
 
       if (currentStep >= 4) {
         if (references.length > 0) {
-          if (!user?.id || !hasAcceptedReferenceConsent) {
+          if (!user?.id || !referenceConsentAccepted) {
             toast.error("Aceite o termo de consentimento antes de salvar referencias.");
             return
           }
-
-          await recordUserConsents({
-            userId: user.id,
-            documentKeys: ["thirdPartyConsent"],
-            context: "caregiver_references",
-            metadata: { referencesCount: references.length },
-          })
         }
 
         await updateReferences.mutateAsync({
@@ -918,26 +936,29 @@ const CaregiverProfile = () => {
                 </div>
 
                 {/* Lista de referências */}
-                <div className="rounded-xl border border-border bg-muted/30 p-3 md:p-4">
-                  <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
-                    <Checkbox
-                      checked={hasAcceptedReferenceConsent}
-                      onCheckedChange={(checked) => setHasAcceptedReferenceConsent(checked === true)}
-                      className="mt-0.5 shrink-0"
-                    />
-                    <span className="text-muted-foreground">
-                      Declaro que tenho autorizacao para cadastrar referencias profissionais e aceito o{' '}
-                      <Link
-                        to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
-                        target="_blank"
-                        className="font-medium text-primary underline-offset-4 hover:underline"
-                      >
-                        Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
-                      </Link>
-                      .
-                    </span>
-                  </label>
-                </div>
+                {!referenceConsentAccepted && (
+                  <div className="rounded-xl border border-border bg-muted/30 p-3 md:p-4">
+                    <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
+                      <Checkbox
+                        checked={referenceConsentAccepted}
+                        disabled={isSavingReferenceConsent}
+                        onCheckedChange={(checked) => handleAcceptReferenceConsent(checked === true)}
+                        className="mt-0.5 shrink-0"
+                      />
+                      <span className="text-muted-foreground">
+                        Declaro que tenho autorizacao para cadastrar referencias profissionais e aceito o{' '}
+                        <Link
+                          to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                          target="_blank"
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                          Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
+                        </Link>
+                        .
+                      </span>
+                    </label>
+                  </div>
+                )}
 
                 {references.map((ref) => (
                   <div key={ref.id} className="rounded-xl border border-border overflow-hidden">

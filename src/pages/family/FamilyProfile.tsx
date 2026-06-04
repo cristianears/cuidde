@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
 import { useFamilyProfile, useUpdateFamilyProfileFull, useUploadFamilyPhoto, useRemoveFamilyPhoto } from "@/hooks/useFamilyProfile";
 import { fetchAddressByCep } from "@/lib/viacep";
 import type { ElderlyMedication } from "@/types/database";
@@ -50,6 +51,7 @@ const healthConditionOptions = [
 const FamilyProfile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(user?.id, "thirdPartyConsent");
   const { data: familyProfileData } = useFamilyProfile();
   const { mutate: saveProfile, isPending: isSaving } = useUpdateFamilyProfileFull();
   const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadFamilyPhoto();
@@ -159,6 +161,29 @@ const FamilyProfile = () => {
   const [newMedName, setNewMedName] = useState("");
   const [newMedTime, setNewMedTime] = useState("");
   const [hasAcceptedElderlyConsent, setHasAcceptedElderlyConsent] = useState(false);
+  const [isSavingElderlyConsent, setIsSavingElderlyConsent] = useState(false);
+
+  const elderlyConsentAccepted = hasAcceptedThirdPartyConsent || hasAcceptedElderlyConsent;
+
+  const handleAcceptElderlyConsent = async (checked: boolean) => {
+    if (!checked || elderlyConsentAccepted) return;
+    if (!user?.id) return;
+
+    setIsSavingElderlyConsent(true);
+    try {
+      await recordUserConsents({
+        userId: user.id,
+        documentKeys: ["thirdPartyConsent"],
+        context: "third_party_data",
+        metadata: { role: "family", source: "family_elderly_profile", relationship },
+      });
+      setHasAcceptedElderlyConsent(true);
+    } catch {
+      toast.error("Nao foi possivel registrar o aceite do termo. Tente novamente.");
+    } finally {
+      setIsSavingElderlyConsent(false);
+    }
+  };
 
   const handleMedicationTimeChange = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 4);
@@ -232,20 +257,8 @@ const FamilyProfile = () => {
       || Boolean(bloodType)
 
     if (hasElderlyInfo) {
-      if (!user?.id || !hasAcceptedElderlyConsent) {
+      if (!user?.id || !elderlyConsentAccepted) {
         toast.error("Aceite o termo de consentimento antes de salvar os dados do idoso.");
-        return;
-      }
-
-      try {
-        await recordUserConsents({
-          userId: user.id,
-          documentKeys: ["thirdPartyConsent"],
-          context: "family_elderly_profile",
-          metadata: { relationship },
-        });
-      } catch {
-        toast.error("Nao foi possivel registrar o aceite do termo. Tente novamente.");
         return;
       }
     }
@@ -695,12 +708,13 @@ const FamilyProfile = () => {
           <div className="rounded-xl border border-border bg-card p-3 md:p-4">
             <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
               <Checkbox
-                checked={hasAcceptedElderlyConsent}
-                onCheckedChange={(checked) => setHasAcceptedElderlyConsent(checked === true)}
+                checked={elderlyConsentAccepted}
+                disabled={elderlyConsentAccepted || isSavingElderlyConsent}
+                onCheckedChange={(checked) => handleAcceptElderlyConsent(checked === true)}
                 className="mt-0.5 shrink-0"
               />
               <span className="text-muted-foreground">
-                Declaro que tenho autorizacao para cadastrar informacoes do idoso e aceito o{' '}
+                {elderlyConsentAccepted ? 'Termo ja aceito para informacoes de terceiros. ' : 'Declaro que tenho autorizacao para cadastrar informacoes do idoso e aceito o '}
                 <Link
                   to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
                   target="_blank"

@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
+import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
 import {
   useDocuments,
   useUploadDocument,
@@ -86,6 +87,7 @@ function makeEmptyDoc(type: DocumentType, required: boolean): CaregiverDocument 
 
 const CaregiverDocuments = () => {
   const { data: profileData, isLoading: profileLoading } = useCaregiverProfile();
+  const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(profileData?.id, "thirdPartyConsent");
   const { data: realDocs = [], isLoading: docsLoading } = useDocuments();
   const uploadDocument   = useUploadDocument();
   const removeDocument   = useRemoveDocument();
@@ -98,6 +100,9 @@ const CaregiverDocuments = () => {
   const [registrationUF, setRegistrationUF]           = useState("");
   const [otherRegistrationDesc, setOtherRegistrationDesc] = useState("");
   const [hasAcceptedDocumentConsent, setHasAcceptedDocumentConsent] = useState(false);
+  const [isSavingDocumentConsent, setIsSavingDocumentConsent] = useState(false);
+
+  const documentConsentAccepted = hasAcceptedThirdPartyConsent || hasAcceptedDocumentConsent;
 
   // Sincronizar registro profissional do perfil real
   useEffect(() => {
@@ -114,22 +119,30 @@ const CaregiverDocuments = () => {
   });
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleUpload = async (docType: DocumentType, file: File) => {
+  const handleAcceptDocumentConsent = async (checked: boolean) => {
+    if (!checked || documentConsentAccepted) return;
     if (!profileData?.id) return;
-    if (!hasAcceptedDocumentConsent) {
-      toast.error("Aceite o termo de consentimento antes de enviar documentos.");
-      return;
-    }
 
+    setIsSavingDocumentConsent(true);
     try {
       await recordUserConsents({
         userId: profileData.id,
         documentKeys: ["thirdPartyConsent"],
-        context: "caregiver_documents",
-        metadata: { documentType: docType },
+        context: "third_party_data",
+        metadata: { role: "caregiver", source: "caregiver_documents" },
       });
+      setHasAcceptedDocumentConsent(true);
     } catch {
       toast.error("Nao foi possivel registrar o aceite do termo. Tente novamente.");
+    } finally {
+      setIsSavingDocumentConsent(false);
+    }
+  };
+
+  const handleUpload = async (docType: DocumentType, file: File) => {
+    if (!profileData?.id) return;
+    if (!documentConsentAccepted) {
+      toast.error("Aceite o termo de consentimento antes de enviar documentos.");
       return;
     }
 
@@ -273,12 +286,13 @@ const CaregiverDocuments = () => {
                 <div className="rounded-xl border border-border bg-muted/30 p-3 md:p-4">
                   <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
                     <Checkbox
-                      checked={hasAcceptedDocumentConsent}
-                      onCheckedChange={(checked) => setHasAcceptedDocumentConsent(checked === true)}
+                      checked={documentConsentAccepted}
+                      disabled={documentConsentAccepted || isSavingDocumentConsent}
+                      onCheckedChange={(checked) => handleAcceptDocumentConsent(checked === true)}
                       className="mt-0.5 shrink-0"
                     />
                     <span className="text-muted-foreground">
-                      Declaro que li e aceito o{' '}
+                      {documentConsentAccepted ? 'Termo aceito. ' : 'Declaro que li e aceito o '}
                       <Link
                         to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
                         target="_blank"

@@ -18,6 +18,7 @@ function stableFilterKey(filters: Record<string, unknown>): string {
 
 export const queryKeys = {
   caregiverProfile: (userId: string) => ['caregiverProfile', userId] as const,
+  userConsent: (userId: string, documentKey: string) => ['userConsent', userId, documentKey] as const,
   professionalRefs: (userId: string) => ['professionalReferences', userId] as const,
   caregiverDocuments: (userId: string) => ['caregiverDocuments', userId] as const,
   favorites: (userId: string) => ['favorites', userId] as const,
