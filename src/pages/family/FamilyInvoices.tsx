@@ -62,7 +62,7 @@ const FamilyInvoices = () => {
         userPhoto={familyProfileData?.photo_url ?? user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture}
       />
 
-      <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader title="Faturas" description="Histórico de cobranças da sua assinatura na icuide">
           <Button variant="outline" asChild>
             <Link to="/family/billing">Ver planos</Link>
@@ -103,57 +103,124 @@ const FamilyInvoices = () => {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : invoices && invoices.length > 0 ? (
-            <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Referência</TableHead>
-                      <TableHead>Período</TableHead>
-                      <TableHead>Plano</TableHead>
-                      <TableHead>Valor</TableHead>
-                      <TableHead>Vencimento</TableHead>
-                      <TableHead>Pagamento</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {invoices.map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-mono text-sm text-muted-foreground">
-                          {invoice.invoice_ref ?? "—"}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {invoice.period ?? "—"}
-                        </TableCell>
-                        <TableCell>{getInvoicePlanLabel(invoice.plan, invoice.amount)}</TableCell>
-                        <TableCell>{formatCurrency(invoice.amount)}</TableCell>
-                        <TableCell>
-                          {invoice.due_date ? formatDate(invoice.due_date) : "—"}
-                        </TableCell>
-                        <TableCell>
-                          {invoice.paid_at ? formatDate(invoice.paid_at) : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={(statusConfig[invoice.status] ?? fallbackStatus).className}>
-                            {(statusConfig[invoice.status] ?? fallbackStatus).label}
+            <>
+              <div className="space-y-3 md:hidden">
+                {invoices.map((invoice) => {
+                  const status = statusConfig[invoice.status] ?? fallbackStatus;
+
+                  return (
+                    <Card key={invoice.id}>
+                      <CardContent className="space-y-3 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-muted-foreground">Fatura</p>
+                            <p className="break-all font-mono text-sm text-foreground">
+                              {invoice.invoice_ref ?? "—"}
+                            </p>
+                          </div>
+                          <Badge className={`${status.className} shrink-0`}>
+                            {status.label}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/family/invoices/${invoice.id}`}>
-                              <Eye className="w-4 h-4 mr-1" />
-                              Detalhes
-                            </Link>
-                          </Button>
-                        </TableCell>
+                        </div>
+
+                        <div className="flex items-end justify-between gap-3 rounded-lg bg-muted/40 p-3">
+                          <div className="min-w-0">
+                            <p className="text-xs text-muted-foreground">Plano</p>
+                            <p className="font-medium text-foreground">
+                              {getInvoicePlanLabel(invoice.plan, invoice.amount)}
+                            </p>
+                          </div>
+                          <p className="shrink-0 text-lg font-bold text-primary">
+                            {formatCurrency(invoice.amount)}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Período</p>
+                            <p className="font-medium text-foreground">{invoice.period ?? "—"}</p>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Vencimento</p>
+                              <p className="font-medium text-foreground">
+                                {invoice.due_date ? formatDate(invoice.due_date) : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Pagamento</p>
+                              <p className="font-medium text-foreground">
+                                {invoice.paid_at ? formatDate(invoice.paid_at) : "—"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Button variant="outline" size="sm" className="w-full gap-1.5" asChild>
+                          <Link to={`/family/invoices/${invoice.id}`}>
+                            <Eye className="w-4 h-4" />
+                            Ver detalhes
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              <Card className="hidden md:block">
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Referência</TableHead>
+                        <TableHead>Período</TableHead>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Vencimento</TableHead>
+                        <TableHead>Pagamento</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {invoices.map((invoice) => (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-mono text-sm text-muted-foreground">
+                            {invoice.invoice_ref ?? "—"}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {invoice.period ?? "—"}
+                          </TableCell>
+                          <TableCell>{getInvoicePlanLabel(invoice.plan, invoice.amount)}</TableCell>
+                          <TableCell>{formatCurrency(invoice.amount)}</TableCell>
+                          <TableCell>
+                            {invoice.due_date ? formatDate(invoice.due_date) : "—"}
+                          </TableCell>
+                          <TableCell>
+                            {invoice.paid_at ? formatDate(invoice.paid_at) : "—"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={(statusConfig[invoice.status] ?? fallbackStatus).className}>
+                              {(statusConfig[invoice.status] ?? fallbackStatus).label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/family/invoices/${invoice.id}`}>
+                                <Eye className="w-4 h-4 mr-1" />
+                                Detalhes
+                              </Link>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
           ) : (
             <Card className="border-dashed">
               <CardContent className="py-16 text-center">

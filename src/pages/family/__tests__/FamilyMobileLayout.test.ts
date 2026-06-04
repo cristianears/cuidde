@@ -7,6 +7,7 @@ const publicProfileSource = readFileSync(resolve(__dirname, '../CaregiverPublicP
 const requestDialogSource = readFileSync(resolve(__dirname, '../../../components/shared/RequestAppointmentDialog.tsx'), 'utf8')
 const matchesSource = readFileSync(resolve(__dirname, '../FamilyMatches.tsx'), 'utf8')
 const familyProfileSource = readFileSync(resolve(__dirname, '../FamilyProfile.tsx'), 'utf8')
+const familyInvoicesSource = readFileSync(resolve(__dirname, '../FamilyInvoices.tsx'), 'utf8')
 
 describe('family mobile layout regressions', () => {
   it('reserves space for compact dashboard metric icons on mobile', () => {
@@ -44,5 +45,12 @@ describe('family mobile layout regressions', () => {
     expect(familyProfileSource).toContain('placeholder="Horário da medicação (HH:MM)"')
     expect(familyProfileSource).toContain('inputMode="numeric"')
     expect(familyProfileSource).not.toContain('type="time"')
+  })
+
+  it('shows family invoices as readable mobile cards instead of a clipped table', () => {
+    expect(familyInvoicesSource).toContain('md:hidden')
+    expect(familyInvoicesSource).toContain('hidden md:block')
+    expect(familyInvoicesSource).toContain('Fatura')
+    expect(familyInvoicesSource).toContain('Ver detalhes')
   })
 })
