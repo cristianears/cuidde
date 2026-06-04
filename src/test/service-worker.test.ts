@@ -50,4 +50,15 @@ describe('PWA service worker', () => {
     expect(source).toContain('request.mode === "navigate"')
     expect(source).toContain("caches.match('/offline.html')")
   })
+
+  it('supports immediate activation for app updates', () => {
+    expect(existsSync('public/sw.js')).toBe(true)
+
+    const source = readServiceWorker()
+
+    expect(source).toContain("CACHE_VERSION = 'cuidde-pwa-v7'")
+    expect(source).toContain("self.addEventListener('message'")
+    expect(source).toContain("event.data?.type === 'SKIP_WAITING'")
+    expect(source).toContain("cache: 'reload'")
+  })
 })

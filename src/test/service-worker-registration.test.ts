@@ -34,7 +34,12 @@ describe('registerServiceWorker', () => {
 
   it('registers sw.js on https origins', async () => {
     const { registerServiceWorker } = await loadRegisterServiceWorker()
-    const register = vi.fn().mockResolvedValue(undefined)
+    const update = vi.fn().mockResolvedValue(undefined)
+    const postMessage = vi.fn()
+    const register = vi.fn().mockResolvedValue({
+      update,
+      waiting: { postMessage },
+    })
 
     const result = await registerServiceWorker({
       navigatorLike: { serviceWorker: { register } },
@@ -42,6 +47,8 @@ describe('registerServiceWorker', () => {
     })
 
     expect(result).toBe('registered')
-    expect(register).toHaveBeenCalledWith('/sw.js', { scope: '/' })
+    expect(register).toHaveBeenCalledWith('/sw.js', { scope: '/', updateViaCache: 'none' })
+    expect(update).toHaveBeenCalled()
+    expect(postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' })
   })
 })

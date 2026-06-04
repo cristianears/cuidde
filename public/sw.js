@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'cuidde-pwa-v6'
+const CACHE_VERSION = 'cuidde-pwa-v7'
 const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`
 
 const APP_SHELL_ASSETS = [
@@ -48,6 +48,12 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
+
 function isBlockedRuntimeRequest(request) {
   if (request.method !== 'GET') return true
   if (request.headers.has('Authorization')) return true
@@ -71,8 +77,10 @@ self.addEventListener('fetch', (event) => {
   if (isBlockedRuntimeRequest(request)) return
 
   if (request.mode === "navigate") {
+    const freshRequest = new Request(request, { cache: 'reload' })
+
     event.respondWith(
-      fetch(request)
+      fetch(freshRequest)
         .then((response) => {
           const copy = response.clone()
           caches.open(APP_SHELL_CACHE).then((cache) => cache.put('/index.html', copy))

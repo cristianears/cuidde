@@ -1,6 +1,11 @@
 type NavigatorLike = {
   serviceWorker?: {
-    register: (scriptURL: string, options?: RegistrationOptions) => Promise<unknown>
+    register: (scriptURL: string, options?: RegistrationOptions) => Promise<{
+      update?: () => Promise<unknown>
+      waiting?: {
+        postMessage?: (message: unknown) => void
+      }
+    }>
   }
 }
 
@@ -33,7 +38,12 @@ export async function registerServiceWorker(
   }
 
   try {
-    await navigatorLike.serviceWorker.register('/sw.js', { scope: '/' })
+    const registration = await navigatorLike.serviceWorker.register('/sw.js', {
+      scope: '/',
+      updateViaCache: 'none',
+    })
+    await registration.update?.()
+    registration.waiting?.postMessage?.({ type: 'SKIP_WAITING' })
     return 'registered'
   } catch {
     return 'failed'
