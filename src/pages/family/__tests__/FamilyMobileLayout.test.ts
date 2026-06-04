@@ -8,8 +8,10 @@ const requestDialogSource = readFileSync(resolve(__dirname, '../../../components
 const matchesSource = readFileSync(resolve(__dirname, '../FamilyMatches.tsx'), 'utf8')
 
 describe('family mobile layout regressions', () => {
-  it('keeps compact dashboard metric icons anchored on mobile', () => {
-    expect(metricCardSource).toContain('absolute right-2 top-2')
+  it('reserves space for compact dashboard metric icons on mobile', () => {
+    expect(metricCardSource).toContain('h-6 w-6')
+    expect(metricCardSource).toContain('text-[10px] sm:text-xs')
+    expect(metricCardSource).not.toContain('absolute right-2 top-2')
   })
 
   it('normalizes caregiver about text alignment', () => {
@@ -19,6 +21,9 @@ describe('family mobile layout regressions', () => {
   })
 
   it('wraps appointment type dropdown text within the mobile dialog', () => {
+    expect(requestDialogSource).toContain('selectedTypeLabel')
+    expect(requestDialogSource).toContain('textValue={opt.label}')
+    expect(requestDialogSource).toContain('truncate text-left')
     expect(requestDialogSource).toContain('max-w-[calc(100vw-2rem)]')
     expect(requestDialogSource).toContain('whitespace-normal')
   })

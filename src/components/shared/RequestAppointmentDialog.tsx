@@ -67,6 +67,7 @@ export default function RequestAppointmentDialog({
   const [endDateOpen, setEndDateOpen] = useState(false)
 
   const isValid = type !== "" && startDate !== undefined
+  const selectedTypeLabel = TYPE_OPTIONS.find((opt) => opt.value === type)?.label
 
   const handleSubmit = () => {
     if (!isValid) return
@@ -116,11 +117,13 @@ export default function RequestAppointmentDialog({
             <Label htmlFor="type">Tipo de atendimento *</Label>
             <Select value={type} onValueChange={(v) => setType(v as Appointment["type"])}>
               <SelectTrigger id="type">
-                <SelectValue placeholder="Selecione o tipo" />
+                <span className={cn("block min-w-0 truncate text-left", !selectedTypeLabel && "text-muted-foreground")}>
+                  {selectedTypeLabel ?? "Selecione o tipo"}
+                </span>
               </SelectTrigger>
               <SelectContent className="w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
                 {TYPE_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value} className="whitespace-normal py-2 pr-3">
+                  <SelectItem key={opt.value} value={opt.value} textValue={opt.label} className="whitespace-normal py-2 pr-3">
                     <div className="flex min-w-0 flex-col gap-0.5 whitespace-normal">
                       <span className="font-medium leading-tight">{opt.label}</span>
                       <span className="text-xs text-muted-foreground leading-snug break-words">{opt.description}</span>

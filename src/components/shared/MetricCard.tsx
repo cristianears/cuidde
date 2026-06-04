@@ -26,11 +26,18 @@ const MetricCard = ({
 
   return (
     <Card className={cn("min-w-0 overflow-hidden", className)}>
-      <CardContent className={cn(compact ? "relative min-h-[72px] p-2.5 pr-9 sm:p-3 sm:pr-10" : "p-6")}>
-        <div className="flex min-w-0 items-center justify-between gap-2">
+      <CardContent className={cn(compact ? "p-2.5 sm:p-3" : "p-6")}>
+        <div className={cn("min-w-0", compact ? "space-y-1" : "flex items-center justify-between gap-2")}>
           <div className="min-w-0 flex-1">
-            <p className={cn("font-medium text-muted-foreground leading-tight", compact ? "text-[11px] sm:text-xs" : "text-sm")}>{title}</p>
-            <p className={cn("font-bold text-foreground whitespace-nowrap", compact ? "text-base mt-0.5" : "text-lg mt-1")}>{value}</p>
+            <div className={cn(compact && "flex min-w-0 items-start justify-between gap-1")}>
+              <p className={cn("font-medium text-muted-foreground leading-tight", compact ? "text-[10px] sm:text-xs" : "text-sm")}>{title}</p>
+              {icon && compact && (
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary [&_svg]:h-3.5 [&_svg]:w-3.5">
+                  {icon}
+                </div>
+              )}
+            </div>
+            <p className={cn("font-bold text-foreground whitespace-nowrap", compact ? "text-base leading-none" : "text-lg mt-1")}>{value}</p>
             {change !== undefined && (
               <div className="flex items-center gap-1 mt-2">
                 {isPositive && <TrendingUp className="w-4 h-4 text-emerald-600" />}
@@ -52,8 +59,8 @@ const MetricCard = ({
               </div>
             )}
           </div>
-          {icon && (
-            <div className={cn("shrink-0 rounded-xl bg-primary/10 text-primary", compact ? "absolute right-2 top-2 p-1.5 sm:right-3 sm:top-3 sm:p-2" : "p-3")}>
+          {icon && !compact && (
+            <div className="shrink-0 rounded-xl bg-primary/10 p-3 text-primary">
               {icon}
             </div>
           )}
