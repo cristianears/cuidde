@@ -92,6 +92,12 @@ export type SupportSubject =
 
 export type SupportTicketStatus = 'enviado' | 'em_analise' | 'respondido'
 
+export type LegalConsentType =
+  | 'terms_of_use'
+  | 'privacy_policy'
+  | 'cookie_policy'
+  | 'third_party_data'
+
 // ─── Tabela: profiles ────────────────────────────────────────────────────────
 
 export interface Profile {
@@ -101,6 +107,19 @@ export interface Profile {
   phone: string | null
   created_at: string
   updated_at: string
+}
+
+export interface UserConsent {
+  id: string
+  user_id: string
+  consent_type: LegalConsentType
+  document_version: string
+  document_url: string
+  accepted: boolean
+  context: string
+  metadata: Record<string, unknown>
+  accepted_at: string
+  created_at: string
 }
 
 // ─── Tabela: caregiver_profiles ──────────────────────────────────────────────
@@ -447,6 +466,11 @@ export interface Database {
         Row: Profile
         Insert: Omit<Profile, 'created_at' | 'updated_at'>
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
+      }
+      user_consents: {
+        Row: UserConsent
+        Insert: Omit<UserConsent, 'id' | 'accepted_at' | 'created_at'>
+        Update: never
       }
       caregiver_profiles: {
         Row: CaregiverProfile

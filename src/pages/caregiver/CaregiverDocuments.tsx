@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { FileText, AlertCircle, CheckCircle2, Briefcase, Eye, EyeOff, Lock, Users, ShieldCheck, Loader2 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -8,9 +9,11 @@ import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import {
   useDocuments,
@@ -20,6 +23,8 @@ import {
   useUpdateProfessionalReg,
 } from "@/hooks/useCaregiverDocuments";
 import type { CaregiverDocument, DocumentType, ProfessionalRegType } from "@/types/database";
+import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
+import { recordUserConsents } from "@/lib/user-consents";
 
 // ─── Definições fixas de documentos ──────────────────────────────────────────
 
@@ -92,6 +97,7 @@ const CaregiverDocuments = () => {
   const [registrationNumber, setRegistrationNumber]   = useState("");
   const [registrationUF, setRegistrationUF]           = useState("");
   const [otherRegistrationDesc, setOtherRegistrationDesc] = useState("");
+  const [hasAcceptedDocumentConsent, setHasAcceptedDocumentConsent] = useState(false);
 
   // Sincronizar registro profissional do perfil real
   useEffect(() => {
@@ -108,7 +114,25 @@ const CaregiverDocuments = () => {
   });
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleUpload = (docType: DocumentType, file: File) => {
+  const handleUpload = async (docType: DocumentType, file: File) => {
+    if (!profileData?.id) return;
+    if (!hasAcceptedDocumentConsent) {
+      toast.error("Aceite o termo de consentimento antes de enviar documentos.");
+      return;
+    }
+
+    try {
+      await recordUserConsents({
+        userId: profileData.id,
+        documentKeys: ["thirdPartyConsent"],
+        context: "caregiver_documents",
+        metadata: { documentType: docType },
+      });
+    } catch {
+      toast.error("Nao foi possivel registrar o aceite do termo. Tente novamente.");
+      return;
+    }
+
     uploadDocument.mutate({ docType, file });
   };
 
@@ -245,6 +269,27 @@ const CaregiverDocuments = () => {
                 <p className="text-xs md:text-sm text-muted-foreground pb-1">
                   Apenas o documento de identificação é necessário para cadastro. Os demais são opcionais e podem aumentar a confiança das famílias no seu perfil.
                 </p>
+
+                <div className="rounded-xl border border-border bg-muted/30 p-3 md:p-4">
+                  <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
+                    <Checkbox
+                      checked={hasAcceptedDocumentConsent}
+                      onCheckedChange={(checked) => setHasAcceptedDocumentConsent(checked === true)}
+                      className="mt-0.5 shrink-0"
+                    />
+                    <span className="text-muted-foreground">
+                      Declaro que li e aceito o{' '}
+                      <Link
+                        to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                        target="_blank"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                </div>
 
                 {documents.map((doc) => {
                   const def = DOC_DEFINITIONS.find((d) => d.type === doc.type)!;

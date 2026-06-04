@@ -164,21 +164,21 @@ const Footer = () => {
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
             <button
               type="button"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/terms")}
               className="text-xs text-footer-foreground/60 hover:text-footer-foreground transition-colors"
             >
               Termos de uso
             </button>
             <button
               type="button"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/privacy")}
               className="text-xs text-footer-foreground/60 hover:text-footer-foreground transition-colors"
             >
               Política de privacidade
             </button>
             <button
               type="button"
-              onClick={() => navigate("/onboarding")}
+              onClick={() => navigate("/cookies")}
               className="text-xs text-footer-foreground/60 hover:text-footer-foreground transition-colors"
             >
               Política de cookies

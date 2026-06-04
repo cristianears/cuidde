@@ -16,6 +16,7 @@ import VerifyEmail from './pages/auth/VerifyEmail'
 import AuthCallback from './pages/auth/AuthCallback'
 import ResetPassword from './pages/auth/ResetPassword'
 import Onboarding from './pages/onboarding/Onboarding'
+import LegalDocumentPage from './pages/legal/LegalDocumentPage'
 import CaregiverDashboard from './pages/caregiver/CaregiverDashboard'
 import CaregiverProfile from './pages/caregiver/CaregiverProfile'
 import CaregiverDocuments from './pages/caregiver/CaregiverDocuments'
@@ -45,6 +46,7 @@ import ApprovalQueue from './pages/admin/ApprovalQueue'
 import Finance from './pages/admin/Finance'
 import AppointmentChat from './pages/chat/AppointmentChat'
 import { usePendingAddress } from '@/hooks/usePendingAddress'
+import { usePendingUserConsents } from '@/hooks/usePendingUserConsents'
 import FreeFamilyBanner from '@/components/shared/FreeFamilyBanner'
 import InstallAppPrompt from '@/components/shared/InstallAppPrompt'
 import CookieConsentBanner from '@/components/shared/CookieConsentBanner'
@@ -52,6 +54,7 @@ import CookieConsentBanner from '@/components/shared/CookieConsentBanner'
 // Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
 const AppInit = () => {
   usePendingAddress()
+  usePendingUserConsents()
   return null
 }
 
@@ -77,6 +80,10 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/terms" element={<LegalDocumentPage documentKey="terms" />} />
+            <Route path="/privacy" element={<LegalDocumentPage documentKey="privacy" />} />
+            <Route path="/cookies" element={<LegalDocumentPage documentKey="cookies" />} />
+            <Route path="/third-party-data-consent" element={<LegalDocumentPage documentKey="thirdPartyConsent" />} />
 
             {/* Rotas de cuidador */}
             <Route path="/caregiver" element={<ProtectedRoute role="caregiver"><CaregiverDashboard /></ProtectedRoute>} />

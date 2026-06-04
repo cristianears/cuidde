@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import {
   Camera,
   Save,
@@ -42,6 +43,8 @@ import {
   useUpdateCaregiverReferences,
   useUploadCaregiverPhoto,
 } from "@/hooks/useCaregiverProfile";
+import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
+import { recordUserConsents } from "@/lib/user-consents";
 
 const profileSteps = [
   { id: 1, title: "Dados básicos" },
@@ -105,6 +108,7 @@ const CaregiverProfile = () => {
 
   const [references, setReferences] = useState<ProfessionalReference[]>([]);
   const [showAddReference, setShowAddReference] = useState(false);
+  const [hasAcceptedReferenceConsent, setHasAcceptedReferenceConsent] = useState(false);
   const [newReference, setNewReference] = useState<NewRef>({
     name: "",
     phone: "",
@@ -280,6 +284,20 @@ const CaregiverProfile = () => {
       }
 
       if (currentStep >= 4) {
+        if (references.length > 0) {
+          if (!user?.id || !hasAcceptedReferenceConsent) {
+            toast.error("Aceite o termo de consentimento antes de salvar referencias.");
+            return
+          }
+
+          await recordUserConsents({
+            userId: user.id,
+            documentKeys: ["thirdPartyConsent"],
+            context: "caregiver_references",
+            metadata: { referencesCount: references.length },
+          })
+        }
+
         await updateReferences.mutateAsync({
           references: references.map((r) => ({
             name: r.name,
@@ -900,6 +918,27 @@ const CaregiverProfile = () => {
                 </div>
 
                 {/* Lista de referências */}
+                <div className="rounded-xl border border-border bg-muted/30 p-3 md:p-4">
+                  <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
+                    <Checkbox
+                      checked={hasAcceptedReferenceConsent}
+                      onCheckedChange={(checked) => setHasAcceptedReferenceConsent(checked === true)}
+                      className="mt-0.5 shrink-0"
+                    />
+                    <span className="text-muted-foreground">
+                      Declaro que tenho autorizacao para cadastrar referencias profissionais e aceito o{' '}
+                      <Link
+                        to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                        target="_blank"
+                        className="font-medium text-primary underline-offset-4 hover:underline"
+                      >
+                        Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                </div>
+
                 {references.map((ref) => (
                   <div key={ref.id} className="rounded-xl border border-border overflow-hidden">
                     {editingRefId === ref.id ? (

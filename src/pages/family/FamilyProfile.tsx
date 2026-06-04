@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Save,
   X,
@@ -18,6 +18,7 @@ import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile, useUpdateFamilyProfileFull, useUploadFamilyPhoto, useRemoveFamilyPhoto } from "@/hooks/useFamilyProfile";
 import { fetchAddressByCep } from "@/lib/viacep";
 import type { ElderlyMedication } from "@/types/database";
+import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
+import { recordUserConsents } from "@/lib/user-consents";
 
 const healthConditionOptions = [
   "Alzheimer",
@@ -155,6 +158,7 @@ const FamilyProfile = () => {
   const [elderlyMedications, setElderlyMedications] = useState<ElderlyMedication[]>([]);
   const [newMedName, setNewMedName] = useState("");
   const [newMedTime, setNewMedTime] = useState("");
+  const [hasAcceptedElderlyConsent, setHasAcceptedElderlyConsent] = useState(false);
 
   const handleMedicationTimeChange = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 4);
@@ -212,7 +216,40 @@ const FamilyProfile = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const hasElderlyInfo = [
+      elderlyName,
+      elderlyAge,
+      careNeeds,
+      preExistingConditions,
+      allergies,
+      continuousMedications,
+      responsibleDoctor,
+      healthInsurance,
+    ].some((value) => value.trim().length > 0)
+      || selectedConditions.length > 0
+      || elderlyMedications.length > 0
+      || Boolean(bloodType)
+
+    if (hasElderlyInfo) {
+      if (!user?.id || !hasAcceptedElderlyConsent) {
+        toast.error("Aceite o termo de consentimento antes de salvar os dados do idoso.");
+        return;
+      }
+
+      try {
+        await recordUserConsents({
+          userId: user.id,
+          documentKeys: ["thirdPartyConsent"],
+          context: "family_elderly_profile",
+          metadata: { relationship },
+        });
+      } catch {
+        toast.error("Nao foi possivel registrar o aceite do termo. Tente novamente.");
+        return;
+      }
+    }
+
     saveProfile({
       full_name: responsibleName,
       phone: responsiblePhone,
@@ -655,6 +692,27 @@ const FamilyProfile = () => {
           </Card>
 
           {/* Rodapé de ações */}
+          <div className="rounded-xl border border-border bg-card p-3 md:p-4">
+            <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
+              <Checkbox
+                checked={hasAcceptedElderlyConsent}
+                onCheckedChange={(checked) => setHasAcceptedElderlyConsent(checked === true)}
+                className="mt-0.5 shrink-0"
+              />
+              <span className="text-muted-foreground">
+                Declaro que tenho autorizacao para cadastrar informacoes do idoso e aceito o{' '}
+                <Link
+                  to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                  target="_blank"
+                  className="font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
+                </Link>
+                .
+              </span>
+            </label>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-6">
             <Button onClick={handleSave} disabled={isSaving} className="gap-2">
               <Save className="w-4 h-4" />

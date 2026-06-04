@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
@@ -30,6 +31,8 @@ import { supabase } from '@/lib/supabase'
 import { geocodeAddress } from '@/lib/geocode'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
+import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
+import { queuePendingUserConsents, recordUserConsents } from '@/lib/user-consents'
 
 type ProfileType = 'family' | 'caregiver' | null
 
@@ -106,6 +109,7 @@ const Onboarding = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [hasAcceptedPlatformTerms, setHasAcceptedPlatformTerms] = useState(false)
 
   // Pre-fill from query params (?type, ?cep, ?email)
   useEffect(() => {
@@ -253,6 +257,21 @@ const Onboarding = () => {
 
   const handleSubmit = async () => {
     if (!formData.profileType) return
+    if (!hasAcceptedPlatformTerms) {
+      toast.error('Para criar sua conta, aceite os termos e politicas da plataforma.')
+      return
+    }
+
+    const buildSignupConsentPayload = (userId: string) => ({
+      userId,
+      documentKeys: ['terms', 'privacy', 'cookies'] as const,
+      context: 'signup',
+      metadata: {
+        role: formData.profileType,
+        flow: isGoogleFlow ? 'google' : 'email',
+      },
+    })
+
     setIsSubmitting(true)
     try {
       if (isGoogleFlow && user) {
@@ -303,6 +322,8 @@ const Onboarding = () => {
             return
           }
         }
+
+        await recordUserConsents(buildSignupConsentPayload(user.id))
 
         const profileQueryKey = formData.profileType === 'caregiver'
           ? queryKeys.caregiverProfile(user.id)
@@ -373,6 +394,13 @@ const Onboarding = () => {
             } catch {
               // Falha na geocodificação não bloqueia o fluxo
             }
+          }
+
+          const consentPayload = buildSignupConsentPayload(data.user.id)
+          try {
+            await recordUserConsents(consentPayload)
+          } catch {
+            queuePendingUserConsents(consentPayload)
           }
         }
 
@@ -900,6 +928,31 @@ const Onboarding = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-background p-4">
+                  <label className="flex items-start gap-3 text-sm leading-relaxed">
+                    <Checkbox
+                      checked={hasAcceptedPlatformTerms}
+                      onCheckedChange={(checked) => setHasAcceptedPlatformTerms(checked === true)}
+                      className="mt-0.5 shrink-0"
+                    />
+                    <span className="text-muted-foreground">
+                      Li e aceito os{' '}
+                      <Link className="font-medium text-primary underline-offset-4 hover:underline" to={LEGAL_DOCUMENTS.terms.route} target="_blank">
+                        Termos de Uso
+                      </Link>
+                      , a{' '}
+                      <Link className="font-medium text-primary underline-offset-4 hover:underline" to={LEGAL_DOCUMENTS.privacy.route} target="_blank">
+                        Politica de Privacidade
+                      </Link>
+                      {' '}e a{' '}
+                      <Link className="font-medium text-primary underline-offset-4 hover:underline" to={LEGAL_DOCUMENTS.cookies.route} target="_blank">
+                        Politica de Cookies
+                      </Link>
+                      .
+                    </span>
+                  </label>
                 </div>
               </div>
             )}
