@@ -183,4 +183,14 @@ describe('AppSidebar', () => {
     expect(solicitacoes).toHaveTextContent('2')
     expect(atendimentos).not.toHaveTextContent('2')
   })
+
+  it('marca a secao ativa em rotas internas para manter o item visivel no mobile', () => {
+    const { container } = renderSidebar({ role: 'family' }, '/family/appointments/appointment-123')
+
+    const atendimentos = container.querySelector('a[href="/family/appointments"]')
+    const dashboard = container.querySelector('a[href="/family"]')
+
+    expect(atendimentos).toHaveAttribute('data-active', 'true')
+    expect(dashboard).not.toHaveAttribute('data-active')
+  })
 })

@@ -625,7 +625,7 @@ const FamilyProfile = () => {
                 )}
 
                 {/* Formulário para adicionar medicamento */}
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto] sm:items-end">
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1fr)_minmax(14rem,16rem)_auto] md:items-end">
                   <div>
                     <Label htmlFor="newMedName" className="sr-only">Nome do medicamento</Label>
                     <Input
@@ -649,7 +649,7 @@ const FamilyProfile = () => {
                         inputMode="numeric"
                         value={newMedTime}
                         onChange={(e) => handleMedicationTimeChange(e.target.value)}
-                        placeholder="Horário da medicação (HH:MM)"
+                        placeholder="HH:MM"
                         maxLength={5}
                         className="pl-9 text-sm"
                         onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddMedication())}

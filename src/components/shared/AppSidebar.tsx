@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -76,6 +76,7 @@ interface AppSidebarProps {
 const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
+  const mobileNavRef = useRef<HTMLElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const items = sidebarItems[role];
@@ -85,6 +86,20 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
   useEffect(() => {
     setPhotoFailed(false);
   }, [userPhoto]);
+
+  useEffect(() => {
+    const nav = mobileNavRef.current;
+    if (!nav || (typeof window.matchMedia === "function" && window.matchMedia("(min-width: 768px)").matches)) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const activeItem = nav.querySelector<HTMLElement>('[data-active="true"]');
+      if (typeof activeItem?.scrollIntoView === "function") {
+        activeItem.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.pathname, role]);
 
   // Notificações — apenas caregiver/family (admin não precisa)
   const enableNotifications = role === 'caregiver' || role === 'family';
@@ -172,15 +187,18 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-x-auto overflow-y-hidden px-2 pb-[env(safe-area-inset-bottom)] pt-2 md:p-3 md:space-y-1 md:overflow-y-auto md:overflow-x-hidden">
+      <nav ref={mobileNavRef} className="flex-1 overflow-x-auto overflow-y-hidden px-2 pb-[env(safe-area-inset-bottom)] pt-2 md:p-3 md:space-y-1 md:overflow-y-auto md:overflow-x-hidden">
         <div className="flex min-w-max items-stretch gap-1 md:block md:min-w-0 md:space-y-1">
         {items.map((item) => {
-          const isActive = location.pathname === item.href;
+          const isActive =
+            location.pathname === item.href ||
+            (item.href !== `/${role}` && location.pathname.startsWith(`${item.href}/`));
           const badgeCount = badgeCounts[item.href] ?? 0;
           return (
             <Link
               key={item.href}
               to={item.href}
+              data-active={isActive ? "true" : undefined}
               className={cn(
                 "relative flex w-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors md:w-auto md:flex-row md:justify-start md:gap-3 md:px-3 md:py-2.5 md:text-left",
                 isActive
