@@ -8,6 +8,7 @@ const requestDialogSource = readFileSync(resolve(__dirname, '../../../components
 const matchesSource = readFileSync(resolve(__dirname, '../FamilyMatches.tsx'), 'utf8')
 const familyProfileSource = readFileSync(resolve(__dirname, '../FamilyProfile.tsx'), 'utf8')
 const familyInvoicesSource = readFileSync(resolve(__dirname, '../FamilyInvoices.tsx'), 'utf8')
+const familyInvoiceDetailsSource = readFileSync(resolve(__dirname, '../FamilyInvoiceDetails.tsx'), 'utf8')
 
 describe('family mobile layout regressions', () => {
   it('reserves space for compact dashboard metric icons on mobile', () => {
@@ -52,5 +53,10 @@ describe('family mobile layout regressions', () => {
     expect(familyInvoicesSource).toContain('hidden md:block')
     expect(familyInvoicesSource).toContain('Fatura')
     expect(familyInvoicesSource).toContain('Ver detalhes')
+  })
+
+  it('does not expose Stripe invoice identifiers in family invoice details', () => {
+    expect(familyInvoiceDetailsSource).not.toContain('ID Stripe')
+    expect(familyInvoiceDetailsSource).not.toContain('stripe_invoice_id &&')
   })
 })

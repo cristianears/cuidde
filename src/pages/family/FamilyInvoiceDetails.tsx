@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, CreditCard, User, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, User, FileText, Loader2 } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/shared/AppSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -194,18 +194,6 @@ const FamilyInvoiceDetails = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Link Stripe */}
-          {invoice.stripe_invoice_id && (
-            <Card className="bg-muted/30 border-dashed">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CreditCard className="w-4 h-4" />
-                  <span>ID Stripe: <span className="font-mono">{invoice.stripe_invoice_id}</span></span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </main>
     </div>
