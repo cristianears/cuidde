@@ -43,7 +43,9 @@ describe('family mobile layout regressions', () => {
 
   it('uses a custom medication time field instead of the native mobile time picker', () => {
     expect(familyProfileSource).toContain('handleMedicationTimeChange')
-    expect(familyProfileSource).toContain('placeholder="Horário da medicação (HH:MM)"')
+    expect(familyProfileSource).toContain('Horário da medicação')
+    expect(familyProfileSource).toContain('placeholder="HH:MM"')
+    expect(familyProfileSource).toContain('md:grid-cols-[minmax(0,1fr)_minmax(14rem,16rem)_auto]')
     expect(familyProfileSource).toContain('inputMode="numeric"')
     expect(familyProfileSource).not.toContain('type="time"')
   })
