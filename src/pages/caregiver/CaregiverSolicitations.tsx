@@ -100,7 +100,7 @@ const CaregiverSolicitations = () => {
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
+          <Button variant="outline" size="sm" className="w-full gap-1.5 text-destructive hover:text-destructive sm:w-auto">
             <XCircle className="w-4 h-4" />
             Recusar
           </Button>
@@ -143,23 +143,23 @@ const CaregiverSolicitations = () => {
 
     return (
       <Card className="hover:shadow-md transition-shadow">
-        <CardContent className="p-4 md:p-5">
-          <div className="flex items-start gap-4">
-            <Avatar className="w-14 h-14 shrink-0">
-              <AvatarFallback className="bg-primary/10 text-primary text-lg">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <Avatar className="w-12 h-12 sm:w-14 sm:h-14">
+              <AvatarFallback className="bg-primary/10 text-primary text-base sm:text-lg">
                 {getInitials(appointment.family_name)}
               </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 space-y-2">
               {/* Header: nome + status */}
-              <div className="flex items-start justify-between gap-2 mb-3">
-                <div>
-                  <h3 className="font-semibold text-foreground">
+              <div className="grid grid-cols-[1fr_auto] items-start gap-2">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground truncate">
                     {appointment.family_name ?? "Família"}
                   </h3>
                   {appointment.elderly_name && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       Idoso(a): {appointment.elderly_name}
                     </p>
                   )}
@@ -182,49 +182,49 @@ const CaregiverSolicitations = () => {
                 )}
               </div>
 
-              <Separator className="mb-3" />
+              <Separator />
 
               {/* Detalhes da solicitação */}
-              <div className="space-y-2 mb-3">
+              <div className="space-y-2">
                 <div className="flex flex-wrap gap-1.5">
                   <Badge variant="secondary" className="text-xs font-normal">
                     {TYPE_LABELS[appointment.type] ?? appointment.type}
                   </Badge>
                   {appointment.modality && (
-                    <Badge variant="outline" className="text-xs font-normal gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {appointment.modality}
+                    <Badge variant="outline" className="max-w-full text-xs font-normal gap-1 whitespace-normal">
+                      <MapPin className="w-3 h-3 shrink-0" />
+                      <span className="break-words">{appointment.modality}</span>
                     </Badge>
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Calendar className="w-3.5 h-3.5 shrink-0" />
                     <span>Início: {formatDate(appointment.start_date)}</span>
                   </div>
                   {appointment.end_date && (
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Clock className="w-3.5 h-3.5 shrink-0" />
                       <span>Fim: {formatDate(appointment.end_date)}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Calendar className="w-3 h-3" />
+                  <Calendar className="w-3 h-3 shrink-0" />
                   <span>Recebida em {formatDate(appointment.created_at)}</span>
                 </div>
               </div>
 
               {/* Descrição do atendimento */}
               {appointment.description && (
-                <div className="bg-muted/50 rounded-lg p-3 mb-3">
+                <div className="bg-muted/50 rounded-lg p-3">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-foreground mb-1">
                     <FileText className="w-3.5 h-3.5" />
                     Descrição do atendimento
                   </div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
                     {appointment.description}
                   </p>
                 </div>
@@ -232,12 +232,12 @@ const CaregiverSolicitations = () => {
 
               {/* Observações sobre o idoso */}
               {appointment.family_notes && (
-                <div className="bg-blue-50/50 rounded-lg p-3 mb-3">
+                <div className="bg-blue-50/50 rounded-lg p-3">
                   <div className="flex items-center gap-1.5 text-xs font-medium text-foreground mb-1">
                     <MessageSquare className="w-3.5 h-3.5" />
                     Observações sobre o idoso
                   </div>
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">
+                  <p className="text-sm text-muted-foreground whitespace-pre-line break-words">
                     {appointment.family_notes}
                   </p>
                 </div>
@@ -258,10 +258,10 @@ const CaregiverSolicitations = () => {
 
               {/* Ações */}
               {isPending && (
-                <div className="flex gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-wrap">
                   <Button
                     size="sm"
-                    className="gap-1.5"
+                    className="w-full gap-1.5 sm:w-auto"
                     onClick={() => handleAccept(appointment.id)}
                     disabled={isUpdating}
                   >
@@ -272,7 +272,7 @@ const CaregiverSolicitations = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5 relative"
+                    className="col-span-2 w-full gap-1.5 relative sm:col-span-1 sm:w-auto"
                     onClick={() => navigate(`/chat/${appointment.id}`)}
                   >
                     <MessageCircle className="w-4 h-4" />
@@ -286,11 +286,11 @@ const CaregiverSolicitations = () => {
                 </div>
               )}
               {isAccepted && (
-                <div className="flex gap-2 pt-2">
+                <div className="grid grid-cols-1 gap-2 pt-2 sm:flex sm:flex-wrap">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5"
+                    className="w-full gap-1.5 sm:w-auto"
                     onClick={() => navigate(`/caregiver/appointments/${appointment.id}`)}
                   >
                     <Briefcase className="w-4 h-4" />
@@ -299,7 +299,7 @@ const CaregiverSolicitations = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5 relative"
+                    className="w-full gap-1.5 relative sm:w-auto"
                     onClick={() => navigate(`/chat/${appointment.id}`)}
                   >
                     <MessageCircle className="w-4 h-4" />

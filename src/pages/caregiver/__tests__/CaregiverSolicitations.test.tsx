@@ -2,8 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import CaregiverSolicitations from '../CaregiverSolicitations'
 import type { AppointmentWithNames } from '@/hooks/useAppointments'
+
+const source = readFileSync(resolve(__dirname, '../CaregiverSolicitations.tsx'), 'utf8')
 
 const mockAppointments = vi.hoisted(() => ({
   data: [] as AppointmentWithNames[],
@@ -102,5 +106,12 @@ describe('CaregiverSolicitations', () => {
     renderPage()
 
     expect(screen.getByRole('button', { name: /chat/i })).toHaveTextContent('1')
+  })
+
+  it('mantem o card de solicitacao legivel no mobile sem estourar as acoes', () => {
+    expect(source).toContain('flex flex-col gap-3 sm:flex-row sm:items-start')
+    expect(source).toContain('grid grid-cols-[1fr_auto] items-start gap-2')
+    expect(source).toContain('grid grid-cols-2 gap-2 pt-2 sm:flex sm:flex-wrap')
+    expect(source).toContain('col-span-2 w-full gap-1.5 relative sm:col-span-1 sm:w-auto')
   })
 })
