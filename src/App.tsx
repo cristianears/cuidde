@@ -47,6 +47,7 @@ import AppointmentChat from './pages/chat/AppointmentChat'
 import { usePendingAddress } from '@/hooks/usePendingAddress'
 import FreeFamilyBanner from '@/components/shared/FreeFamilyBanner'
 import InstallAppPrompt from '@/components/shared/InstallAppPrompt'
+import CookieConsentBanner from '@/components/shared/CookieConsentBanner'
 
 // Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
 const AppInit = () => {
@@ -64,6 +65,7 @@ const App = () => (
           <AppInit />
           <FreeFamilyBanner />
           <InstallAppPrompt />
+          <CookieConsentBanner />
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
