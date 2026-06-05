@@ -1,4 +1,4 @@
-import { Users, DollarSign, TrendingUp } from "lucide-react";
+import { Users, DollarSign, TrendingUp, CheckCircle2, ClipboardList, CalendarDays } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import MetricCard from "@/components/shared/MetricCard";
@@ -36,6 +36,37 @@ const AdminDashboard = () => {
             }
             icon={<DollarSign className="w-5 h-5" />}
           />
+        </div>
+
+        <div className="mb-8">
+          <div className="mb-3">
+            <h2 className="text-base font-semibold text-foreground">Operação de cuidadores</h2>
+            <p className="text-sm text-muted-foreground">
+              Acompanhe completude de perfil e uso recente da rotina de cuidados.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Perfis completos"
+              value={loadingMetrics ? "..." : (metrics?.profileCompleteCaregivers ?? 0)}
+              icon={<CheckCircle2 className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Rotina nos últimos 7 dias"
+              value={loadingMetrics ? "..." : (metrics?.caregiversWithRoutineLast7Days ?? 0)}
+              icon={<ClipboardList className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Rotina nos últimos 30 dias"
+              value={loadingMetrics ? "..." : (metrics?.caregiversWithRoutineLast30Days ?? 0)}
+              icon={<CalendarDays className="w-5 h-5" />}
+            />
+            <MetricCard
+              title="Rotina hoje"
+              value={loadingMetrics ? "..." : (metrics?.caregiversWithRoutineToday ?? 0)}
+              icon={<ClipboardList className="w-5 h-5" />}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6">

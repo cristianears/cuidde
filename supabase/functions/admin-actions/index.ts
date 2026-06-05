@@ -205,6 +205,11 @@ serve(async (req) => {
     const weightedSum = (ratingData ?? []).reduce((s: number, r: any) => s + (r.average_rating ?? 0) * (r.review_count ?? 0), 0)
     const averageRating = totalReviews > 0 ? Math.round((weightedSum / totalReviews) * 10) / 10 : 0
 
+    const { data: caregiverOps, error: caregiverOpsError } = await supabase
+      .rpc('get_admin_caregiver_operational_metrics')
+      .single()
+    if (caregiverOpsError) return json({ error: caregiverOpsError.message }, 500, cors)
+
     const activeSubscriptions = subsRes.count ?? 0
 
     // MRR = receita recorrente mensal normalizada por plano
@@ -229,6 +234,11 @@ serve(async (req) => {
         averageTicket,
         subscriptions,
         averageRating,
+        profileCompleteCaregivers: caregiverOps?.profile_complete_caregivers ?? 0,
+        caregiversWithRoutineAnyTime: caregiverOps?.caregivers_with_routine_any_time ?? 0,
+        caregiversWithRoutineLast30Days: caregiverOps?.caregivers_with_routine_last_30_days ?? 0,
+        caregiversWithRoutineLast7Days: caregiverOps?.caregivers_with_routine_last_7_days ?? 0,
+        caregiversWithRoutineToday: caregiverOps?.caregivers_with_routine_today ?? 0,
       },
     }, 200, cors)
   }

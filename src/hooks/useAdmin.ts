@@ -68,6 +68,11 @@ export interface AdminMetrics {
   averageTicket: number
   subscriptions: { monthly: number; quarterly: number; annual: number }
   averageRating: number
+  profileCompleteCaregivers: number
+  caregiversWithRoutineAnyTime: number
+  caregiversWithRoutineLast30Days: number
+  caregiversWithRoutineLast7Days: number
+  caregiversWithRoutineToday: number
 }
 
 export interface AdminSubscriptionRow {
