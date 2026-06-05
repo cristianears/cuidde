@@ -6,6 +6,7 @@ const metricCardSource = readFileSync(resolve(__dirname, '../../../components/sh
 const publicProfileSource = readFileSync(resolve(__dirname, '../CaregiverPublicProfile.tsx'), 'utf8')
 const requestDialogSource = readFileSync(resolve(__dirname, '../../../components/shared/RequestAppointmentDialog.tsx'), 'utf8')
 const matchesSource = readFileSync(resolve(__dirname, '../FamilyMatches.tsx'), 'utf8')
+const searchCaregiversSource = readFileSync(resolve(__dirname, '../SearchCaregivers.tsx'), 'utf8')
 const familyProfileSource = readFileSync(resolve(__dirname, '../FamilyProfile.tsx'), 'utf8')
 const familyInvoicesSource = readFileSync(resolve(__dirname, '../FamilyInvoices.tsx'), 'utf8')
 const familyInvoiceDetailsSource = readFileSync(resolve(__dirname, '../FamilyInvoiceDetails.tsx'), 'utf8')
@@ -39,6 +40,14 @@ describe('family mobile layout regressions', () => {
   it('uses a stacked mobile solicitation card layout with balanced actions', () => {
     expect(matchesSource).toContain('flex flex-col gap-3 sm:flex-row')
     expect(matchesSource).toContain('grid grid-cols-[1fr_auto]')
+  })
+
+  it('makes binary caregiver filters clearly show active and inactive states', () => {
+    expect(searchCaregiversSource).toContain('aria-pressed={emergencyOnly}')
+    expect(searchCaregiversSource).toContain('aria-pressed={withReferences}')
+    expect(searchCaregiversSource).toContain('CheckCircle2')
+    expect(searchCaregiversSource).toContain('Ativo')
+    expect(searchCaregiversSource).toContain('Não aplicado')
   })
 
   it('uses a custom medication time field instead of the native mobile time picker', () => {

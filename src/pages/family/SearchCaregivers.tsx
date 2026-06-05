@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe, Locate } from "lucide-react";
+import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe, Locate, CheckCircle2 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import CaregiverCard from "@/components/shared/CaregiverCard";
@@ -390,12 +390,24 @@ const SearchCaregivers = () => {
                     Disponibilidade
                   </Label>
                   <Button
-                    variant={emergencyOnly ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
                     onClick={() => setEmergencyOnly(!emergencyOnly)}
-                    className={cn("h-8 text-xs justify-start w-full", emergencyOnly && "bg-primary")}
+                    aria-pressed={emergencyOnly}
+                    className={cn(
+                      "h-auto min-h-10 w-full justify-between gap-2 px-3 py-2 text-xs transition-colors",
+                      emergencyOnly
+                        ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
                   >
-                    Disponível p/ emergências
+                    <span className="flex min-w-0 items-center gap-2 text-left">
+                      {emergencyOnly && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                      <span className="truncate">Disponível p/ emergências</span>
+                    </span>
+                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", emergencyOnly ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                      {emergencyOnly ? "Ativo" : "Não aplicado"}
+                    </span>
                   </Button>
                 </div>
 
@@ -406,12 +418,24 @@ const SearchCaregivers = () => {
                     Referências
                   </Label>
                   <Button
-                    variant={withReferences ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
                     onClick={() => setWithReferences(!withReferences)}
-                    className={cn("h-8 text-xs justify-start w-full", withReferences && "bg-primary")}
+                    aria-pressed={withReferences}
+                    className={cn(
+                      "h-auto min-h-10 w-full justify-between gap-2 px-3 py-2 text-xs transition-colors",
+                      withReferences
+                        ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+                    )}
                   >
-                    Com referências
+                    <span className="flex min-w-0 items-center gap-2 text-left">
+                      {withReferences && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
+                      <span className="truncate">Com referências</span>
+                    </span>
+                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", withReferences ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
+                      {withReferences ? "Ativo" : "Não aplicado"}
+                    </span>
                   </Button>
                 </div>
 

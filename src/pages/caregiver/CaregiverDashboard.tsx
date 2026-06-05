@@ -187,6 +187,7 @@ const CaregiverDashboard = () => {
     : { pct: 0, checks: [] };
 
   const incompleteChecks = profileCompleteness.checks.filter((c) => !c.done);
+  const isProfileComplete = profileCompleteness.pct === 100;
 
   // ── Ações recomendadas (mostrar apenas itens incompletos, máx. 4) ────────
   const recommendedActions = incompleteChecks
@@ -274,7 +275,7 @@ const CaregiverDashboard = () => {
         {/* ── Seção 1 — Métricas rápidas ──────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
 
-          {/* 1. Perfil completo */}
+          {/* 1. Perfil */}
           <Card className="shadow-sm border-0 bg-card">
             <CardContent className="p-4 md:p-5">
               <div className="flex items-start justify-between mb-3">
@@ -282,16 +283,18 @@ const CaregiverDashboard = () => {
                   <User className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                 </div>
               </div>
-              <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">Perfil</p>
+              <p className="text-xs md:text-sm font-medium text-muted-foreground mb-1">
+                {isProfileComplete ? "Perfil Completo" : "Perfil Incompleto"}
+              </p>
               <span
                 className={cn(
                   "inline-flex items-center gap-1 md:gap-1.5 px-2 md:px-2.5 py-1 rounded-full text-xs font-semibold",
-                  profileCompleteness.pct === 100
+                  isProfileComplete
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-amber-100 text-amber-700",
                 )}
               >
-                {profileCompleteness.pct === 100 ? (
+                {isProfileComplete ? (
                   <><CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5" /> Completo</>
                 ) : (
                   <><Clock className="w-3 h-3 md:w-3.5 md:h-3.5" /> {profileCompleteness.pct}%</>
@@ -396,7 +399,7 @@ const CaregiverDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Perfil completo — barra de progresso */}
+            {/* Perfil — barra de progresso */}
             <Card className="shadow-sm border-0 bg-card">
               <CardContent className="p-4 md:p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -406,7 +409,7 @@ const CaregiverDashboard = () => {
                   <span
                     className={cn(
                       "text-xs font-bold px-2 py-0.5 rounded-full",
-                      profileCompleteness.pct >= 80
+                      isProfileComplete
                         ? "bg-emerald-100 text-emerald-700"
                         : "bg-amber-100 text-amber-700",
                     )}
@@ -414,7 +417,9 @@ const CaregiverDashboard = () => {
                     {profileCompleteness.pct}%
                   </span>
                 </div>
-                <p className="text-xs md:text-sm font-medium text-muted-foreground mb-2">Perfil completo</p>
+                <p className="text-xs md:text-sm font-medium text-muted-foreground mb-2">
+                  {isProfileComplete ? "Perfil completo" : "Perfil incompleto"}
+                </p>
                 <Progress value={profileCompleteness.pct} className="h-1.5 mb-3" />
                 {incompleteChecks.length > 0 ? (
                   <div className="space-y-1.5">
