@@ -19,4 +19,12 @@ describe('CaregiverDashboard profile completeness labels', () => {
     expect(source).not.toContain('refs: ProfessionalReference[]')
     expect(source).not.toContain('getProfileCompleteness(profileData, documents, refs)')
   })
+
+  it('surfaces the daily care routine reminder on the caregiver dashboard', () => {
+    expect(source).toContain('useCareRoutineTodayStatus')
+    expect(source).toContain('firstAppointmentMissingRoutineToday')
+    expect(source).toContain('Já registrou a rotina de cuidados hoje?')
+    expect(source).toContain('Registrar rotina')
+    expect(source).toContain('/care-routine')
+  })
 })

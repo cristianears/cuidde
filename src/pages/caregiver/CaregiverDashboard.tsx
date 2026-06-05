@@ -13,6 +13,7 @@ import {
   MessageCircle,
   TrendingUp,
   Loader2,
+  ClipboardList,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import StarRating from "@/components/shared/StarRating";
@@ -26,6 +27,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
 import { useDocuments } from "@/hooks/useCaregiverDocuments";
 import { useAppointments } from "@/hooks/useAppointments";
+import { useCareRoutineTodayStatus } from "@/hooks/useCareRoutine";
 import { useReviews } from "@/hooks/useReviews";
 import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
 import type { CaregiverDocument, CaregiverPublic } from "@/types/database";
@@ -171,7 +173,22 @@ const CaregiverDashboard = () => {
   const { data: reviews = [] } = useReviews(user?.id);
 
   // ── Métricas de atendimentos ─────────────────────────────────────────────
-  const activeAppointments  = appointments.filter((a) => a.status === "ativo").length;
+  const activeAppointmentList = React.useMemo(
+    () => appointments.filter((a) => a.status === "ativo"),
+    [appointments],
+  );
+  const activeAppointmentIds = React.useMemo(
+    () => activeAppointmentList.map((appointment) => appointment.id),
+    [activeAppointmentList],
+  );
+  const { data: routineTodayStatus = {}, isLoading: isLoadingRoutineTodayStatus } =
+    useCareRoutineTodayStatus(activeAppointmentIds);
+  const appointmentsMissingRoutineToday = React.useMemo(() => {
+    if (isLoadingRoutineTodayStatus) return [];
+    return activeAppointmentList.filter((appointment) => routineTodayStatus[appointment.id] !== true);
+  }, [activeAppointmentList, isLoadingRoutineTodayStatus, routineTodayStatus]);
+  const firstAppointmentMissingRoutineToday = appointmentsMissingRoutineToday[0];
+  const activeAppointments  = activeAppointmentList.length;
   const doneAppointments    = appointments.filter((a) => a.status === "finalizado").length;
 
   // ── Completude do perfil ─────────────────────────────────────────────────
@@ -264,6 +281,27 @@ const CaregiverDashboard = () => {
             Acompanhe seu perfil, atendimentos e visibilidade na plataforma.
           </p>
         </div>
+
+        {firstAppointmentMissingRoutineToday && (
+          <div className="mb-6 flex flex-col gap-3 rounded-lg border border-primary/15 bg-primary/5 p-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <ClipboardList className="h-4 w-4 text-primary" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-foreground">Já registrou a rotina de cuidados hoje?</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Um breve registro ajuda a família a acompanhar o atendimento e valoriza seu histórico na plataforma.
+                </p>
+              </div>
+            </div>
+            <Button size="sm" className="h-8 shrink-0 text-xs" asChild>
+              <Link to={`/caregiver/appointments/${firstAppointmentMissingRoutineToday.id}/care-routine`}>
+                Registrar rotina
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {/* ── Seção 1 — Métricas rápidas ──────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-6 md:mb-8">
