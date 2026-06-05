@@ -11,4 +11,12 @@ describe('CaregiverDashboard profile completeness labels', () => {
     expect(source).toContain('isProfileComplete ? "Perfil completo" : "Perfil incompleto"')
     expect(source).not.toContain('profileCompleteness.pct >= 80')
   })
+
+  it('does not require professional references to complete the searchable profile', () => {
+    expect(source).toContain('Referências são diferencial')
+    expect(source).not.toContain('useProfessionalReferences')
+    expect(source).not.toContain('refs.length >= 1')
+    expect(source).not.toContain('refs: ProfessionalReference[]')
+    expect(source).not.toContain('getProfileCompleteness(profileData, documents, refs)')
+  })
 })

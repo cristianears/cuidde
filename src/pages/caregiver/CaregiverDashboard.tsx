@@ -23,15 +23,15 @@ import { Progress } from "@/components/ui/progress";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCaregiverProfile, useProfessionalReferences, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
+import { useCaregiverProfile, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
 import { useDocuments } from "@/hooks/useCaregiverDocuments";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useReviews } from "@/hooks/useReviews";
 import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
-import type { CaregiverDocument, ProfessionalReference, CaregiverPublic } from "@/types/database";
+import type { CaregiverDocument, CaregiverPublic } from "@/types/database";
 
 // ─── Completude do perfil ─────────────────────────────────────────────────────
-// 8 critérios ponderados — cada um vale 1 ponto
+// 7 critérios obrigatórios para habilitar a busca. Referências são diferencial.
 
 interface CompletenessCheck {
   done: boolean;
@@ -42,7 +42,6 @@ interface CompletenessCheck {
 function getProfileCompleteness(
   profile: CaregiverProfileFull,
   docs: CaregiverDocument[],
-  refs: ProfessionalReference[],
 ): { pct: number; checks: CompletenessCheck[] } {
   const checks: CompletenessCheck[] = [
     {
@@ -90,11 +89,6 @@ function getProfileCompleteness(
         href: "/caregiver/documents",
       };
     })(),
-    {
-      done: refs.length >= 1,
-      label: "Inserir referências profissionais",
-      href: "/caregiver/profile",
-    },
   ];
 
   const doneCount = checks.filter((c) => c.done).length;
@@ -173,7 +167,6 @@ const CaregiverDashboard = () => {
   useAutoGeocodeCaregiver(profileData);
 
   const { data: documents = [] } = useDocuments();
-  const { data: refs = [] } = useProfessionalReferences();
   const { data: appointments = [] } = useAppointments("caregiver");
   const { data: reviews = [] } = useReviews(user?.id);
 
@@ -183,7 +176,7 @@ const CaregiverDashboard = () => {
 
   // ── Completude do perfil ─────────────────────────────────────────────────
   const profileCompleteness = profileData
-    ? getProfileCompleteness(profileData, documents, refs)
+    ? getProfileCompleteness(profileData, documents)
     : { pct: 0, checks: [] };
 
   const incompleteChecks = profileCompleteness.checks.filter((c) => !c.done);
