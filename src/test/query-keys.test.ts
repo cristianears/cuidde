@@ -58,6 +58,13 @@ describe('queryKeys', () => {
     expect(key).toEqual(['careRoutines', 'appt-002'])
   })
 
+  it('careRoutineTodayStatus retorna key estavel com ids ordenados', () => {
+    const key1 = queryKeys.careRoutineTodayStatus(['appt-b', 'appt-a'], '2026-06-05')
+    const key2 = queryKeys.careRoutineTodayStatus(['appt-a', 'appt-b'], '2026-06-05')
+    expect(key1).toEqual(['careRoutineTodayStatus', '2026-06-05', 'appt-a,appt-b'])
+    expect(key1).toEqual(key2)
+  })
+
   it('professionalRefs retorna key com userId', () => {
     const key = queryKeys.professionalRefs('user-abc')
     expect(key).toEqual(['professionalReferences', 'user-abc'])

@@ -30,6 +30,9 @@ export const queryKeys = {
   appointments: (userId: string, role: string) => ['appointments', role, userId] as const,
   appointmentDetail: (id: string) => ['appointment', id] as const,
   careRoutines: (appointmentId: string) => ['careRoutines', appointmentId] as const,
+  careRoutineTodayStatusAll: ['careRoutineTodayStatus'] as const,
+  careRoutineTodayStatus: (appointmentIds: string[], date: string) =>
+    ['careRoutineTodayStatus', date, [...appointmentIds].sort().join(',')] as const,
   publicCaregiverProfile: (caregiverId: string) => ['publicCaregiverProfile', caregiverId] as const,
   messages: (appointmentId: string) => ['messages', appointmentId] as const,
   reviews: (caregiverId: string) => ['reviews', caregiverId] as const,

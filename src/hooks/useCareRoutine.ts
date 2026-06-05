@@ -16,6 +16,13 @@ import type {
 
 // ─── Query: listar rotinas de cuidado por agendamento ───────────────────────
 
+export function getLocalDateString(date = new Date()): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function useCareRoutines(appointmentId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.careRoutines(appointmentId ?? ''),
@@ -64,6 +71,33 @@ export function useCareRoutines(appointmentId: string | undefined) {
 }
 
 // ─── Payload para criar rotina de cuidado ───────────────────────────────────
+
+export function useCareRoutineTodayStatus(appointmentIds: string[]) {
+  const today = getLocalDateString()
+
+  return useQuery({
+    queryKey: queryKeys.careRoutineTodayStatus(appointmentIds, today),
+    queryFn: async (): Promise<Record<string, boolean>> => {
+      if (appointmentIds.length === 0) return {}
+
+      const { data, error } = await supabase
+        .from('care_routines')
+        .select('appointment_id')
+        .in('appointment_id', appointmentIds)
+        .eq('date', today)
+
+      if (error) throw error
+
+      const status = Object.fromEntries(appointmentIds.map((id) => [id, false]))
+      for (const row of data ?? []) {
+        status[row.appointment_id] = true
+      }
+      return status
+    },
+    enabled: appointmentIds.length > 0,
+    staleTime: 30_000,
+  })
+}
 
 export interface CreateCareRoutinePayload {
   appointment_id: string
@@ -120,6 +154,7 @@ export function useCreateCareRoutine() {
     },
     onSuccess: (_, payload) => {
       qc.invalidateQueries({ queryKey: queryKeys.careRoutines(payload.appointment_id) })
+      qc.invalidateQueries({ queryKey: queryKeys.careRoutineTodayStatusAll })
       toast.success('Registro de cuidado salvo com sucesso!')
     },
     onError: (error: Error) => {
@@ -173,6 +208,7 @@ export function useUpdateCareRoutine() {
     },
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: queryKeys.careRoutines(result.appointmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.careRoutineTodayStatusAll })
       toast.success('Registro atualizado com sucesso!')
     },
     onError: (error: Error) => {
@@ -213,6 +249,7 @@ export function useDeleteCareRoutine() {
     },
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: queryKeys.careRoutines(result.appointmentId) })
+      qc.invalidateQueries({ queryKey: queryKeys.careRoutineTodayStatusAll })
       toast.success('Registro excluído.')
     },
     onError: (error: Error) => {

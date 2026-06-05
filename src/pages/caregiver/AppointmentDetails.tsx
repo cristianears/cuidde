@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useAppointmentDetail, useUpdateAppointmentStatus } from "@/hooks/useAppointments";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
-import { useCareRoutines, useDeleteCareRoutine } from "@/hooks/useCareRoutine";
+import { getLocalDateString, useCareRoutines, useDeleteCareRoutine } from "@/hooks/useCareRoutine";
 import { supabase } from "@/lib/supabase";
 import { useAppointmentHasReview } from "@/hooks/useReviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -146,6 +146,7 @@ const AppointmentDetails = () => {
 
   const statusInfo = getStatusBadge(appointment.status);
   const isActive = appointment.status === "ativo";
+  const hasRoutineToday = careRoutines?.some((care) => care.date === getLocalDateString()) ?? false;
 
   const handleAccept = () => updateStatus({ id: appointment.id, status: "ativo" });
   const handleReject = () => {
@@ -674,7 +675,33 @@ const AppointmentDetails = () => {
 
             {/* Tab: Registro de cuidados */}
             <TabsContent value="rotina" className="space-y-4">
-              {isActive && (
+              {isActive && !isLoadingRoutines && !hasRoutineToday && (
+                <div className="flex flex-col gap-3 rounded-lg border border-primary/15 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <ClipboardList className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-foreground">Nenhum registro de hoje ainda</p>
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        Um breve registro ajuda a família a acompanhar o cuidado com mais tranquilidade.
+                      </p>
+                    </div>
+                  </div>
+                  <Button size="sm" className="h-8 shrink-0 text-xs" onClick={() => navigate(`/caregiver/appointments/${id}/care-routine`)}>
+                    Registrar rotina
+                  </Button>
+                </div>
+              )}
+
+              {isActive && !isLoadingRoutines && hasRoutineToday && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  Rotina de hoje registrada. A família já consegue acompanhar este atendimento.
+                </div>
+              )}
+
+              {isActive && hasRoutineToday && (
                 <div className="flex justify-end">
                   <Button size="sm" onClick={() => navigate(`/caregiver/appointments/${id}/care-routine`)}>
                     <Plus className="w-4 h-4 mr-2" />

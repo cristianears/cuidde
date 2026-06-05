@@ -5,12 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Clock, FileText, Loader2, MessageCircle } from "lucide-react";
+import { Calendar, User, Clock, FileText, Loader2, MessageCircle, ClipboardList, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
+import { useCareRoutineTodayStatus } from "@/hooks/useCareRoutine";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import type { AppointmentStatus, AppointmentType } from "@/types/database";
 import { appointmentStatusConfig } from "@/lib/labels";
@@ -29,6 +30,16 @@ const CaregiverAppointments = () => {
     const finalizados = list.filter((a) => a.status === "finalizado");
     return { ativos, finalizados };
   }, [appointments]);
+  const activeAppointmentIds = useMemo(
+    () => appointmentsByTab.ativos.map((appointment) => appointment.id),
+    [appointmentsByTab.ativos],
+  );
+  const { data: routineTodayStatus = {}, isLoading: isLoadingRoutineTodayStatus } =
+    useCareRoutineTodayStatus(activeAppointmentIds);
+  const appointmentsMissingRoutineToday = useMemo(() => {
+    if (isLoadingRoutineTodayStatus) return [];
+    return appointmentsByTab.ativos.filter((appointment) => routineTodayStatus[appointment.id] !== true);
+  }, [appointmentsByTab.ativos, isLoadingRoutineTodayStatus, routineTodayStatus]);
 
   const getStatusBadge = (status: AppointmentStatus) => {
     return appointmentStatusConfig[status] ?? appointmentStatusConfig.pendente;
@@ -54,6 +65,8 @@ const CaregiverAppointments = () => {
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const statusBadge = getStatusBadge(appointment.status);
     const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
+    const hasRoutineToday = routineTodayStatus[appointment.id] === true;
+    const shouldShowRoutinePrompt = appointment.status === "ativo" && !isLoadingRoutineTodayStatus && !hasRoutineToday;
     return (
       <Card className={cn("hover:shadow-md transition-shadow", unreadCount > 0 && "border-l-4 border-l-primary bg-primary/[0.02]")}>
         <CardContent className="p-4 md:p-5">
@@ -107,6 +120,32 @@ const CaregiverAppointments = () => {
                   </div>
                 )}
               </div>
+
+              {shouldShowRoutinePrompt ? (
+                <div className="flex flex-col gap-2 rounded-lg border border-primary/15 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 gap-2">
+                    <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-foreground">Rotina de hoje</p>
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        Um breve registro ajuda a família a acompanhar o cuidado e fortalece seu histórico profissional.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="h-8 shrink-0 text-xs"
+                    onClick={() => navigate(`/caregiver/appointments/${appointment.id}/care-routine`)}
+                  >
+                    Registrar rotina
+                  </Button>
+                </div>
+              ) : appointment.status === "ativo" && hasRoutineToday ? (
+                <div className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Rotina de hoje registrada
+                </div>
+              ) : null}
             </div>
 
             <div className="flex gap-2 shrink-0 self-start sm:self-auto">
@@ -198,6 +237,28 @@ const CaregiverAppointments = () => {
 
     return (
       <div className="space-y-3 md:space-y-4">
+        {key === "ativos" && appointmentsMissingRoutineToday.length > 0 && (
+          <div className="flex flex-col gap-3 rounded-lg border border-primary/15 bg-primary/5 p-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                <ClipboardList className="h-4 w-4 text-primary" />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-sm font-semibold text-foreground">Já registrou a rotina de cuidados hoje?</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Esses registros ajudam a família a acompanhar o atendimento e valorizam seu histórico na plataforma.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="h-8 shrink-0 text-xs"
+              onClick={() => navigate(`/caregiver/appointments/${appointmentsMissingRoutineToday[0].id}/care-routine`)}
+            >
+              Registrar agora
+            </Button>
+          </div>
+        )}
         {list.map((appointment) => (
           <AppointmentCard key={appointment.id} appointment={appointment} />
         ))}
