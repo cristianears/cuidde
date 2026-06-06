@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, DollarSign, Star, Clock, MapPin, CalendarClock, User, Globe, Locate, CheckCircle2 } from "lucide-react";
+import { Search, Filter, DollarSign, Star, MapPin, CalendarClock, Globe, Locate } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import CaregiverCard from "@/components/shared/CaregiverCard";
@@ -383,60 +383,50 @@ const SearchCaregivers = () => {
                   </div>
                 </div>
 
-                {/* Disponibilidade */}
-                <div>
-                  <Label className="flex items-center gap-2 mb-2 text-xs">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    Disponibilidade
-                  </Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEmergencyOnly(!emergencyOnly)}
+                {/* Filtros rápidos */}
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={emergencyOnly ? "default" : "outline"}
+                    role="button"
+                    tabIndex={0}
                     aria-pressed={emergencyOnly}
                     className={cn(
-                      "h-auto min-h-10 w-full justify-between gap-2 px-3 py-2 text-xs transition-colors",
+                      "cursor-pointer transition-all text-xs",
                       emergencyOnly
-                        ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
-                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ? "bg-primary hover:bg-primary/90"
+                        : "hover:bg-muted"
                     )}
+                    onClick={() => setEmergencyOnly(!emergencyOnly)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setEmergencyOnly(!emergencyOnly);
+                      }
+                    }}
                   >
-                    <span className="flex min-w-0 items-center gap-2 text-left">
-                      {emergencyOnly && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                      <span className="truncate">Disponível p/ emergências</span>
-                    </span>
-                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", emergencyOnly ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                      {emergencyOnly ? "Ativo" : "Não aplicado"}
-                    </span>
-                  </Button>
-                </div>
-
-                {/* Referências */}
-                <div>
-                  <Label className="flex items-center gap-2 mb-2 text-xs">
-                    <User className="w-4 h-4 text-muted-foreground" />
-                    Referências
-                  </Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setWithReferences(!withReferences)}
+                    Disponível p/ emergências
+                  </Badge>
+                  <Badge
+                    variant={withReferences ? "default" : "outline"}
+                    role="button"
+                    tabIndex={0}
                     aria-pressed={withReferences}
                     className={cn(
-                      "h-auto min-h-10 w-full justify-between gap-2 px-3 py-2 text-xs transition-colors",
+                      "cursor-pointer transition-all text-xs",
                       withReferences
-                        ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
-                        : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ? "bg-primary hover:bg-primary/90"
+                        : "hover:bg-muted"
                     )}
+                    onClick={() => setWithReferences(!withReferences)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setWithReferences(!withReferences);
+                      }
+                    }}
                   >
-                    <span className="flex min-w-0 items-center gap-2 text-left">
-                      {withReferences && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}
-                      <span className="truncate">Com referências</span>
-                    </span>
-                    <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold", withReferences ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
-                      {withReferences ? "Ativo" : "Não aplicado"}
-                    </span>
-                  </Button>
+                    Com referências
+                  </Badge>
                 </div>
 
               </CardContent>

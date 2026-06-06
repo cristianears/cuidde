@@ -45,9 +45,11 @@ describe('family mobile layout regressions', () => {
   it('makes binary caregiver filters clearly show active and inactive states', () => {
     expect(searchCaregiversSource).toContain('aria-pressed={emergencyOnly}')
     expect(searchCaregiversSource).toContain('aria-pressed={withReferences}')
-    expect(searchCaregiversSource).toContain('CheckCircle2')
-    expect(searchCaregiversSource).toContain('Ativo')
-    expect(searchCaregiversSource).toContain('Não aplicado')
+    expect(searchCaregiversSource).toContain('variant={emergencyOnly ? "default" : "outline"}')
+    expect(searchCaregiversSource).toContain('variant={withReferences ? "default" : "outline"}')
+    expect(searchCaregiversSource).toContain('Disponível p/ emergências')
+    expect(searchCaregiversSource).toContain('Com referências')
+    expect(searchCaregiversSource).not.toContain('Não aplicado')
   })
 
   it('uses a custom medication time field instead of the native mobile time picker', () => {
