@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { FileText, AlertCircle, CheckCircle2, Briefcase, Eye, EyeOff, Lock, Users, ShieldCheck, Loader2 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -293,13 +292,14 @@ const CaregiverDocuments = () => {
                     />
                     <span className="text-muted-foreground">
                       {documentConsentAccepted ? 'Termo aceito. ' : 'Declaro que li e aceito o '}
-                      <Link
-                        to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                      <a
+                        href={LEGAL_DOCUMENTS.thirdPartyConsent.path}
                         target="_blank"
+                        rel="noreferrer"
                         className="font-medium text-primary underline-offset-4 hover:underline"
                       >
                         Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
-                      </Link>
+                      </a>
                       .
                     </span>
                   </label>

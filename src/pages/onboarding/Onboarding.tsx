@@ -939,17 +939,17 @@ const Onboarding = () => {
                     />
                     <span className="text-muted-foreground">
                       Li e aceito os{' '}
-                      <Link className="font-medium text-primary underline-offset-4 hover:underline" to={LEGAL_DOCUMENTS.terms.route} target="_blank">
+                      <a className="font-medium text-primary underline-offset-4 hover:underline" href={LEGAL_DOCUMENTS.terms.path} target="_blank" rel="noreferrer">
                         Termos de Uso
-                      </Link>
+                      </a>
                       , a{' '}
-                      <Link className="font-medium text-primary underline-offset-4 hover:underline" to={LEGAL_DOCUMENTS.privacy.route} target="_blank">
+                      <a className="font-medium text-primary underline-offset-4 hover:underline" href={LEGAL_DOCUMENTS.privacy.path} target="_blank" rel="noreferrer">
                         Politica de Privacidade
-                      </Link>
+                      </a>
                       {' '}e a{' '}
-                      <Link className="font-medium text-primary underline-offset-4 hover:underline" to={LEGAL_DOCUMENTS.cookies.route} target="_blank">
+                      <a className="font-medium text-primary underline-offset-4 hover:underline" href={LEGAL_DOCUMENTS.cookies.path} target="_blank" rel="noreferrer">
                         Politica de Cookies
-                      </Link>
+                      </a>
                       .
                     </span>
                   </label>

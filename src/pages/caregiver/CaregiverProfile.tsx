@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import {
   Camera,
   Save,
@@ -947,13 +946,14 @@ const CaregiverProfile = () => {
                       />
                       <span className="text-muted-foreground">
                         Declaro que tenho autorizacao para cadastrar referencias profissionais e aceito o{' '}
-                        <Link
-                          to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                        <a
+                          href={LEGAL_DOCUMENTS.thirdPartyConsent.path}
                           target="_blank"
+                          rel="noreferrer"
                           className="font-medium text-primary underline-offset-4 hover:underline"
                         >
                           Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
-                        </Link>
+                        </a>
                         .
                       </span>
                     </label>

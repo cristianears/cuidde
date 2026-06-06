@@ -162,27 +162,24 @@ const Footer = () => {
         <div className="pt-6 border-t border-footer-foreground/10 flex flex-col md:flex-row justify-between items-center gap-3">
           <p className="text-xs text-footer-foreground/60 text-center md:text-left">© 2026 icuide. Todos os direitos reservados.</p>
           <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-            <button
-              type="button"
-              onClick={() => navigate("/terms")}
+            <a
+              href="/terms/"
               className="text-xs text-footer-foreground/60 hover:text-footer-foreground transition-colors"
             >
               Termos de uso
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/privacy")}
+            </a>
+            <a
+              href="/privacy/"
               className="text-xs text-footer-foreground/60 hover:text-footer-foreground transition-colors"
             >
               Política de privacidade
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate("/cookies")}
+            </a>
+            <a
+              href="/cookies/"
               className="text-xs text-footer-foreground/60 hover:text-footer-foreground transition-colors"
             >
               Política de cookies
-            </button>
+            </a>
           </div>
         </div>
       </div>

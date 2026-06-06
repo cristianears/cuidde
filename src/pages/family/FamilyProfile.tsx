@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Save,
   X,
@@ -715,13 +715,14 @@ const FamilyProfile = () => {
               />
               <span className="text-muted-foreground">
                 {elderlyConsentAccepted ? 'Termo ja aceito para informacoes de terceiros. ' : 'Declaro que tenho autorizacao para cadastrar informacoes do idoso e aceito o '}
-                <Link
-                  to={LEGAL_DOCUMENTS.thirdPartyConsent.route}
+                <a
+                  href={LEGAL_DOCUMENTS.thirdPartyConsent.path}
                   target="_blank"
+                  rel="noreferrer"
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
                   Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
-                </Link>
+                </a>
                 .
               </span>
             </label>
