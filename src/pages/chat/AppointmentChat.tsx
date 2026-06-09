@@ -321,20 +321,20 @@ const AppointmentChat = () => {
         <div className="max-w-3xl mx-auto">
           {isWritable ? (
             canSendMessages ? (
-              <div className="flex items-end gap-2">
+              <div className="flex w-full min-w-0 items-end gap-2 overflow-hidden">
                 <Textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Digite sua mensagem..."
-                  className="min-h-[44px] max-h-32 resize-none"
+                  className="min-h-[44px] max-h-32 min-w-0 flex-1 resize-none text-base md:text-sm"
                   rows={1}
                 />
                 <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || isSending}
                   size="icon"
-                  className="flex-shrink-0 h-11 w-11"
+                  className="h-11 w-11 shrink-0"
                 >
                   {isSending ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
