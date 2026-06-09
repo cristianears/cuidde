@@ -23,6 +23,16 @@ function getCorsHeaders(origin: string | null) {
   }
 }
 
+async function releaseSubscriptionSchedule(subscription: Stripe.Subscription) {
+  const scheduleId = typeof subscription.schedule === 'string'
+    ? subscription.schedule
+    : subscription.schedule?.id
+
+  if (scheduleId) {
+    await stripe.subscriptionSchedules.release(scheduleId)
+  }
+}
+
 serve(async (req) => {
   const reqOrigin = req.headers.get('origin')
   const corsHeaders = getCorsHeaders(reqOrigin)
@@ -102,15 +112,28 @@ serve(async (req) => {
       })
     }
 
-    await stripe.subscriptions.update(profile.stripe_subscription_id, {
-      cancel_at_period_end: true,
-    })
+    try {
+      const subscription = await stripe.subscriptions.retrieve(profile.stripe_subscription_id)
+      await releaseSubscriptionSchedule(subscription)
 
-    // Atualiza Supabase imediatamente — não espera o webhook chegar
-    await supabase
-      .from('family_profiles')
-      .update({ cancel_at_period_end: true })
-      .eq('id', family_id)
+      await stripe.subscriptions.update(profile.stripe_subscription_id, {
+        cancel_at_period_end: true,
+      })
+
+      // Atualiza Supabase imediatamente — não espera o webhook chegar
+      const { error: updateError } = await supabase
+        .from('family_profiles')
+        .update({ cancel_at_period_end: true, pending_plan: null })
+        .eq('id', family_id)
+
+      if (updateError) throw updateError
+    } catch (error) {
+      console.error('cancel_subscription_error', error)
+      return new Response(JSON.stringify({ error: 'Nao foi possivel cancelar a assinatura' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -132,15 +155,28 @@ serve(async (req) => {
       })
     }
 
-    await stripe.subscriptions.update(profile.stripe_subscription_id, {
-      cancel_at_period_end: false,
-    })
+    try {
+      const subscription = await stripe.subscriptions.retrieve(profile.stripe_subscription_id)
+      await releaseSubscriptionSchedule(subscription)
 
-    // Atualiza Supabase imediatamente — não espera o webhook chegar
-    await supabase
-      .from('family_profiles')
-      .update({ cancel_at_period_end: false })
-      .eq('id', family_id)
+      await stripe.subscriptions.update(profile.stripe_subscription_id, {
+        cancel_at_period_end: false,
+      })
+
+      // Atualiza Supabase imediatamente — não espera o webhook chegar
+      const { error: updateError } = await supabase
+        .from('family_profiles')
+        .update({ cancel_at_period_end: false, pending_plan: null })
+        .eq('id', family_id)
+
+      if (updateError) throw updateError
+    } catch (error) {
+      console.error('reactivate_subscription_error', error)
+      return new Response(JSON.stringify({ error: 'Nao foi possivel reativar a assinatura' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

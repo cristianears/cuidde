@@ -40,6 +40,25 @@ const AppointmentChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [contactWarningShown, setContactWarningShown] = useState(false);
 
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateChatViewportHeight = () => {
+      document.documentElement.style.setProperty("--chat-viewport-height", `${viewport.height}px`);
+    };
+
+    updateChatViewportHeight();
+    viewport.addEventListener("resize", updateChatViewportHeight);
+    viewport.addEventListener("scroll", updateChatViewportHeight);
+
+    return () => {
+      viewport.removeEventListener("resize", updateChatViewportHeight);
+      viewport.removeEventListener("scroll", updateChatViewportHeight);
+      document.documentElement.style.removeProperty("--chat-viewport-height");
+    };
+  }, []);
+
   // Status helpers
   const status: AppointmentStatus | undefined = appointment?.status;
   const isWritable = status === "pendente" || status === "ativo";
@@ -136,7 +155,7 @@ const AppointmentChat = () => {
   // Loading state
   if (isLoadingAppointment || isLoadingMessages) {
     return (
-      <div className="flex flex-col h-screen bg-background items-center justify-center">
+      <div className="flex min-h-[100dvh] flex-col bg-background items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -145,7 +164,7 @@ const AppointmentChat = () => {
   // Appointment não encontrado
   if (!appointment) {
     return (
-      <div className="flex flex-col h-screen bg-background items-center justify-center gap-4">
+      <div className="flex min-h-[100dvh] flex-col bg-background items-center justify-center gap-4">
         <p className="text-muted-foreground">Agendamento não encontrado.</p>
         <Button variant="outline" onClick={() => navigate(-1)}>Voltar</Button>
       </div>
@@ -159,9 +178,9 @@ const AppointmentChat = () => {
   const elderlyName = appointment.elderly_name ?? "o idoso";
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex h-[var(--chat-viewport-height,100dvh)] flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-card border-b border-border px-4 py-3">
+      <header className="shrink-0 bg-card border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
           <Button
             variant="ghost"
@@ -194,7 +213,7 @@ const AppointmentChat = () => {
 
       {/* Banner de filtro de contato ativo */}
       {isContactFiltered && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-2">
+        <div className="shrink-0 bg-amber-50 border-b border-amber-200 px-4 py-2">
           <div className="max-w-3xl mx-auto flex items-start gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-800">
@@ -205,7 +224,7 @@ const AppointmentChat = () => {
       )}
 
       {/* Messages Area */}
-      <main className="flex-1 overflow-y-auto px-4 py-4">
+      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         <div className="max-w-3xl mx-auto space-y-6">
           {messages.length === 0 ? (
             <Card className="border-dashed mt-8">
@@ -279,7 +298,7 @@ const AppointmentChat = () => {
 
       {/* Contact warning toast (aparece uma vez quando o filtro bloqueia) */}
       {contactWarningShown && isContactFiltered && (
-        <div className="bg-amber-50 border-t border-amber-200 px-4 py-2">
+        <div className="shrink-0 bg-amber-50 border-t border-amber-200 px-4 py-2">
           <div className="max-w-3xl mx-auto flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800">
@@ -298,7 +317,7 @@ const AppointmentChat = () => {
       )}
 
       {/* Input Area */}
-      <footer className="sticky bottom-0 bg-card border-t border-border px-4 py-3">
+      <footer className="shrink-0 bg-card border-t border-border px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <div className="max-w-3xl mx-auto">
           {isWritable ? (
             canSendMessages ? (

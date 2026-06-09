@@ -97,7 +97,7 @@ export function useSubscription() {
     onSuccess: () => {
       queryClient.setQueryData(queryKeys.familyProfile(user!.id), (old: FamilyProfileWithRelations | undefined) => {
         if (!old) return old
-        return { ...old, cancel_at_period_end: true }
+        return { ...old, cancel_at_period_end: true, pending_plan: null }
       })
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
       toast.success('Cancelamento agendado para o fim do período atual.')
@@ -122,7 +122,7 @@ export function useSubscription() {
     onSuccess: () => {
       queryClient.setQueryData(queryKeys.familyProfile(user!.id), (old: FamilyProfileWithRelations | undefined) => {
         if (!old) return old
-        return { ...old, cancel_at_period_end: false }
+        return { ...old, cancel_at_period_end: false, pending_plan: null }
       })
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user!.id) })
       toast.success('Assinatura reativada. A renovação automática voltou a valer.')
