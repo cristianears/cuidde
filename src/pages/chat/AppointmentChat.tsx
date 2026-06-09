@@ -40,25 +40,6 @@ const AppointmentChat = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [contactWarningShown, setContactWarningShown] = useState(false);
 
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const updateChatViewportHeight = () => {
-      document.documentElement.style.setProperty("--chat-viewport-height", `${viewport.height}px`);
-    };
-
-    updateChatViewportHeight();
-    viewport.addEventListener("resize", updateChatViewportHeight);
-    viewport.addEventListener("scroll", updateChatViewportHeight);
-
-    return () => {
-      viewport.removeEventListener("resize", updateChatViewportHeight);
-      viewport.removeEventListener("scroll", updateChatViewportHeight);
-      document.documentElement.style.removeProperty("--chat-viewport-height");
-    };
-  }, []);
-
   // Status helpers
   const status: AppointmentStatus | undefined = appointment?.status;
   const isWritable = status === "pendente" || status === "ativo";
@@ -178,7 +159,7 @@ const AppointmentChat = () => {
   const elderlyName = appointment.elderly_name ?? "o idoso";
 
   return (
-    <div className="flex h-[var(--chat-viewport-height,100dvh)] flex-col overflow-hidden bg-background">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
       {/* Header */}
       <header className="shrink-0 bg-card border-b border-border px-4 py-3">
         <div className="flex items-center gap-3 max-w-3xl mx-auto">
@@ -321,13 +302,13 @@ const AppointmentChat = () => {
         <div className="max-w-3xl mx-auto">
           {isWritable ? (
             canSendMessages ? (
-              <div className="flex w-full min-w-0 items-end gap-2 overflow-hidden">
+              <div className="flex w-full min-w-0 items-end gap-2">
                 <Textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Digite sua mensagem..."
-                  className="min-h-[44px] max-h-32 min-w-0 flex-1 resize-none text-base md:text-sm"
+                  className="min-h-[44px] max-h-32 min-w-0 flex-1 resize-none text-base focus-visible:border-primary focus-visible:ring-0 focus-visible:ring-offset-0 md:text-sm"
                   rows={1}
                 />
                 <Button
