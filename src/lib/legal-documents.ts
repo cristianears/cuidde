@@ -30,7 +30,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
   },
   privacy: {
     key: 'privacy',
-    title: 'Politica de Privacidade',
+    title: 'Política de Privacidade',
     description: 'Como a icuide trata dados pessoais na plataforma.',
     route: '/privacy',
     path: '/legal/politica_privacidade_icuide.pdf',
@@ -39,7 +39,7 @@ export const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
   },
   cookies: {
     key: 'cookies',
-    title: 'Politica de Cookies',
+    title: 'Política de Cookies',
     description: 'Como usamos cookies e tecnologias semelhantes.',
     route: '/cookies',
     path: '/legal/politica_cookies_icuide.pdf',
@@ -48,8 +48,8 @@ export const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
   },
   thirdPartyConsent: {
     key: 'thirdPartyConsent',
-    title: 'Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros',
-    description: 'Autorizacao para envio e tratamento de documentos, referencias e dados de terceiros.',
+    title: 'Termo de Consentimento para Tratamento de Dados, Documentos e Informações de Terceiros',
+    description: 'Autorização para envio e tratamento de documentos, referências e dados de terceiros.',
     route: '/third-party-data-consent',
     path: '/legal/termo_consentimento_icuide.pdf',
     version: LEGAL_DOCUMENT_VERSION,

@@ -24,10 +24,25 @@ describe('legal document links', () => {
   })
 
   it('publishes static responsive pages for Google Auth verification', () => {
-    expect(read('public/privacy/index.html')).toContain('Politica de Privacidade')
+    expect(read('public/privacy/index.html')).toContain('Política de Privacidade')
+    expect(read('public/privacy/index.html')).toContain('usuários')
+    expect(read('public/privacy/index.html')).not.toContain('Politica de Privacidade')
+    expect(read('public/privacy/index.html')).not.toContain('usuario')
+    expect(read('public/terms/index.html')).toContain('informações verdadeiras')
+    expect(read('public/cookies/index.html')).toContain('Política de Cookies')
+    expect(read('public/cookies/index.html')).toContain('Cookies necessários')
     expect(read('public/privacy/index.html')).toContain('/legal/politica_privacidade_icuide.pdf')
     expect(read('public/terms/index.html')).toContain('/legal/termos_uso_icuide.pdf')
     expect(read('public/cookies/index.html')).toContain('/legal/politica_cookies_icuide.pdf')
     expect(read('public/_redirects')).toContain('/privacy /privacy/index.html 200')
+  })
+
+  it('uses accented Portuguese in SPA legal summaries and consent labels', () => {
+    expect(read('src/lib/legal-documents.ts')).toContain('Política de Privacidade')
+    expect(read('src/lib/legal-documents.ts')).toContain('Informações de Terceiros')
+    expect(read('src/pages/legal/LegalDocumentPage.tsx')).toContain('Esta página resume')
+    expect(read('src/pages/legal/LegalDocumentPage.tsx')).toContain('usuários')
+    expect(read('src/pages/onboarding/Onboarding.tsx')).toContain('Política de Privacidade')
+    expect(read('src/pages/family/FamilyProfile.tsx')).toContain('Termo já aceito')
   })
 })

@@ -944,11 +944,11 @@ const Onboarding = () => {
                       </a>
                       , a{' '}
                       <a className="font-medium text-primary underline-offset-4 hover:underline" href={LEGAL_DOCUMENTS.privacy.path} target="_blank" rel="noreferrer">
-                        Politica de Privacidade
+                        Política de Privacidade
                       </a>
                       {' '}e a{' '}
                       <a className="font-medium text-primary underline-offset-4 hover:underline" href={LEGAL_DOCUMENTS.cookies.path} target="_blank" rel="noreferrer">
-                        Politica de Cookies
+                        Política de Cookies
                       </a>
                       .
                     </span>

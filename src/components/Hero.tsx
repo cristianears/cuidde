@@ -39,11 +39,6 @@ const Hero = () => {
               <br />
               <span className="text-primary-foreground/90">com transparência e calma</span>
             </h1>
-            {/* Subtitle */}
-            <p className="text-sm md:text-base text-primary-foreground/85 mb-5 md:mb-6 max-w-xl mx-auto leading-relaxed font-light">
-              Explore perfis, avaliações e informações enviadas pelos profissionais.
-              Quando quiser avançar, você libera o contato e os documentos completos.
-            </p>
             {/* CEP Search */}
             <div className="mx-auto max-w-lg">
               <div className="relative mb-2">

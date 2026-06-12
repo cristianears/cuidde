@@ -298,7 +298,7 @@ const CaregiverDocuments = () => {
                         rel="noreferrer"
                         className="font-medium text-primary underline-offset-4 hover:underline"
                       >
-                        Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
+                        Termo de Consentimento para Tratamento de Dados, Documentos e Informações de Terceiros
                       </a>
                       .
                     </span>

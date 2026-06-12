@@ -714,14 +714,14 @@ const FamilyProfile = () => {
                 className="mt-0.5 shrink-0"
               />
               <span className="text-muted-foreground">
-                {elderlyConsentAccepted ? 'Termo ja aceito para informacoes de terceiros. ' : 'Declaro que tenho autorizacao para cadastrar informacoes do idoso e aceito o '}
+                {elderlyConsentAccepted ? 'Termo já aceito para informações de terceiros. ' : 'Declaro que tenho autorização para cadastrar informações do idoso e aceito o '}
                 <a
                   href={LEGAL_DOCUMENTS.thirdPartyConsent.path}
                   target="_blank"
                   rel="noreferrer"
                   className="font-medium text-primary underline-offset-4 hover:underline"
                 >
-                  Termo de Consentimento para Tratamento de Dados, Documentos e Informacoes de Terceiros
+                  Termo de Consentimento para Tratamento de Dados, Documentos e Informações de Terceiros
                 </a>
                 .
               </span>
