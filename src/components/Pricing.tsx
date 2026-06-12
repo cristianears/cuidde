@@ -46,8 +46,8 @@ const plans = [
   {
     name: "Trimestral",
     description: "Mais tempo para decidir com tranquilidade.",
-    price: "99/mês",
-    priceLabel: null,
+    price: "99",
+    priceLabel: "/mês",
     priceDiscount: "22% de desconto",
     priceTotal: "total R$ 297",
     features: [
@@ -64,8 +64,8 @@ const plans = [
   {
     name: "Anual",
     description: "Ideal para cuidado contínuo.",
-    price: "83/mês",
-    priceLabel: null,
+    price: "83",
+    priceLabel: "/mês",
     priceDiscount: "35% de desconto",
     priceTotal: "total R$ 997",
     features: [
