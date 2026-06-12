@@ -51,11 +51,10 @@ const Index = () => {
       <CareRoutinePreview />
       <Pricing />
       <WhyItMatters />
-      <LatestBlogPosts />
       <CaregiverCTA />
-      
       <FinalCTA />
       <FAQ />
+      <LatestBlogPosts />
       <Footer />
     </div>
   );

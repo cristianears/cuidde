@@ -1,4 +1,6 @@
 import { render, screen } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Index from '../Index'
@@ -69,5 +71,12 @@ describe('Index', () => {
 
     expect(screen.getByText('Family Dashboard')).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/family')
+  })
+
+  it('mostra Guias da icuide depois do FAQ na landing', () => {
+    const source = readFileSync(resolve(__dirname, '../Index.tsx'), 'utf8')
+
+    expect(source.indexOf('<FAQ />')).toBeGreaterThan(-1)
+    expect(source.indexOf('<LatestBlogPosts />')).toBeGreaterThan(source.indexOf('<FAQ />'))
   })
 })

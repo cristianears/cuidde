@@ -30,6 +30,8 @@ interface Plan {
   subtitle: string;
   price: string;
   priceDescription: string;
+  priceDiscount?: string;
+  priceTotal?: string;
   features: string[];
   color: string;
   bgGradient: string;
@@ -61,7 +63,9 @@ const plans: Plan[] = [
     name: "Trimestral",
     subtitle: "Mais tempo para decidir com tranquilidade",
     price: "R$ 99/mês",
-    priceDescription: "(Economize 22% • total R$ 297)",
+    priceDescription: "",
+    priceDiscount: "22% de desconto",
+    priceTotal: "total R$ 297",
     features: ["Todos os recursos do plano mensal", "Melhor custo mensal"],
     color: "text-blue-700",
     bgGradient: "from-blue-50 to-blue-100/50",
@@ -73,7 +77,9 @@ const plans: Plan[] = [
     name: "Anual",
     subtitle: "Ideal para cuidado contínuo.",
     price: "R$ 83/mês",
-    priceDescription: "(Economize 35% • total R$ 997)",
+    priceDescription: "",
+    priceDiscount: "35% de desconto",
+    priceTotal: "total R$ 997",
     features: ["Todos os recursos do plano completo", "Maior economia no longo prazo", "Acesso contínuo durante todo o ano"],
     color: "text-teal-800",
     bgGradient: "from-teal-50 to-teal-100/50",
@@ -202,9 +208,19 @@ const FamilyBilling = () => {
                       {currentPlanDetails ? `Plano ${planNames[plan!]}` : "Sem plano ativo"}
                     </CardTitle>
                     {currentPlanDetails && (
-                      <p className="text-sm text-muted-foreground">
-                        {currentPlanDetails.price} {currentPlanDetails.priceDescription}
-                      </p>
+                      <div className="text-sm text-muted-foreground">
+                        <span>{currentPlanDetails.price}</span>
+                        {currentPlanDetails.priceDescription ? (
+                          <span> {currentPlanDetails.priceDescription}</span>
+                        ) : null}
+                        {currentPlanDetails.priceDiscount && currentPlanDetails.priceTotal ? (
+                          <div className="flex flex-wrap items-center gap-x-1 text-xs">
+                            <span className="whitespace-nowrap">{currentPlanDetails.priceDiscount}</span>
+                            <span aria-hidden="true">•</span>
+                            <span className="whitespace-nowrap">{currentPlanDetails.priceTotal}</span>
+                          </div>
+                        ) : null}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -369,7 +385,16 @@ const FamilyBilling = () => {
                       </div>
                       <div className="pt-3">
                         <span className={`text-2xl font-bold ${p.color}`}>{p.price}</span>
-                        <span className="text-xs text-muted-foreground ml-1">{p.priceDescription}</span>
+                        {p.priceDescription ? (
+                          <span className="text-xs text-muted-foreground ml-1">{p.priceDescription}</span>
+                        ) : null}
+                        {p.priceDiscount && p.priceTotal ? (
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
+                            <span className="whitespace-nowrap">{p.priceDiscount}</span>
+                            <span aria-hidden="true">•</span>
+                            <span className="whitespace-nowrap">{p.priceTotal}</span>
+                          </div>
+                        ) : null}
                       </div>
                     </CardHeader>
 
@@ -456,7 +481,16 @@ const FamilyBilling = () => {
                 </div>
                 <div className="text-right">
                   <span className={`text-xl font-bold ${selectedPlan.color}`}>{selectedPlan.price}</span>
-                  <p className="text-xs text-muted-foreground">{selectedPlan.priceDescription}</p>
+                  {selectedPlan.priceDescription ? (
+                    <p className="text-xs text-muted-foreground">{selectedPlan.priceDescription}</p>
+                  ) : null}
+                  {selectedPlan.priceDiscount && selectedPlan.priceTotal ? (
+                    <div className="mt-0.5 flex flex-wrap justify-end gap-x-1 text-xs text-muted-foreground">
+                      <span className="whitespace-nowrap">{selectedPlan.priceDiscount}</span>
+                      <span aria-hidden="true">•</span>
+                      <span className="whitespace-nowrap">{selectedPlan.priceTotal}</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>

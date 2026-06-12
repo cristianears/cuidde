@@ -7,6 +7,8 @@ const plans = [
     description: "Explore a plataforma sem compromisso.",
     price: "0",
     priceLabel: "gratuito",
+    priceDiscount: null,
+    priceTotal: null,
     features: [
       "Busca limitada de profissionais por mês",
       "Visualização parcial de perfis",
@@ -24,6 +26,8 @@ const plans = [
     description: "Acesso completo por 30 dias.",
     price: "127",
     priceLabel: "/mês",
+    priceDiscount: null,
+    priceTotal: null,
     features: [
       "Visualização completa de perfis",
       "Veja o que outras famílias dizem antes de contratar",
@@ -43,7 +47,9 @@ const plans = [
     name: "Trimestral",
     description: "Mais tempo para decidir com tranquilidade.",
     price: "99/mês",
-    priceLabel: " (Economize 22% • total R$ 297)",
+    priceLabel: null,
+    priceDiscount: "22% de desconto",
+    priceTotal: "total R$ 297",
     features: [
       "Todos os recursos do plano mensal",
       "Rotina de Cuidados e registro de ocorrências",
@@ -59,7 +65,9 @@ const plans = [
     name: "Anual",
     description: "Ideal para cuidado contínuo.",
     price: "83/mês",
-    priceLabel: " (Economize 35% • total R$ 997)",
+    priceLabel: null,
+    priceDiscount: "35% de desconto",
+    priceTotal: "total R$ 997",
     features: [
       "Todos os recursos do plano completo",
       "Rotina de Cuidados e registro de ocorrências",
@@ -114,8 +122,19 @@ const Pricing = () => {
                   <span className="text-xl font-bold text-foreground">Grátis</span>
                 ) : (
                   <>
-                    <span className="text-xl font-bold text-foreground">R$ {plan.price}</span>
-                    <span className="text-muted-foreground ml-1 text-xs">{plan.priceLabel}</span>
+                    <div>
+                      <span className="text-xl font-bold text-foreground">R$ {plan.price}</span>
+                      {plan.priceLabel && (
+                        <span className="text-muted-foreground ml-1 text-xs">{plan.priceLabel}</span>
+                      )}
+                    </div>
+                    {plan.priceDiscount && plan.priceTotal && (
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
+                        <span className="whitespace-nowrap">{plan.priceDiscount}</span>
+                        <span aria-hidden="true">•</span>
+                        <span className="whitespace-nowrap">{plan.priceTotal}</span>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

@@ -10,17 +10,23 @@ describe('pricing copy', () => {
     const source = read('src/components/Pricing.tsx')
 
     expect(source).toContain('price: "99/mês"')
-    expect(source).toContain('priceLabel: " (Economize 22% • total R$ 297)"')
+    expect(source).toContain('priceDiscount: "22% de desconto"')
+    expect(source).toContain('priceTotal: "total R$ 297"')
     expect(source).toContain('price: "83/mês"')
-    expect(source).toContain('priceLabel: " (Economize 35% • total R$ 997)"')
+    expect(source).toContain('priceDiscount: "35% de desconto"')
+    expect(source).toContain('priceTotal: "total R$ 997"')
+    expect(source).toContain('whitespace-nowrap')
   })
 
   it('shows monthly equivalent, savings and total on family billing plans', () => {
     const source = read('src/pages/family/FamilyBilling.tsx')
 
     expect(source).toContain('price: "R$ 99/mês"')
-    expect(source).toContain('priceDescription: "(Economize 22% • total R$ 297)"')
+    expect(source).toContain('priceDiscount: "22% de desconto"')
+    expect(source).toContain('priceTotal: "total R$ 297"')
     expect(source).toContain('price: "R$ 83/mês"')
-    expect(source).toContain('priceDescription: "(Economize 35% • total R$ 997)"')
+    expect(source).toContain('priceDiscount: "35% de desconto"')
+    expect(source).toContain('priceTotal: "total R$ 997"')
+    expect(source).toContain('whitespace-nowrap')
   })
 })
