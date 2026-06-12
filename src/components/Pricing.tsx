@@ -42,8 +42,8 @@ const plans = [
   {
     name: "Trimestral",
     description: "Mais tempo para decidir com tranquilidade.",
-    price: "297",
-    priceLabel: " (R$ 99/mês)",
+    price: "99/mês",
+    priceLabel: " (Economize 22% • total R$ 297)",
     features: [
       "Todos os recursos do plano mensal",
       "Rotina de Cuidados e registro de ocorrências",
@@ -58,8 +58,8 @@ const plans = [
   {
     name: "Anual",
     description: "Ideal para cuidado contínuo.",
-    price: "997",
-    priceLabel: " (R$ 83/mês)",
+    price: "83/mês",
+    priceLabel: " (Economize 35% • total R$ 997)",
     features: [
       "Todos os recursos do plano completo",
       "Rotina de Cuidados e registro de ocorrências",
