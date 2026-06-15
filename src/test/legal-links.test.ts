@@ -41,8 +41,8 @@ describe('legal document links', () => {
     expect(read('public/privacy/index.html')).toContain('/legal/politica_privacidade_icuide.pdf')
     expect(read('public/terms/index.html')).toContain('/legal/termos_uso_icuide.pdf')
     expect(read('public/cookies/index.html')).toContain('/legal/politica_cookies_icuide.pdf')
-    expect(read('public/privacy/index.html')).toContain('brand-logo')
-    expect(read('public/privacy/index.html')).not.toContain('<img src="/logo.png"')
+    expect(read('public/privacy/index.html')).toContain('<img src="/logo.png"')
+    expect(read('public/privacy/index.html')).not.toContain('brand-logo')
     expect(read('public/_redirects')).toContain('/privacy /privacy/index.html 200')
   })
 
