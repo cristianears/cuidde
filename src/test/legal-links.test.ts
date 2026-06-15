@@ -23,6 +23,29 @@ describe('legal document links', () => {
     expect(footer).toContain('São José dos Campos, SP - Brasil')
   })
 
+  it('keeps footer navigation pointed at real landing sections', () => {
+    const footer = read('src/components/Footer.tsx')
+
+    expect(footer).toContain('href="/#como-funciona"')
+    expect(footer).toContain('href="/onboarding?type=family"')
+    expect(footer).toContain('href="/#planos"')
+    expect(footer).toContain('href="/#faq"')
+    expect(footer).toContain('href="/onboarding?type=caregiver"')
+    expect(footer).toContain('href="/para-cuidadores#como-funciona-cuidador"')
+    expect(footer).toContain('href="/para-cuidadores#duvidas-cuidadores"')
+    expect(footer).not.toContain('goTo("#como-funciona")')
+    expect(footer).not.toContain('useNavigate')
+  })
+
+  it('shows only instagram in the social footer area without outbound placeholder links', () => {
+    const footer = read('src/components/Footer.tsx')
+
+    expect(footer).toContain('aria-label="Instagram"')
+    expect(footer).not.toContain('aria-label="Facebook"')
+    expect(footer).not.toContain('aria-label="LinkedIn"')
+    expect(footer).not.toContain('href="#"')
+  })
+
   it('keeps consent links opening the official PDFs directly', () => {
     expect(read('src/pages/onboarding/Onboarding.tsx')).toContain('LEGAL_DOCUMENTS.privacy.path')
     expect(read('src/pages/caregiver/CaregiverProfile.tsx')).toContain('LEGAL_DOCUMENTS.thirdPartyConsent.path')

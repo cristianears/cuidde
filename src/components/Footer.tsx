@@ -1,49 +1,29 @@
-import { Facebook, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+import { Instagram, Mail, Phone, MapPin } from "lucide-react";
 import BrandMark from "@/components/shared/BrandMark";
-import { useNavigate } from "react-router-dom";
 const Footer = () => {
-  const navigate = useNavigate();
-  const goTo = (hash: string) => {
-    navigate(`/${hash}`);
-  };
   return (
     <footer className="bg-footer text-footer-foreground py-14">
       <div className="container mx-auto px-6 md:px-10">
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8 md:mb-10">
           {/* Brand */}
           <div className="col-span-2 md:col-span-2 lg:col-span-1">
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="mb-4"
+            <a
+              href="/"
+              className="mb-4 inline-block"
             >
               <BrandMark size={32} wordmarkClassName="text-footer-foreground" />
-            </button>
+            </a>
             <p className="text-footer-foreground/70 mb-5 leading-relaxed text-xs md:text-sm">
               Conectando famílias a profissionais de cuidado com transparência, informação e segurança para decidir melhor.
             </p>
             <div className="flex gap-2.5">
-              <a
-                href="#"
-                aria-label="Facebook"
-                className="w-8 h-8 rounded-lg bg-footer-foreground/10 hover:bg-footer-foreground/20 flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5"
-              >
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a
-                href="#"
+              <span
+                role="img"
                 aria-label="Instagram"
-                className="w-8 h-8 rounded-lg bg-footer-foreground/10 hover:bg-footer-foreground/20 flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5"
+                className="w-8 h-8 rounded-lg bg-footer-foreground/10 flex items-center justify-center"
               >
                 <Instagram className="w-4 h-4" />
-              </a>
-              <a
-                href="#"
-                aria-label="LinkedIn"
-                className="w-8 h-8 rounded-lg bg-footer-foreground/10 hover:bg-footer-foreground/20 flex items-center justify-center transition-all duration-300 hover:-translate-y-0.5"
-              >
-                <Linkedin className="w-4 h-4" />
-              </a>
+              </span>
             </div>
           </div>
           {/* For Families */}
@@ -51,49 +31,44 @@ const Footer = () => {
             <h4 className="font-semibold mb-4 text-sm">Para Famílias</h4>
             <ul className="space-y-3">
               <li>
-                <button
-                  type="button"
-                  onClick={() => goTo("#como-funciona")}
+                <a
+                  href="/#como-funciona"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Como Funciona
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/onboarding?type=family")}
+                <a
+                  href="/onboarding?type=family"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Buscar profissionais
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => goTo("#planos")}
+                <a
+                  href="/#planos"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Planos e preços
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/blog")}
+                <a
+                  href="/blog"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Guias e blog
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => goTo("#faq")}
+                <a
+                  href="/#faq"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Perguntas frequentes
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -102,40 +77,36 @@ const Footer = () => {
             <h4 className="font-semibold mb-4 text-sm">Para Profissionais</h4>
             <ul className="space-y-3">
               <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/para-cuidadores")}
+                <a
+                  href="/onboarding?type=caregiver"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Criar perfil grátis
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => goTo("#como-funciona")}
+                <a
+                  href="/para-cuidadores#como-funciona-cuidador"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Como funciona
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/blog/como-montar-perfil-de-cuidador")}
+                <a
+                  href="/blog/como-montar-perfil-de-cuidador"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Dicas para seu perfil
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  type="button"
-                  onClick={() => goTo("#faq")}
+                <a
+                  href="/para-cuidadores#duvidas-cuidadores"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >
                   Perguntas frequentes
-                </button>
+                </a>
               </li>
             </ul>
           </div>
