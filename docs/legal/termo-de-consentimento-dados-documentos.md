@@ -108,7 +108,7 @@ O usuário entende que:
 
 Quando o tratamento se basear em consentimento, o usuário poderá revogá-lo a qualquer momento pelo canal **contato@icuide.com.br** ou por funcionalidade disponível na plataforma.
 
-A revogação poderá limitar ou impedir o uso de certas funcionalidades, como exibição de perfil, documentos, referências, solicitações, chat ou rotina de cuidados.
+A revogação poderá limitar ou impedir o uso de certas funcionalidades, como exibição de perfil, documentos, referências, solicitações, chat, rotina de cuidados, histórico de atendimento ou exportação de relatórios.
 
 Mesmo após revogação, a icuide poderá manter dados quando necessário para:
 

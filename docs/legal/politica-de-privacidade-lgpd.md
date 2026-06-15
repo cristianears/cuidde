@@ -55,7 +55,7 @@ Podemos coletar os seguintes dados, conforme o perfil e uso da plataforma.
 - endereço, CEP, bairro, cidade e estado;
 - localização aproximada ou coordenadas quando necessárias para busca por proximidade;
 - dados de assinatura, plano, status de pagamento, faturas, histórico de cobrança e motivo informado em caso de cancelamento de assinatura;
-- favoritos, buscas, solicitações de atendimento, mensagens, avaliações e histórico de uso;
+- favoritos, buscas, solicitações de atendimento, mensagens, avaliações, registros de rotina de cuidados, relatórios exportados e histórico de uso;
 - informações sobre o idoso, paciente ou pessoa atendida, quando fornecidas pela Família, como nome, idade, observações, rotina, necessidades de cuidado, mobilidade, preferências, alergias, condições de saúde ou outras informações relevantes.
 
 ### 4.3 Dados de Cuidadores
@@ -99,14 +99,14 @@ Tratamos dados pessoais para as seguintes finalidades:
 | Finalidade | Exemplos | Base legal provável |
 | --- | --- | --- |
 | Cadastro e autenticação | criar conta, login, segurança de sessão | execução de contrato, procedimentos preliminares, legítimo interesse |
-| Operação da plataforma | exibir perfis, busca, favoritos, solicitações, chat, avaliações | execução de contrato, legítimo interesse |
+| Operação da plataforma | exibir perfis, busca, favoritos, solicitações, chat, avaliações, histórico de atendimento e rotina de cuidados | execução de contrato, legítimo interesse |
 | Busca por proximidade | calcular distância aproximada entre Família e Cuidadores | execução de contrato, legítimo interesse, consentimento quando aplicável |
 | Assinaturas e cobrança | processar planos, faturas, status de pagamento | execução de contrato, cumprimento de obrigação legal |
 | Cancelamento e reembolso | registrar pedido de cancelamento, motivo informado, contestação de cobrança, reembolso e suporte financeiro | execução de contrato, legítimo interesse, cumprimento legal e exercício regular de direitos |
 | Segurança e prevenção a fraude | logs, análise de abuso, moderação, suspensão | legítimo interesse, exercício regular de direitos, cumprimento legal |
 | Suporte e comunicação | responder dúvidas, avisos transacionais, notificações | execução de contrato, legítimo interesse |
 | Documentos de Cuidadores | armazenar e exibir documentos selecionados conforme regras de visibilidade | execução de contrato, consentimento quando necessário, exercício regular de direitos |
-| Dados sensíveis de atendimento | informações de saúde/rotina fornecidas pela Família para viabilizar solicitação ou rotina | consentimento específico quando aplicável, proteção da vida, tutela da saúde por profissionais habilitados quando aplicável, exercício regular de direitos |
+| Dados sensíveis de atendimento | informações de saúde/rotina fornecidas pela Família para viabilizar solicitação, acompanhamento, rotina ou exportação de relatório | consentimento específico quando aplicável, proteção da vida, tutela da saúde por profissionais habilitados quando aplicável, exercício regular de direitos |
 | Cumprimento legal | retenção contábil, fiscal, judicial, regulatória ou resposta a autoridade | cumprimento de obrigação legal/regulatória, exercício regular de direitos |
 | Melhoria da plataforma | métricas, estatísticas e análise de uso | legítimo interesse, preferencialmente com dados agregados ou anonimizados |
 
@@ -164,6 +164,10 @@ Manteremos dados pessoais pelo tempo necessário para cumprir as finalidades des
 Após esse período, os dados serão excluídos, anonimizados ou mantidos de forma bloqueada quando permitido por lei.
 
 Solicitações de exclusão serão analisadas conforme a LGPD. Alguns dados podem ser mantidos mesmo após exclusão da conta quando necessário para cumprimento legal, exercício regular de direitos, prevenção a fraude, auditoria, segurança ou preservação de evidências.
+
+O cancelamento da assinatura ou a perda de acesso às funcionalidades pagas não gera exclusão automática dos dados da conta, dos atendimentos, das mensagens ou dos registros de rotina de cuidados. Esses dados poderão permanecer armazenados pelo tempo necessário para operação da plataforma, suporte, segurança, continuidade do histórico, cumprimento legal, auditoria, prevenção a fraude, exercício regular de direitos ou preservação de evidências.
+
+Enquanto o acesso pago estiver ativo, a Família poderá utilizar as funcionalidades disponíveis para consultar ou exportar relatórios de rotina de cuidados. Após o término efetivo do período pago, o acesso direto a determinados históricos, relatórios ou funcionalidades restritas poderá ser limitado, sem prejuízo dos direitos do titular de solicitar acesso, cópia, correção, eliminação, anonimização, portabilidade quando regulamentada ou outras providências previstas na LGPD.
 
 ## 12. Direitos dos titulares
 

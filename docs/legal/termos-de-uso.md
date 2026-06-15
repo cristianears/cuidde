@@ -137,6 +137,18 @@ Após o prazo legal de arrependimento, os valores pagos pelo ciclo vigente não 
 
 Pedidos de cancelamento, reembolso ou contestação de cobrança poderão ser analisados pela icuide e/ou pelo intermediador de pagamento. A icuide poderá solicitar informações adicionais para localizar a cobrança, verificar a titularidade da conta e prevenir fraudes.
 
+### 10.2 Histórico da rotina de cuidados após cancelamento
+
+Durante o período em que a assinatura permanecer ativa, inclusive quando o cancelamento estiver agendado para o fim do ciclo já pago, a Família poderá acessar as funcionalidades pagas disponíveis no plano contratado, incluindo, quando aplicável, histórico de atendimentos, registros de rotina de cuidados e exportação de relatórios disponibilizados pela plataforma.
+
+Após o término efetivo do período pago ou a perda de acesso às funcionalidades pagas, o acesso direto a históricos completos, relatórios, documentos, chats ou demais recursos restritos poderá ser limitado, suspenso ou indisponibilizado, conforme o plano ativo e as regras da plataforma.
+
+A icuide recomenda que a Família exporte ou salve, antes do fim do período pago, relatórios e informações de rotina de cuidados que considere importantes para acompanhamento familiar, organização pessoal, continuidade do cuidado, consultas com profissionais ou preservação de histórico.
+
+O cancelamento da assinatura não implica exclusão automática da conta nem apagamento imediato dos dados registrados na plataforma. Dados de atendimento, mensagens, rotinas de cuidado, faturas, registros técnicos e demais informações poderão ser mantidos pelo tempo necessário para cumprimento de obrigações legais, prevenção a fraudes, segurança, auditoria, suporte, exercício regular de direitos, preservação de evidências ou conforme previsto na Política de Privacidade.
+
+O usuário poderá solicitar acesso, cópia, correção, exclusão ou outras providências sobre seus dados pessoais pelos canais indicados na Política de Privacidade, observadas as limitações legais, técnicas e contratuais aplicáveis.
+
 ## 11. Mensagens, chat, solicitações e registros
 
 A plataforma poderá permitir envio de solicitações, mensagens e informações entre usuários. Os usuários são responsáveis pelo conteúdo que enviam.

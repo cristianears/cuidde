@@ -13,13 +13,15 @@ const legalHighlights: Record<LegalDocumentKey, string[]> = {
     'A icuide conecta famílias e cuidadores, oferecendo ferramentas para cadastro, busca, solicitações e acompanhamento.',
     'A contratação do serviço de cuidado ocorre diretamente entre família e cuidador, conforme as informações combinadas entre as partes.',
     'A assinatura remunera o acesso à plataforma, pode ser cancelada a qualquer momento e mantém o acesso até o fim do período já pago.',
+    'Ao cancelar, a família deve exportar relatórios e histórico de rotina de cuidados antes do fim do período pago, se desejar guardar essas informações.',
     'Reembolso integral é previsto em caso de direito de arrependimento no prazo legal de 7 dias ou nas demais hipóteses previstas nos Termos.',
     'O uso da plataforma exige informações verdadeiras, respeito aos demais usuários e cumprimento das regras publicadas.',
   ],
   privacy: [
     'A icuide trata dados pessoais para criar contas, autenticar usuários, operar perfis, facilitar buscas e manter a segurança da plataforma.',
     'Quando o login com Google é utilizado, recebemos dados básicos de autenticação, como nome, e-mail e identificador da conta, conforme autorizado pelo usuário.',
-    'Dados de assinatura, cobrança e motivo de cancelamento podem ser tratados para suporte, prevenção a fraudes, reembolso, contestação e cumprimento de obrigações legais.',
+    'Dados de atendimento, rotina de cuidados, assinatura, cobrança e motivo de cancelamento podem ser tratados para suporte, segurança, reembolso, contestação e cumprimento de obrigações legais.',
+    'O cancelamento da assinatura não apaga automaticamente os dados, mas o titular pode solicitar acesso, cópia, correção ou exclusão conforme a LGPD.',
   ],
   cookies: [
     'Usamos cookies necessários para manter a sessão, lembrar preferências e garantir o funcionamento da plataforma.',
