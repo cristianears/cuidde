@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Política de Privacidade | icuide</title>
     <meta name="description" content="Como a icuide trata dados pessoais na plataforma." />
-    <link rel="icon" type="image/png" href="/logo.png" />
+    <link rel="icon" type="image/png" href="/pwa-icon-192.png" />
     <style>
       :root { color-scheme: light; --bg: #f8fafc; --card: #ffffff; --text: #111827; --muted: #667085; --primary: #0f766e; --border: #e5e7eb; }
       * { box-sizing: border-box; }
@@ -14,7 +14,7 @@
       nav, main { width: min(960px, calc(100% - 32px)); margin: 0 auto; }
       nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
       .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 700; }
-      .brand img { width: 30px; height: 30px; }
+      .brand-logo { width: 30px; height: 30px; border-radius: 999px; background: linear-gradient(135deg, #c8f7dc, #52c7d9 52%, #1d8f85); background-image: url('/logo.png'), linear-gradient(135deg, #c8f7dc, #52c7d9 52%, #1d8f85); background-position: center; background-repeat: no-repeat; background-size: contain; box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.12); }
       main { padding: 40px 0; }
       article { max-width: 760px; }
       h1 { margin: 0 0 8px; font-size: clamp(2rem, 8vw, 3.25rem); line-height: 1.05; }
@@ -32,7 +32,7 @@
     <header>
       <nav>
         <a class="brand" href="/">
-          <img src="/logo.png" alt="" />
+          <span class="brand-logo" aria-hidden="true"></span>
           <span>icuide</span>
         </a>
         <a class="button" href="/legal/politica_privacidade_icuide.pdf">Abrir PDF completo</a>
@@ -49,6 +49,7 @@
             <li>Quando o login com Google é utilizado, recebemos dados básicos de autenticação, como nome, e-mail e identificador da conta, conforme autorizado pelo usuário.</li>
             <li>Dados de cuidadores, famílias, idosos, documentos, referências, atendimentos, rotinas de cuidado, relatórios, assinaturas e motivos de cancelamento são tratados para viabilizar o funcionamento do marketplace e das ferramentas de acompanhamento.</li>
             <li>Os dados podem ser usados para suporte, prevenção a fraudes, comunicações operacionais, cumprimento de obrigações legais, cobrança, reembolso e melhoria da experiência.</li>
+            <li>Durante períodos de segurança previstos nos Termos, a icuide pode ocultar contatos externos e aplicar filtragem técnica proporcional para evitar compartilhamento indevido de telefone, WhatsApp, e-mail, links ou outros contatos diretos.</li>
             <li>O cancelamento da assinatura não apaga automaticamente os dados, mas o titular pode solicitar acesso, cópia, correção ou exclusão conforme a LGPD.</li>
             <li>O usuário pode consultar o texto integral no PDF oficial desta Política de Privacidade.</li>
           </ul>

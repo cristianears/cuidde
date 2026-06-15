@@ -3,8 +3,6 @@
 Versão: 1.0  
 Data da última atualização: 04/06/2026
 
-> Importante: este documento deve ser revisado periodicamente por advogado e/ou especialista em proteção de dados para refletir mudanças legais, técnicas e operacionais da plataforma.
-
 ## 1. Identificação e finalidade
 
 Esta Política de Cookies explica como a plataforma icuide, operada e de propriedade de **Cristiane Alves Rodrigues de Sousa**, inscrita no CPF sob nº **269.430.238-61**, com endereço de correspondência na **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**, usa cookies, localStorage, sessionStorage e tecnologias semelhantes.

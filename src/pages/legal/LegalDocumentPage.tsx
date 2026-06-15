@@ -15,12 +15,14 @@ const legalHighlights: Record<LegalDocumentKey, string[]> = {
     'A assinatura remunera o acesso à plataforma, pode ser cancelada a qualquer momento e mantém o acesso até o fim do período já pago.',
     'Ao cancelar, a família deve exportar relatórios e histórico de rotina de cuidados antes do fim do período pago, se desejar guardar essas informações.',
     'Reembolso integral é previsto em caso de direito de arrependimento no prazo legal de 7 dias ou nas demais hipóteses previstas nos Termos.',
+    'Nos primeiros 7 dias da primeira assinatura paga, por segurança, contatos externos podem ficar ocultos e a comunicação pode ocorrer pelo chat da icuide, sem prejuízo ao direito legal de arrependimento.',
     'O uso da plataforma exige informações verdadeiras, respeito aos demais usuários e cumprimento das regras publicadas.',
   ],
   privacy: [
     'A icuide trata dados pessoais para criar contas, autenticar usuários, operar perfis, facilitar buscas e manter a segurança da plataforma.',
     'Quando o login com Google é utilizado, recebemos dados básicos de autenticação, como nome, e-mail e identificador da conta, conforme autorizado pelo usuário.',
     'Dados de atendimento, rotina de cuidados, assinatura, cobrança e motivo de cancelamento podem ser tratados para suporte, segurança, reembolso, contestação e cumprimento de obrigações legais.',
+    'Durante períodos de segurança previstos nos Termos, a icuide pode ocultar contatos externos e aplicar filtragem técnica proporcional para evitar compartilhamento indevido de telefone, WhatsApp, e-mail, links ou outros contatos diretos.',
     'O cancelamento da assinatura não apaga automaticamente os dados, mas o titular pode solicitar acesso, cópia, correção ou exclusão conforme a LGPD.',
   ],
   cookies: [

@@ -3,8 +3,6 @@
 Versão: 1.0  
 Data da última atualização: 04/06/2026
 
-> Importante: este documento deve ser revisado periodicamente por advogado e/ou especialista em proteção de dados para refletir mudanças legais, comerciais e operacionais da plataforma.
-
 ## 1. Quem somos
 
 A icuide é uma plataforma digital operada e de propriedade de **Cristiane Alves Rodrigues de Sousa**, inscrita no CPF sob nº **269.430.238-61**, com endereço de correspondência na **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**, e contato pelo e-mail **contato@icuide.com.br**, criada para aproximar Famílias e Cuidadores independentes.
@@ -103,7 +101,7 @@ Tratamos dados pessoais para as seguintes finalidades:
 | Busca por proximidade | calcular distância aproximada entre Família e Cuidadores | execução de contrato, legítimo interesse, consentimento quando aplicável |
 | Assinaturas e cobrança | processar planos, faturas, status de pagamento | execução de contrato, cumprimento de obrigação legal |
 | Cancelamento e reembolso | registrar pedido de cancelamento, motivo informado, contestação de cobrança, reembolso e suporte financeiro | execução de contrato, legítimo interesse, cumprimento legal e exercício regular de direitos |
-| Segurança e prevenção a fraude | logs, análise de abuso, moderação, suspensão | legítimo interesse, exercício regular de direitos, cumprimento legal |
+| Segurança e prevenção a fraude | logs, análise de abuso, moderação, restrição temporária de contatos externos, filtragem técnica de mensagens para impedir compartilhamento de telefone, WhatsApp, e-mail ou outros contatos durante períodos de segurança, suspensão | legítimo interesse, exercício regular de direitos, cumprimento legal |
 | Suporte e comunicação | responder dúvidas, avisos transacionais, notificações | execução de contrato, legítimo interesse |
 | Documentos de Cuidadores | armazenar e exibir documentos selecionados conforme regras de visibilidade | execução de contrato, consentimento quando necessário, exercício regular de direitos |
 | Dados sensíveis de atendimento | informações de saúde/rotina fornecidas pela Família para viabilizar solicitação, acompanhamento, rotina ou exportação de relatório | consentimento específico quando aplicável, proteção da vida, tutela da saúde por profissionais habilitados quando aplicável, exercício regular de direitos |
@@ -125,6 +123,8 @@ Podemos compartilhar dados pessoais apenas quando necessário e proporcional, in
 - em operações societárias, fusão, aquisição, investimento, reorganização ou venda de ativos, observadas salvaguardas adequadas.
 
 A icuide não vende dados pessoais.
+
+Durante períodos de segurança previstos nos Termos de Uso, especialmente nos primeiros 7 dias da primeira assinatura paga de uma Família, a icuide poderá ocultar contatos externos e aplicar filtragem técnica ou moderação proporcional em mensagens para reduzir fraude, abuso ou uso indevido da plataforma. Essa medida pode envolver análise automatizada de padrões evidentes de telefone, WhatsApp, e-mail, links ou outros meios diretos de contato, sem afastar os direitos do titular previstos na LGPD.
 
 ## 8. Documentos de Cuidadores e responsabilidade sobre autenticidade
 

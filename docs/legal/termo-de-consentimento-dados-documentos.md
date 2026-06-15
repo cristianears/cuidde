@@ -3,8 +3,6 @@
 Versão: 1.0  
 Data da última atualização: 04/06/2026
 
-> Importante: este documento deve ser revisado periodicamente por advogado e/ou especialista em proteção de dados. Recomenda-se exibir este termo em fluxos específicos de aceite, com checkbox separado e registro de data, hora, usuário, IP e versão aceita.
-
 ## 1. Finalidade deste termo
 
 Este Termo explica e registra o consentimento do usuário para o tratamento de dados pessoais, dados sensíveis, documentos, referências e informações de terceiros enviados à plataforma icuide, operada e de propriedade de **Cristiane Alves Rodrigues de Sousa**, inscrita no CPF sob nº **269.430.238-61**, com endereço de correspondência na **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**.
