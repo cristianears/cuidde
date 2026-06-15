@@ -92,6 +92,15 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
   )
 }
 
+async function fetchFamilyPhotos(familyIds: string[]): Promise<Record<string, string | null>> {
+  if (familyIds.length === 0) return {}
+  const { data } = await supabase
+    .from('family_profiles')
+    .select('id, photo_url')
+    .in('id', familyIds)
+  return Object.fromEntries((data ?? []).map((p) => [p.id, p.photo_url ?? null]))
+}
+
 async function fetchCaregiverPhotos(caregiverIds: string[]): Promise<Record<string, string | null>> {
   if (caregiverIds.length === 0) return {}
   const { data } = await supabase
@@ -154,9 +163,10 @@ export function useAppointments(role: 'caregiver' | 'family') {
       const uniqueIds = [...new Set(data.flatMap((a) => [a.family_id, a.caregiver_id]))]
       const familyIds = [...new Set(data.map((a) => a.family_id))]
       const caregiverIds = [...new Set(data.map((a) => a.caregiver_id))]
-      const [names, familyInfo, caregiverPhotos] = await Promise.all([
+      const [names, familyInfo, familyPhotos, caregiverPhotos] = await Promise.all([
         fetchProfileNames(uniqueIds),
         fetchFamilyInfo(familyIds),
+        fetchFamilyPhotos(familyIds),
         fetchCaregiverPhotos(caregiverIds),
       ])
 
@@ -165,7 +175,7 @@ export function useAppointments(role: 'caregiver' | 'family') {
         return {
           ...row,
           family_name: info?.responsible_name ?? names[row.family_id] ?? null,
-          family_photo: info?.photo_url ?? null,
+          family_photo: familyPhotos[row.family_id] ?? info?.photo_url ?? null,
           caregiver_name: names[row.caregiver_id] ?? null,
           caregiver_photo: caregiverPhotos[row.caregiver_id] ?? null,
           elderly_name: info?.elderly_name ?? null,
@@ -212,9 +222,10 @@ export function useAppointmentDetail(
         return null
       }
 
-      const [names, familyInfo, caregiverPhotos] = await Promise.all([
+      const [names, familyInfo, familyPhotos, caregiverPhotos] = await Promise.all([
         fetchProfileNames([data.family_id, data.caregiver_id]),
         fetchFamilyInfo([data.family_id]),
+        fetchFamilyPhotos([data.family_id]),
         fetchCaregiverPhotos([data.caregiver_id]),
       ])
 
@@ -222,7 +233,7 @@ export function useAppointmentDetail(
       return {
         ...data,
         family_name: info?.responsible_name ?? names[data.family_id] ?? null,
-        family_photo: info?.photo_url ?? null,
+        family_photo: familyPhotos[data.family_id] ?? info?.photo_url ?? null,
         caregiver_name: names[data.caregiver_id] ?? null,
         caregiver_photo: caregiverPhotos[data.caregiver_id] ?? null,
         elderly_name: info?.elderly_name ?? null,
