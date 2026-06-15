@@ -109,7 +109,6 @@ function markdownToHtml(markdown) {
 }
 
 function pageTemplate(body) {
-  const logoPath = resolve(root, 'public/logo.png').replaceAll('\\', '/')
   return `<!doctype html>
 <html lang="pt-BR">
   <head>
@@ -132,7 +131,25 @@ function pageTemplate(body) {
         margin-bottom: 18px;
         padding-bottom: 10px;
       }
-      header img { height: 26px; width: 26px; }
+      .brand-mark {
+        background: linear-gradient(135deg, #c8f7dc, #52c7d9 52%, #1d8f85);
+        border-radius: 999px;
+        box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.14);
+        height: 26px;
+        position: relative;
+        width: 26px;
+      }
+      .brand-mark::after {
+        background: rgba(255, 255, 255, 0.86);
+        border-radius: 999px 999px 999px 4px;
+        content: "";
+        height: 13px;
+        left: 5px;
+        position: absolute;
+        top: 7px;
+        transform: rotate(-35deg);
+        width: 18px;
+      }
       header span { font-size: 14px; font-weight: 700; }
       h1 {
         color: #0f172a;
@@ -184,7 +201,7 @@ function pageTemplate(body) {
   </head>
   <body>
     <header>
-      <img src="file:///${logoPath}" alt="" />
+      <div class="brand-mark" aria-hidden="true"></div>
       <span>icuide</span>
     </header>
     <main>${body}</main>

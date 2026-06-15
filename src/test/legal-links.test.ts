@@ -80,5 +80,7 @@ describe('legal document links', () => {
     expect(privacy).not.toContain('revisado periodicamente por advogado')
     expect(pdfScript).toContain('termos_uso_icuide.pdf')
     expect(pdfScript).toContain('politica_cookies_icuide.pdf')
+    expect(pdfScript).toContain('brand-mark')
+    expect(pdfScript).not.toContain('<img src="file:///')
   })
 })
