@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -146,6 +146,11 @@ const CaregiverSolicitations = () => {
         <CardContent className="p-3 sm:p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
             <Avatar className="w-12 h-12 sm:w-14 sm:h-14">
+              <AvatarImage
+                src={appointment.family_photo ?? undefined}
+                alt={appointment.family_name ?? "Família"}
+                className="object-cover"
+              />
               <AvatarFallback className="bg-primary/10 text-primary text-base sm:text-lg">
                 {getInitials(appointment.family_name)}
               </AvatarFallback>

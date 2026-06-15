@@ -178,7 +178,7 @@ create policy "family_profiles: leitura consolidada"
       from public.appointments
       where appointments.family_id = family_profiles.id
         and appointments.caregiver_id = (select auth.uid())
-        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
+        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text, 'cancelado'::text])
     )
   );
 
@@ -202,13 +202,13 @@ create policy "profiles: leitura consolidada"
       select a.family_id
       from public.appointments a
       where a.caregiver_id = (select auth.uid())
-        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text])
+        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text, 'cancelado'::text])
     )
     or id in (
       select a.caregiver_id
       from public.appointments a
       where a.family_id = (select auth.uid())
-        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text])
+        and a.status = any (array['ativo'::text, 'pendente'::text, 'finalizado'::text, 'cancelado'::text])
     )
   );
 

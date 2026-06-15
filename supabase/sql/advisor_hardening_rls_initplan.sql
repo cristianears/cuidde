@@ -51,7 +51,7 @@ create policy "caregiver reads linked family"
       from public.appointments
       where appointments.family_id = family_profiles.id
         and appointments.caregiver_id = (select auth.uid())
-        and appointments.status = any (array['ativo'::text, 'pendente'::text])
+        and appointments.status = any (array['ativo'::text, 'pendente'::text, 'cancelado'::text])
     )
   );
 
@@ -66,7 +66,7 @@ create policy "family_profiles: cuidador lê dados do idoso no atendimento"
       from public.appointments
       where appointments.family_id = family_profiles.id
         and appointments.caregiver_id = (select auth.uid())
-        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text])
+        and appointments.status = any (array['pendente'::text, 'ativo'::text, 'finalizado'::text, 'cancelado'::text])
     )
   );
 

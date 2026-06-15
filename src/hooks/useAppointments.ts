@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
@@ -10,7 +11,9 @@ import { trackCaregiverInterest } from '@/hooks/useTrackCaregiverEvent'
 
 export interface AppointmentWithNames extends Appointment {
   family_name: string | null
+  family_photo: string | null
   caregiver_name: string | null
+  caregiver_photo: string | null
   elderly_name: string | null
   family_subscription: {
     subscription_status: SubscriptionStatus
@@ -51,6 +54,7 @@ async function fetchProfileNames(ids: string[]): Promise<Record<string, string>>
 interface FamilyInfo {
   elderly_name: string | null
   responsible_name: string | null
+  photo_url: string | null
   subscription_status: SubscriptionStatus
   payment_failed_at: string | null
   subscription_started_at: string | null
@@ -63,7 +67,7 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
   const [{ data: familyData }, { data: profileData }] = await Promise.all([
     supabase
       .from('family_profiles')
-      .select('id, elderly_name, subscription_status, payment_failed_at, subscription_started_at')
+      .select('id, elderly_name, photo_url, subscription_status, payment_failed_at, subscription_started_at')
       .in('id', familyIds),
     supabase
       .from('profiles')
@@ -79,6 +83,7 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
     (familyData ?? []).map((p) => [p.id, {
       elderly_name: p.elderly_name ?? null,
       responsible_name: profileNames[p.id] ?? null,
+      photo_url: p.photo_url ?? null,
       subscription_status: p.subscription_status,
       payment_failed_at: p.payment_failed_at ?? null,
       subscription_started_at: p.subscription_started_at ?? null,
@@ -86,10 +91,48 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
   )
 }
 
+async function fetchCaregiverPhotos(caregiverIds: string[]): Promise<Record<string, string | null>> {
+  if (caregiverIds.length === 0) return {}
+  const { data } = await supabase
+    .from('caregiver_profiles')
+    .select('id, photo_url')
+    .in('id', caregiverIds)
+  return Object.fromEntries((data ?? []).map((p) => [p.id, p.photo_url ?? null]))
+}
+
 // ─── Query: listar agendamentos ──────────────────────────────────────────────
 
 export function useAppointments(role: 'caregiver' | 'family') {
   const { user } = useAuth()
+  const qc = useQueryClient()
+
+  useEffect(() => {
+    if (!user?.id) return
+
+    const column = role === 'caregiver' ? 'caregiver_id' : 'family_id'
+    const channel = supabase
+      .channel(`appointments:${role}:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'appointments', filter: `${column}=eq.${user.id}` },
+        (payload) => {
+          const appointmentId =
+            (payload.new as { id?: string } | null)?.id ??
+            (payload.old as { id?: string } | null)?.id
+
+          qc.invalidateQueries({ queryKey: queryKeys.appointments(user.id, role) })
+          qc.invalidateQueries({ queryKey: queryKeys.appointmentsAll })
+          if (appointmentId) {
+            qc.invalidateQueries({ queryKey: queryKeys.appointmentDetail(appointmentId) })
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [qc, role, user?.id])
 
   return useQuery({
     queryKey: queryKeys.appointments(user?.id ?? '', role),
@@ -109,9 +152,11 @@ export function useAppointments(role: 'caregiver' | 'family') {
 
       const uniqueIds = [...new Set(data.flatMap((a) => [a.family_id, a.caregiver_id]))]
       const familyIds = [...new Set(data.map((a) => a.family_id))]
-      const [names, familyInfo] = await Promise.all([
+      const caregiverIds = [...new Set(data.map((a) => a.caregiver_id))]
+      const [names, familyInfo, caregiverPhotos] = await Promise.all([
         fetchProfileNames(uniqueIds),
         fetchFamilyInfo(familyIds),
+        fetchCaregiverPhotos(caregiverIds),
       ])
 
       return data.map((row) => {
@@ -119,7 +164,9 @@ export function useAppointments(role: 'caregiver' | 'family') {
         return {
           ...row,
           family_name: info?.responsible_name ?? names[row.family_id] ?? null,
+          family_photo: info?.photo_url ?? null,
           caregiver_name: names[row.caregiver_id] ?? null,
+          caregiver_photo: caregiverPhotos[row.caregiver_id] ?? null,
           elderly_name: info?.elderly_name ?? null,
           family_subscription: info ? {
             subscription_status: info.subscription_status,
@@ -164,16 +211,19 @@ export function useAppointmentDetail(
         return null
       }
 
-      const [names, familyInfo] = await Promise.all([
+      const [names, familyInfo, caregiverPhotos] = await Promise.all([
         fetchProfileNames([data.family_id, data.caregiver_id]),
         fetchFamilyInfo([data.family_id]),
+        fetchCaregiverPhotos([data.caregiver_id]),
       ])
 
       const info = familyInfo[data.family_id]
       return {
         ...data,
         family_name: info?.responsible_name ?? names[data.family_id] ?? null,
+        family_photo: info?.photo_url ?? null,
         caregiver_name: names[data.caregiver_id] ?? null,
+        caregiver_photo: caregiverPhotos[data.caregiver_id] ?? null,
         elderly_name: info?.elderly_name ?? null,
         family_subscription: info ? {
           subscription_status: info.subscription_status,

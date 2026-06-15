@@ -108,6 +108,12 @@ describe('CaregiverSolicitations', () => {
     expect(screen.getByRole('button', { name: /chat/i })).toHaveTextContent('1')
   })
 
+  it('renderiza foto da familia no avatar da solicitacao', () => {
+    expect(source).toContain('AvatarImage')
+    expect(source).toContain('appointment.family_photo')
+    expect(source).toContain('alt={appointment.family_name ?? "Família"}')
+  })
+
   it('mantem o card de solicitacao legivel no mobile sem estourar as acoes', () => {
     expect(source).toContain('flex flex-col gap-3 sm:flex-row sm:items-start')
     expect(source).toContain('grid grid-cols-[1fr_auto] items-start gap-2')
