@@ -1,13 +1,13 @@
 # Termos de Uso da Plataforma icuide
 
 Versão: 1.0  
-Data da última atualização: 25/05/2026
+Data da última atualização: 04/06/2026
 
-> Importante: este documento é um modelo operacional e deve ser revisado por advogado antes da publicação. Substitua todos os campos entre colchetes antes de usar em produção.
+> Importante: este documento deve ser revisado periodicamente por advogado para refletir mudanças legais, comerciais e operacionais da plataforma.
 
 ## 1. Identificação da plataforma
 
-Estes Termos de Uso regulam o acesso e uso da plataforma icuide, disponibilizada por **[RAZÃO SOCIAL]**, pessoa jurídica inscrita no CNPJ sob nº **[CNPJ]**, com sede em **[ENDEREÇO]**, e contato pelo e-mail **[E-MAIL DE CONTATO]**.
+Estes Termos de Uso regulam o acesso e uso da plataforma icuide, disponibilizada, operada e de propriedade de **Cristiane Alves Rodrigues de Sousa**, pessoa física inscrita no CPF sob nº **269.430.238-61**, com endereço de correspondência na **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**, e contato pelo e-mail **contato@icuide.com.br**.
 
 Para fins destes Termos, a icuide é uma plataforma digital destinada a aproximar famílias, responsáveis e pessoas interessadas em contratar serviços de cuidado de idosos ou apoio domiciliar ("Famílias") de profissionais independentes que se anunciam como cuidadores ou prestadores de serviços relacionados ("Cuidadores").
 
@@ -38,7 +38,7 @@ Podem utilizar a icuide:
 
 - **Famílias:** pessoas físicas responsáveis por buscar, avaliar e eventualmente contratar Cuidadores para atendimento próprio, de familiar, idoso, paciente ou terceiro sob sua responsabilidade.
 - **Cuidadores:** profissionais independentes que desejam divulgar seu perfil, experiência, formação, disponibilidade, preços, referências, documentos e demais informações profissionais.
-- **Administradores:** pessoas autorizadas pela icuide para operar, moderar e manter a plataforma.
+- **Administradores:** pessoas autorizadas pela proprietária da plataforma para operar, moderar e manter a plataforma.
 
 O usuário declara que possui capacidade legal para usar a plataforma e, quando agir em nome de terceiro, declara possuir autorização ou responsabilidade legítima para fornecer dados e contratar serviços em seu nome.
 
@@ -120,6 +120,22 @@ Quando houver pagamento por assinatura, a cobrança poderá ser processada por p
 A icuide poderá alterar planos, funcionalidades, preços, períodos promocionais e condições comerciais mediante comunicação quando exigido por lei ou quando aplicável.
 
 Salvo previsão específica, a assinatura da plataforma remunera o acesso à tecnologia e às funcionalidades digitais, não a prestação de serviços de cuidado.
+
+### 10.1 Cancelamento, renovação e reembolso de assinaturas
+
+Os planos pagos da icuide são assinaturas de acesso à plataforma e às funcionalidades digitais disponíveis no plano contratado. A assinatura não inclui a prestação de serviços de cuidado, enfermagem, saúde ou atendimento presencial, que são negociados diretamente entre Família e Cuidador.
+
+As assinaturas podem ter cobrança mensal, trimestral ou anual, conforme o plano escolhido no momento da contratação. Salvo informação em contrário no momento da compra, a assinatura poderá ser renovada automaticamente ao fim de cada ciclo, mediante cobrança pelo intermediador de pagamento.
+
+A Família poderá cancelar a assinatura a qualquer momento pela área de planos/assinatura da plataforma ou pelos canais de suporte informados pela icuide. O cancelamento interrompe cobranças futuras e, como regra, o acesso às funcionalidades pagas permanece ativo até o fim do período já pago.
+
+O cancelamento da assinatura da icuide não cancela automaticamente acordos, atendimentos, pagamentos ou combinações feitos diretamente entre Família e Cuidador, que são de responsabilidade exclusiva dos usuários envolvidos.
+
+Em contratações realizadas pela internet, o usuário consumidor poderá exercer o direito de arrependimento no prazo legal de 7 dias, contado da contratação, com reembolso integral dos valores pagos, conforme a legislação aplicável.
+
+Após o prazo legal de arrependimento, os valores pagos pelo ciclo vigente não serão reembolsados de forma proporcional em razão de cancelamento voluntário, salvo em caso de cobrança indevida, cobrança em duplicidade, falha comprovada da plataforma, determinação legal ou outra hipótese expressamente aceita pela icuide.
+
+Pedidos de cancelamento, reembolso ou contestação de cobrança poderão ser analisados pela icuide e/ou pelo intermediador de pagamento. A icuide poderá solicitar informações adicionais para localizar a cobrança, verificar a titularidade da conta e prevenir fraudes.
 
 ## 11. Mensagens, chat, solicitações e registros
 
@@ -218,13 +234,14 @@ Alterações relevantes serão comunicadas por meio adequado. O uso continuado d
 
 Estes Termos são regidos pelas leis da República Federativa do Brasil.
 
-Fica eleito o foro da comarca de **[CIDADE/UF]**, salvo quando a legislação aplicável assegurar foro diverso ao consumidor ou titular de direitos.
+Fica eleito o foro da comarca de **São José dos Campos/SP**, salvo quando a legislação aplicável assegurar foro diverso ao consumidor ou titular de direitos.
 
 ## 21. Contato
 
 Para dúvidas, suporte, denúncias, solicitações de privacidade ou comunicações sobre estes Termos, entre em contato:
 
-- E-mail geral: **[E-MAIL DE CONTATO]**
-- Privacidade/LGPD: **[E-MAIL DO ENCARREGADO/DPO]**
-- Endereço: **[ENDEREÇO]**
+- E-mail geral: **contato@icuide.com.br**
+- Privacidade/LGPD: **contato@icuide.com.br**
+- Responsável legal: **Cristiane Alves Rodrigues de Sousa (CPF nº 269.430.238-61)**
+- Endereço de correspondência: **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**
 

@@ -5,21 +5,21 @@ Esta pasta contém rascunhos para publicação dos documentos legais da platafor
 - `termos-de-uso.md`
 - `politica-de-privacidade-lgpd.md`
 - `termo-de-consentimento-dados-documentos.md`
+- `politica-de-cookies.md`
 
 ## Antes de publicar
 
 Estes documentos devem ser revisados por advogado antes de irem para produção. Eles foram estruturados para o modelo atual da icuide como plataforma digital de conexão entre Famílias e Cuidadores independentes, mas dependem de validação jurídica, societária, tributária, consumerista, trabalhista e de proteção de dados.
 
-Preencher obrigatoriamente:
+Manter atualizados e revisar antes de publicação:
 
-- razão social;
-- CNPJ;
-- endereço;
+- identificação do operador da plataforma;
+- endereço de correspondência;
 - e-mail de contato;
 - canal do encarregado/DPO;
 - foro;
 - dados específicos do operador da plataforma;
-- política comercial definitiva de planos, cancelamento e reembolso.
+- política comercial de planos, cancelamento e reembolso.
 
 ## Pontos críticos para revisão jurídica
 
@@ -37,6 +37,7 @@ Preencher obrigatoriamente:
 - Cadastro de referências profissionais: confirmação de autorização da pessoa indicada.
 - Solicitação de atendimento pela família: confirmação de autorização para inserir dados do idoso/paciente/terceiro.
 - Assinatura: ciência de que a cobrança remunera acesso à plataforma, não o serviço de cuidado.
+- Cancelamento de assinatura: ciência de que o cancelamento interrompe cobranças futuras e mantém o acesso até o fim do período já pago, salvo direito de arrependimento ou hipóteses legais de reembolso.
 
 ## Referências consultadas
 

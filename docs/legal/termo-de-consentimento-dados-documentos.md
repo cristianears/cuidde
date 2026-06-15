@@ -1,13 +1,13 @@
 # Termo de Consentimento para Tratamento de Dados, Documentos e Informações de Terceiros
 
 Versão: 1.0  
-Data da última atualização: 25/05/2026
+Data da última atualização: 04/06/2026
 
-> Importante: este documento é um modelo operacional e deve ser revisado por advogado e/ou especialista em proteção de dados antes da publicação. Recomenda-se exibir este termo em fluxos específicos de aceite, com checkbox separado e registro de data, hora, usuário, IP e versão aceita.
+> Importante: este documento deve ser revisado periodicamente por advogado e/ou especialista em proteção de dados. Recomenda-se exibir este termo em fluxos específicos de aceite, com checkbox separado e registro de data, hora, usuário, IP e versão aceita.
 
 ## 1. Finalidade deste termo
 
-Este Termo explica e registra o consentimento do usuário para o tratamento de dados pessoais, dados sensíveis, documentos, referências e informações de terceiros enviados à plataforma icuide, operada por **[RAZÃO SOCIAL]**, CNPJ nº **[CNPJ]**.
+Este Termo explica e registra o consentimento do usuário para o tratamento de dados pessoais, dados sensíveis, documentos, referências e informações de terceiros enviados à plataforma icuide, operada e de propriedade de **Cristiane Alves Rodrigues de Sousa**, inscrita no CPF sob nº **269.430.238-61**, com endereço de correspondência na **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**.
 
 Este Termo complementa os Termos de Uso e a Política de Privacidade/LGPD da icuide.
 
@@ -106,7 +106,7 @@ O usuário entende que:
 
 ## 9. Revogação do consentimento
 
-Quando o tratamento se basear em consentimento, o usuário poderá revogá-lo a qualquer momento pelo canal **[E-MAIL DO ENCARREGADO/DPO]** ou por funcionalidade disponível na plataforma.
+Quando o tratamento se basear em consentimento, o usuário poderá revogá-lo a qualquer momento pelo canal **contato@icuide.com.br** ou por funcionalidade disponível na plataforma.
 
 A revogação poderá limitar ou impedir o uso de certas funcionalidades, como exibição de perfil, documentos, referências, solicitações, chat ou rotina de cuidados.
 

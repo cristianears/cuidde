@@ -1,20 +1,20 @@
 # Política de Privacidade e Proteção de Dados da icuide
 
 Versão: 1.0  
-Data da última atualização: 25/05/2026
+Data da última atualização: 04/06/2026
 
-> Importante: este documento é um modelo operacional e deve ser revisado por advogado e/ou especialista em proteção de dados antes da publicação. Substitua todos os campos entre colchetes antes de usar em produção.
+> Importante: este documento deve ser revisado periodicamente por advogado e/ou especialista em proteção de dados para refletir mudanças legais, comerciais e operacionais da plataforma.
 
 ## 1. Quem somos
 
-A icuide é uma plataforma digital operada por **[RAZÃO SOCIAL]**, CNPJ nº **[CNPJ]**, com sede em **[ENDEREÇO]**, criada para aproximar Famílias e Cuidadores independentes.
+A icuide é uma plataforma digital operada e de propriedade de **Cristiane Alves Rodrigues de Sousa**, inscrita no CPF sob nº **269.430.238-61**, com endereço de correspondência na **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**, e contato pelo e-mail **contato@icuide.com.br**, criada para aproximar Famílias e Cuidadores independentes.
 
 Esta Política explica como coletamos, usamos, armazenamos, compartilhamos e protegemos dados pessoais no contexto da plataforma, em conformidade com a Lei Geral de Proteção de Dados Pessoais, Lei nº 13.709/2018 ("LGPD").
 
 Contato para privacidade e proteção de dados:
 
-- Encarregado/DPO: **[NOME OU CANAL DO ENCARREGADO]**
-- E-mail: **[E-MAIL DO ENCARREGADO/DPO]**
+- Encarregado/DPO: **Setor de Privacidade icuide**
+- E-mail: **contato@icuide.com.br**
 
 ## 2. Definições
 
@@ -54,7 +54,7 @@ Podemos coletar os seguintes dados, conforme o perfil e uso da plataforma.
 
 - endereço, CEP, bairro, cidade e estado;
 - localização aproximada ou coordenadas quando necessárias para busca por proximidade;
-- dados de assinatura, plano e status de pagamento;
+- dados de assinatura, plano, status de pagamento, faturas, histórico de cobrança e motivo informado em caso de cancelamento de assinatura;
 - favoritos, buscas, solicitações de atendimento, mensagens, avaliações e histórico de uso;
 - informações sobre o idoso, paciente ou pessoa atendida, quando fornecidas pela Família, como nome, idade, observações, rotina, necessidades de cuidado, mobilidade, preferências, alergias, condições de saúde ou outras informações relevantes.
 
@@ -70,7 +70,7 @@ Podemos coletar os seguintes dados, conforme o perfil e uso da plataforma.
 
 ### 4.4 Dados de pagamento
 
-Pagamentos e assinaturas podem ser processados por terceiros, como Stripe. A icuide poderá receber identificadores de cliente, status da assinatura, plano, faturas e eventos de pagamento necessários para liberar ou restringir funcionalidades.
+Pagamentos e assinaturas podem ser processados por terceiros, como Stripe. A icuide poderá receber identificadores de cliente, status da assinatura, plano, faturas, eventos de pagamento, eventos de cancelamento, dados necessários para análise de reembolso ou contestação e informações necessárias para liberar ou restringir funcionalidades.
 
 Dados completos de cartão, quando houver, são tratados pelo intermediador de pagamento, conforme suas próprias políticas.
 
@@ -102,6 +102,7 @@ Tratamos dados pessoais para as seguintes finalidades:
 | Operação da plataforma | exibir perfis, busca, favoritos, solicitações, chat, avaliações | execução de contrato, legítimo interesse |
 | Busca por proximidade | calcular distância aproximada entre Família e Cuidadores | execução de contrato, legítimo interesse, consentimento quando aplicável |
 | Assinaturas e cobrança | processar planos, faturas, status de pagamento | execução de contrato, cumprimento de obrigação legal |
+| Cancelamento e reembolso | registrar pedido de cancelamento, motivo informado, contestação de cobrança, reembolso e suporte financeiro | execução de contrato, legítimo interesse, cumprimento legal e exercício regular de direitos |
 | Segurança e prevenção a fraude | logs, análise de abuso, moderação, suspensão | legítimo interesse, exercício regular de direitos, cumprimento legal |
 | Suporte e comunicação | responder dúvidas, avisos transacionais, notificações | execução de contrato, legítimo interesse |
 | Documentos de Cuidadores | armazenar e exibir documentos selecionados conforme regras de visibilidade | execução de contrato, consentimento quando necessário, exercício regular de direitos |
@@ -180,7 +181,7 @@ Nos termos da LGPD, o titular pode solicitar:
 - revisão de decisões automatizadas, quando aplicável;
 - peticionamento perante a ANPD.
 
-Para exercer direitos, envie solicitação para **[E-MAIL DO ENCARREGADO/DPO]**. Poderemos solicitar confirmação de identidade antes de responder.
+Para exercer direitos, envie solicitação para **contato@icuide.com.br**. Poderemos solicitar confirmação de identidade antes de responder.
 
 ## 13. Cookies e tecnologias semelhantes
 
@@ -221,7 +222,8 @@ Alterações relevantes serão comunicadas por meio adequado. A data de atualiza
 
 Para dúvidas, solicitações de direitos, reclamações ou comunicações de privacidade:
 
-- Encarregado/DPO: **[NOME OU CANAL DO ENCARREGADO]**
-- E-mail: **[E-MAIL DO ENCARREGADO/DPO]**
-- Endereço: **[ENDEREÇO]**
+- Encarregado/DPO: **Setor de Privacidade icuide**
+- E-mail: **contato@icuide.com.br**
+- Responsável legal: **Cristiane Alves Rodrigues de Sousa (CPF nº 269.430.238-61)**
+- Endereço de correspondência: **R. Penedo, 903 - Conj. Res. Trinta e Um de Março, São José dos Campos - SP, CEP: 12.237-071**
 
