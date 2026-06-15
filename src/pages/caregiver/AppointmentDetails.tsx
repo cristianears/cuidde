@@ -12,6 +12,7 @@ import { useAppointmentHasReview } from "@/hooks/useReviews";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -154,6 +155,10 @@ const AppointmentDetails = () => {
     updateStatus({ id: appointment.id, status: "cancelado", cancel_reason: reason ?? undefined });
   };
   const handleFinalize = () => updateStatus({ id: appointment.id, status: "finalizado" });
+  const getInitials = (name: string | null) => {
+    if (!name) return "?";
+    return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  };
 
   const handleDeleteRoutine = (routineId: string) => {
     if (!confirm("Tem certeza que deseja excluir este registro de cuidado?")) return;
@@ -408,16 +413,28 @@ const AppointmentDetails = () => {
                       {appointment.type}
                     </Badge>
                   </div>
-                  <div>
-                    <h1 className="text-lg md:text-xl font-semibold text-foreground">
-                      {appointment.family_name ?? "Família"}
-                    </h1>
-                    {familyProfile?.elderly_name && (
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        Idoso: <span className="font-medium text-foreground">{familyProfile.elderly_name}</span>
-                        {familyProfile.elderly_age ? `, ${familyProfile.elderly_age} anos` : ""}
-                      </p>
-                    )}
+                  <div className="flex min-w-0 items-start gap-3">
+                    <Avatar className="h-12 w-12 shrink-0">
+                      <AvatarImage
+                        src={appointment.family_photo ?? undefined}
+                        alt={appointment.family_name ?? "Família"}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        {getInitials(appointment.family_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <h1 className="text-lg md:text-xl font-semibold text-foreground truncate">
+                        {appointment.family_name ?? "Família"}
+                      </h1>
+                      {familyProfile?.elderly_name && (
+                        <p className="text-sm text-muted-foreground mt-0.5">
+                          Idoso: <span className="font-medium text-foreground">{familyProfile.elderly_name}</span>
+                          {familyProfile.elderly_age ? `, ${familyProfile.elderly_age} anos` : ""}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">

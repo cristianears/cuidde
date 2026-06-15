@@ -107,7 +107,7 @@ export default function RequestAppointmentDialog({
           <DialogTitle>Solicitar Atendimento</DialogTitle>
           <DialogDescription>
             Envie uma solicitação para <strong>{caregiverName}</strong>. O cuidador receberá sua
-            solicitação e poderá aceitar ou recusar.
+            solicitação, poderá aceitar ou recusar e poderão trocar mensagens via chat.
           </DialogDescription>
         </DialogHeader>
 

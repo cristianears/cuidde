@@ -157,6 +157,9 @@ const AppointmentChat = () => {
   const otherPartyName = userRole === "family"
     ? (appointment.caregiver_name ?? "Cuidador")
     : (appointment.family_name ?? "Família");
+  const otherPartyPhoto = userRole === "family"
+    ? appointment.caregiver_photo
+    : appointment.family_photo;
 
   const elderlyName = appointment.elderly_name ?? "o idoso";
 
@@ -175,6 +178,11 @@ const AppointmentChat = () => {
           </Button>
 
           <Avatar className="w-10 h-10 flex-shrink-0">
+            <AvatarImage
+              src={otherPartyPhoto ?? undefined}
+              alt={otherPartyName}
+              className="object-cover"
+            />
             <AvatarFallback className="bg-primary/10 text-primary">
               {otherPartyName.split(" ").map(n => n[0]).join("").slice(0, 2)}
             </AvatarFallback>

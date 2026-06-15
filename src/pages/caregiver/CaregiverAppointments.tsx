@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Clock, FileText, Loader2, MessageCircle, ClipboardList, CheckCircle2 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar, Clock, FileText, Loader2, MessageCircle, ClipboardList, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -62,6 +63,11 @@ const CaregiverAppointments = () => {
     });
   };
 
+  const getInitials = (name: string | null) => {
+    if (!name) return "?";
+    return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  };
+
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const statusBadge = getStatusBadge(appointment.status);
     const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
@@ -88,7 +94,16 @@ const CaregiverAppointments = () => {
 
               <div className="space-y-1.5 md:space-y-2">
                 <div className="flex items-center gap-2 text-foreground">
-                  <User className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground shrink-0" />
+                  <Avatar className="h-10 w-10 shrink-0">
+                    <AvatarImage
+                      src={appointment.family_photo ?? undefined}
+                      alt={appointment.family_name ?? "Família"}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {getInitials(appointment.family_name)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex flex-col">
                     <span className="text-sm md:text-base font-medium">
                       {appointment.family_name ?? "Família"}

@@ -348,7 +348,7 @@ const CaregiverPublicProfile = () => {
                       className="gap-2"
                     >
                       {canRequestAppointment ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                      {canRequestAppointment ? "Solicitar Atendimento" : appointmentCtaLabel}
+                      {canRequestAppointment ? "Solicitar Atendimento/Chat" : appointmentCtaLabel}
                     </Button>
                     <Button
                       variant="outline"
@@ -769,7 +769,7 @@ const CaregiverPublicProfile = () => {
               size="lg"
             >
               {canRequestAppointment ? <Send className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-              {canRequestAppointment ? "Solicitar Atendimento" : appointmentCtaLabel}
+              {canRequestAppointment ? "Solicitar Atendimento/Chat" : appointmentCtaLabel}
             </Button>
           </div>
 

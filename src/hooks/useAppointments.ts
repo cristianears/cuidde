@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
+import { filterContactInfo } from '@/lib/contact-filter'
 import type { Appointment, AppointmentStatus, SubscriptionStatus } from '@/types/database'
 import { trackCaregiverInterest } from '@/hooks/useTrackCaregiverEvent'
 
@@ -303,8 +304,12 @@ export function useUpdateAppointmentStatus() {
       }
 
       if (payload.status === 'cancelado') {
+        const sanitizedReason = payload.cancel_reason
+          ? filterContactInfo(payload.cancel_reason).trim()
+          : ''
+
         updateData.cancelled_by = user.id
-        updateData.cancel_reason = payload.cancel_reason || null
+        updateData.cancel_reason = sanitizedReason || null
       }
 
       const { error } = await supabase
