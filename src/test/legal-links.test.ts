@@ -16,6 +16,13 @@ describe('legal document links', () => {
     expect(footer).not.toContain('navigate("/privacy")')
   })
 
+  it('publishes the official footer contact details', () => {
+    const footer = read('src/components/Footer.tsx')
+
+    expect(footer).toContain('(12) 98852-7053')
+    expect(footer).toContain('São José dos Campos, SP - Brasil')
+  })
+
   it('keeps consent links opening the official PDFs directly', () => {
     expect(read('src/pages/onboarding/Onboarding.tsx')).toContain('LEGAL_DOCUMENTS.privacy.path')
     expect(read('src/pages/caregiver/CaregiverProfile.tsx')).toContain('LEGAL_DOCUMENTS.thirdPartyConsent.path')
