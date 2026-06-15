@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
+import { filterContactInfo } from "@/lib/contact-filter";
 
 const TYPE_LABELS: Record<string, string> = {
   "plantão": "Plantão",
@@ -177,14 +178,14 @@ const FamilyMatches = () => {
               </div>
             )}
             {appointment.status === "ativo" && (
-              <div className="grid grid-cols-[1fr_auto] gap-2 pt-1">
-                <Button asChild size="sm" className="gap-2 px-3">
+              <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center">
+                <Button asChild size="sm" className="w-full gap-2 px-3 sm:w-auto">
                   <Link to={`/family/appointments/${appointment.id}`}>
                     <CheckCircle className="w-4 h-4" />
                     Acessar atendimento
                   </Link>
                 </Button>
-                <Button asChild size="sm" variant="outline" className="gap-1.5 relative px-3">
+                <Button asChild size="sm" variant="outline" className="w-full gap-1.5 relative px-3 sm:w-auto">
                   <Link to={`/chat/${appointment.id}`}>
                     <MessageCircle className="w-4 h-4" />
                     Chat
@@ -201,7 +202,7 @@ const FamilyMatches = () => {
               <div className="mt-3">
                 {appointment.cancel_reason && (
                   <p className="text-xs text-muted-foreground mb-2">
-                    Motivo: {appointment.cancel_reason}
+                    Motivo: {filterContactInfo(appointment.cancel_reason)}
                   </p>
                 )}
                 <Button asChild variant="outline" size="sm" className="gap-2">

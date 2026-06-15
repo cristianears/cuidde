@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, User, Search, Briefcase, Loader2, MessageCircle, Star } from "lucide-react";
+import { Calendar, Clock, Search, Briefcase, Loader2, MessageCircle, Star } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,6 +34,11 @@ const FamilyAppointments = () => {
 
   const hasAny = active.length > 0 || finished.length > 0;
 
+  const getInitials = (name: string | null) => {
+    if (!name) return "?";
+    return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+  };
+
   const AppointmentCard = ({ appointment }: { appointment: AppointmentWithNames }) => {
     const status = appointmentStatusConfig[appointment.status] ?? appointmentStatusConfig.pendente;
     const unreadCount = unread?.unreadByAppointment[appointment.id] ?? 0;
@@ -47,9 +53,16 @@ const FamilyAppointments = () => {
           <CardContent className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User className="w-5 h-5 text-primary" />
-                </div>
+                <Avatar className="w-10 h-10 shrink-0">
+                  <AvatarImage
+                    src={appointment.caregiver_photo ?? undefined}
+                    alt={appointment.caregiver_name ?? "Cuidador"}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {getInitials(appointment.caregiver_name)}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
                   <p className="font-medium text-foreground">
                     {appointment.caregiver_name ?? "Cuidador"}

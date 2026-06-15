@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 const appointmentsSource = readFileSync(resolve(__dirname, '../CaregiverAppointments.tsx'), 'utf8')
 const detailsSource = readFileSync(resolve(__dirname, '../AppointmentDetails.tsx'), 'utf8')
 const chatSource = readFileSync(resolve(__dirname, '../../chat/AppointmentChat.tsx'), 'utf8')
+const familyAppointmentsSource = readFileSync(resolve(__dirname, '../../family/FamilyAppointments.tsx'), 'utf8')
 
 describe('foto da familia para o cuidador', () => {
   it('exibe foto da familia na lista de atendimentos do cuidador', () => {
@@ -23,5 +24,11 @@ describe('foto da familia para o cuidador', () => {
     expect(chatSource).toContain('otherPartyPhoto')
     expect(chatSource).toContain('AvatarImage')
     expect(chatSource).toContain('src={otherPartyPhoto ?? undefined}')
+  })
+
+  it('exibe foto do cuidador na lista de atendimentos da familia', () => {
+    expect(familyAppointmentsSource).toContain('AvatarImage')
+    expect(familyAppointmentsSource).toContain('appointment.caregiver_photo')
+    expect(familyAppointmentsSource).toContain('alt={appointment.caregiver_name ?? "Cuidador"}')
   })
 })
