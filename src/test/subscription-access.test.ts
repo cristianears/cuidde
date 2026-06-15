@@ -4,6 +4,8 @@ import {
   canSendAppointmentChat,
   hasFullPaidAccess,
   isPastDueWithinGrace,
+  isSubscriptionContactLocked,
+  shouldFilterAppointmentContact,
 } from '@/lib/subscription-access'
 
 const now = new Date('2026-05-19T12:00:00.000Z')
@@ -53,5 +55,34 @@ describe('subscription access policy', () => {
       subscription_status: 'past_due',
       payment_failed_at: '2026-05-18T12:00:00.000Z',
     })).toBe(false)
+  })
+
+  it('locks external contact during the first seven days of the paid subscription', () => {
+    expect(isSubscriptionContactLocked({
+      subscription_status: 'active',
+      subscription_started_at: '2026-05-13T12:00:00.000Z',
+    }, now)).toBe(true)
+
+    expect(isSubscriptionContactLocked({
+      subscription_status: 'active',
+      subscription_started_at: '2026-05-12T12:00:00.000Z',
+    }, now)).toBe(false)
+  })
+
+  it('keeps contact filtering for pending appointments and paid subscriptions in the safety window', () => {
+    expect(shouldFilterAppointmentContact('pendente', {
+      subscription_status: 'active',
+      subscription_started_at: '2026-05-01T12:00:00.000Z',
+    }, now)).toBe(true)
+
+    expect(shouldFilterAppointmentContact('ativo', {
+      subscription_status: 'active',
+      subscription_started_at: '2026-05-13T12:00:00.000Z',
+    }, now)).toBe(true)
+
+    expect(shouldFilterAppointmentContact('ativo', {
+      subscription_status: 'active',
+      subscription_started_at: '2026-05-12T12:00:00.000Z',
+    }, now)).toBe(false)
   })
 })

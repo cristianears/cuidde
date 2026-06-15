@@ -12,7 +12,7 @@ import { useAppointmentDetail } from "@/hooks/useAppointments";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useChatMessages, useSendMessage, useChatRealtime, useMarkMessagesAsRead } from "@/hooks/useChat";
 import { filterContactInfo, hasContactInfo, CONTACT_WARNING_MESSAGE } from "@/lib/contact-filter";
-import { canSendAppointmentChat } from "@/lib/subscription-access";
+import { canSendAppointmentChat, shouldFilterAppointmentContact } from "@/lib/subscription-access";
 import type { AppointmentStatus } from "@/types/database";
 
 const AppointmentChat = () => {
@@ -44,7 +44,10 @@ const AppointmentChat = () => {
   const status: AppointmentStatus | undefined = appointment?.status;
   const isWritable = status === "pendente" || status === "ativo";
   const isReadOnly = status === "finalizado" || status === "cancelado";
-  const isContactFiltered = status === "pendente";
+  const contactFilterSubscription = userRole === "family"
+    ? familyProfile
+    : appointment?.family_subscription;
+  const isContactFiltered = shouldFilterAppointmentContact(status, contactFilterSubscription);
 
   // Auto-scroll ao receber novas mensagens
   useEffect(() => {
@@ -62,15 +65,14 @@ const AppointmentChat = () => {
     if (!newMessage.trim() || !isWritable) return;
 
     const content = newMessage.trim();
+    const hasBlockedContact = isContactFiltered && hasContactInfo(content);
 
     // Se o filtro está ativo e a mensagem contém contato, avisa o usuário
-    if (isContactFiltered && hasContactInfo(content)) {
+    if (hasBlockedContact) {
       setContactWarningShown(true);
     }
 
-    // Envia a mensagem original — o filtro é aplicado na exibição, não no envio
-    // Isso preserva o conteúdo original no banco para quando o status mudar para ativo
-    sendMessage(content);
+    sendMessage(hasBlockedContact ? filterContactInfo(content) : content);
     setNewMessage("");
   };
 
@@ -283,7 +285,7 @@ const AppointmentChat = () => {
           <div className="max-w-3xl mx-auto flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800">
-              Sua mensagem foi enviada, mas informações de contato aparecerão como [contato removido] até o atendimento ser confirmado.
+              Sua mensagem foi enviada, mas telefone, WhatsApp, e-mail, links e endereço foram removidos enquanto o bloqueio de segurança está ativo.
             </p>
             <Button
               variant="ghost"

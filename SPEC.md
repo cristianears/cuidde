@@ -51,7 +51,7 @@ appointments → care_routines (1:N) | messages (1:N) | reviews (1:1)
 **Endereço:** `cep` `street` `number` `complement` `neighborhood` `city` `state` · `lat FLOAT8` · `lng FLOAT8`
 **Idoso:** `elderly_name` · `elderly_age` · `elderly_conditions[]` · `blood_type` · `pre_existing_conditions` · `allergies` · `continuous_medications` · `responsible_doctor` · `health_insurance` · `care_needs`
 **Preferências:** `service_formats[]` · `hourly_range_min/max` · `daily_range_min/max` · `distance_preference`
-**Stripe:** `stripe_customer_id` · `plan` (monthly|quarterly|annual) · `subscription_status` (free|active|past_due|canceled|incomplete) · `stripe_subscription_id` · `cancel_at_period_end` BOOL · `current_period_end` TIMESTAMPTZ · `pending_plan` TEXT (nullable — plano agendado em downgrade)
+**Stripe:** `stripe_customer_id` · `plan` (monthly|quarterly|annual) · `subscription_status` (free|active|past_due|canceled|incomplete) · `stripe_subscription_id` · `cancel_at_period_end` BOOL · `current_period_end` TIMESTAMPTZ · `subscription_started_at` TIMESTAMPTZ · `pending_plan` TEXT (nullable — plano agendado em downgrade)
 
 ### `professional_references`
 `id` · `caregiver_id`→caregiver_profiles · `name` · `phone` · `workplace` · `position` · `work_duration` · `notes`

@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import type { Appointment, AppointmentStatus } from '@/types/database'
+import type { Appointment, AppointmentStatus, SubscriptionStatus } from '@/types/database'
 import { trackCaregiverInterest } from '@/hooks/useTrackCaregiverEvent'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -12,6 +12,11 @@ export interface AppointmentWithNames extends Appointment {
   family_name: string | null
   caregiver_name: string | null
   elderly_name: string | null
+  family_subscription: {
+    subscription_status: SubscriptionStatus
+    payment_failed_at: string | null
+    subscription_started_at: string | null
+  } | null
 }
 
 interface CreateAppointmentPayload {
@@ -46,6 +51,9 @@ async function fetchProfileNames(ids: string[]): Promise<Record<string, string>>
 interface FamilyInfo {
   elderly_name: string | null
   responsible_name: string | null
+  subscription_status: SubscriptionStatus
+  payment_failed_at: string | null
+  subscription_started_at: string | null
 }
 
 async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, FamilyInfo>> {
@@ -55,7 +63,7 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
   const [{ data: familyData }, { data: profileData }] = await Promise.all([
     supabase
       .from('family_profiles')
-      .select('id, elderly_name')
+      .select('id, elderly_name, subscription_status, payment_failed_at, subscription_started_at')
       .in('id', familyIds),
     supabase
       .from('profiles')
@@ -71,6 +79,9 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
     (familyData ?? []).map((p) => [p.id, {
       elderly_name: p.elderly_name ?? null,
       responsible_name: profileNames[p.id] ?? null,
+      subscription_status: p.subscription_status,
+      payment_failed_at: p.payment_failed_at ?? null,
+      subscription_started_at: p.subscription_started_at ?? null,
     }])
   )
 }
@@ -110,6 +121,11 @@ export function useAppointments(role: 'caregiver' | 'family') {
           family_name: info?.responsible_name ?? names[row.family_id] ?? null,
           caregiver_name: names[row.caregiver_id] ?? null,
           elderly_name: info?.elderly_name ?? null,
+          family_subscription: info ? {
+            subscription_status: info.subscription_status,
+            payment_failed_at: info.payment_failed_at,
+            subscription_started_at: info.subscription_started_at,
+          } : null,
         }
       })
     },
@@ -159,6 +175,11 @@ export function useAppointmentDetail(
         family_name: info?.responsible_name ?? names[data.family_id] ?? null,
         caregiver_name: names[data.caregiver_id] ?? null,
         elderly_name: info?.elderly_name ?? null,
+        family_subscription: info ? {
+          subscription_status: info.subscription_status,
+          payment_failed_at: info.payment_failed_at,
+          subscription_started_at: info.subscription_started_at,
+        } : null,
       } as AppointmentWithNames
     },
     enabled: !!user && !!appointmentId,

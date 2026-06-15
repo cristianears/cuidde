@@ -129,6 +129,7 @@ async function syncSubscriptionToFamily(
       current_period_end: periodEndTs
         ? new Date(periodEndTs * 1000).toISOString()
         : null,
+      subscription_started_at: new Date(sub.created * 1000).toISOString(),
       payment_failed_at: sub.status === 'past_due' ? new Date().toISOString() : null,
       pending_plan: null,
     })
@@ -200,19 +201,25 @@ serve(async (req) => {
         ?? null
       const pendingPlan = await getPendingPlanFromSchedule(sub.schedule ?? null)
 
+      const updateData: Record<string, unknown> = {
+        stripe_subscription_id: sub.id,
+        subscription_status: mapSubStatus(sub.status),
+        plan,
+        cancel_at_period_end: sub.cancel_at_period_end ?? false,
+        current_period_end: periodEndTs
+          ? new Date(periodEndTs * 1000).toISOString()
+          : null,
+        payment_failed_at: sub.status === 'past_due' ? new Date().toISOString() : null,
+        pending_plan: pendingPlan,
+      }
+
+      if (event.type === 'customer.subscription.created') {
+        updateData.subscription_started_at = new Date(sub.created * 1000).toISOString()
+      }
+
       await supabase
         .from('family_profiles')
-        .update({
-          stripe_subscription_id: sub.id,
-          subscription_status: mapSubStatus(sub.status),
-          plan,
-          cancel_at_period_end: sub.cancel_at_period_end ?? false,
-          current_period_end: periodEndTs
-            ? new Date(periodEndTs * 1000).toISOString()
-            : null,
-          payment_failed_at: sub.status === 'past_due' ? new Date().toISOString() : null,
-          pending_plan: pendingPlan,
-        })
+        .update(updateData)
         .eq('id', familyId)
       break
     }
@@ -229,6 +236,7 @@ serve(async (req) => {
             plan: null,
             cancel_at_period_end: false,
             current_period_end: null,
+            subscription_started_at: null,
             payment_failed_at: null,
             pending_plan: null,
           })
@@ -255,11 +263,14 @@ serve(async (req) => {
       // Cobranças automáticas não têm due_date — usar period_end da assinatura
       const dueDate = periodEnd ? toISODate(periodEnd) : null
       const linePlan = getPlanFromInvoiceLine(line)
+      const paidAt = inv.status_transitions?.paid_at
+        ? new Date(inv.status_transitions.paid_at * 1000).toISOString()
+        : new Date().toISOString()
 
       // Busca plano já salvo em family_profiles (definido pelo subscription.created)
       const { data: fp } = await supabase
         .from('family_profiles')
-        .select('plan')
+        .select('plan, subscription_started_at')
         .eq('id', familyId)
         .single()
       const plan = linePlan ?? fp?.plan ?? null
@@ -272,9 +283,7 @@ serve(async (req) => {
           amount: inv.amount_paid / 100,
           status: 'paid',
           plan,
-          paid_at: inv.status_transitions?.paid_at
-            ? new Date(inv.status_transitions.paid_at * 1000).toISOString()
-            : null,
+          paid_at: paidAt,
           due_date: dueDate,
           invoice_ref: inv.number ?? null,
           period: periodLabel,
@@ -282,9 +291,17 @@ serve(async (req) => {
         { onConflict: 'stripe_invoice_id' },
       )
 
+      const familyUpdate: Record<string, unknown> = {
+        subscription_status: 'active',
+        payment_failed_at: null,
+      }
+      if (!fp?.subscription_started_at) {
+        familyUpdate.subscription_started_at = paidAt
+      }
+
       await supabase
         .from('family_profiles')
-        .update({ subscription_status: 'active', payment_failed_at: null })
+        .update(familyUpdate)
         .eq('id', familyId)
       break
     }

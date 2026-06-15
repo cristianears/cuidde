@@ -325,6 +325,7 @@ begin
       'pending_plan',
       'cancel_at_period_end',
       'current_period_end',
+      'subscription_started_at',
       'payment_failed_at'
     );
 
@@ -344,6 +345,7 @@ begin
       'pending_plan',
       'cancel_at_period_end',
       'current_period_end',
+      'subscription_started_at',
       'payment_failed_at'
     );
 
