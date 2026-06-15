@@ -20,7 +20,7 @@ export default function BrandMark({
   const fontSize = Math.round(size * 0.5)
 
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
+    <div translate="no" className={cn("flex items-center gap-2.5", className)}>
       <img
         src="/logo.png"
         alt="icuide"
@@ -29,6 +29,7 @@ export default function BrandMark({
       />
       {showWordmark && (
         <span
+          translate="no"
           className={cn(
             "font-dm-sans font-bold lowercase text-foreground",
             wordmarkClassName,
