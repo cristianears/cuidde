@@ -10,6 +10,7 @@ const searchCaregiversSource = readFileSync(resolve(__dirname, '../SearchCaregiv
 const familyProfileSource = readFileSync(resolve(__dirname, '../FamilyProfile.tsx'), 'utf8')
 const familyInvoicesSource = readFileSync(resolve(__dirname, '../FamilyInvoices.tsx'), 'utf8')
 const familyInvoiceDetailsSource = readFileSync(resolve(__dirname, '../FamilyInvoiceDetails.tsx'), 'utf8')
+const familyBillingSource = readFileSync(resolve(__dirname, '../FamilyBilling.tsx'), 'utf8')
 
 describe('family mobile layout regressions', () => {
   it('reserves space for compact dashboard metric icons on mobile', () => {
@@ -71,5 +72,15 @@ describe('family mobile layout regressions', () => {
   it('does not expose Stripe invoice identifiers in family invoice details', () => {
     expect(familyInvoiceDetailsSource).not.toContain('ID Stripe')
     expect(familyInvoiceDetailsSource).not.toContain('stripe_invoice_id &&')
+  })
+
+  it('collects subscription cancellation feedback in a mobile-safe dialog', () => {
+    expect(familyBillingSource).toContain('subscription_cancellation_feedback')
+    expect(familyBillingSource).toContain('cancellationReasons')
+    expect(familyBillingSource).toContain('RadioGroup')
+    expect(familyBillingSource).toContain('Textarea')
+    expect(familyBillingSource).toContain('max-h-[calc(100dvh-2rem)]')
+    expect(familyBillingSource).toContain('text-base md:text-sm')
+    expect(familyBillingSource).toContain('handleCancelDialogOpenChange')
   })
 })

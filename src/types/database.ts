@@ -98,6 +98,15 @@ export type LegalConsentType =
   | 'cookie_policy'
   | 'third_party_data'
 
+export type SubscriptionCancellationReason =
+  | 'found_caregiver_elsewhere'
+  | 'no_caregivers_region'
+  | 'price_high'
+  | 'temporary_need'
+  | 'difficult_to_use'
+  | 'missing_features'
+  | 'other'
+
 // ─── Tabela: profiles ────────────────────────────────────────────────────────
 
 export interface Profile {
@@ -119,6 +128,19 @@ export interface UserConsent {
   context: string
   metadata: Record<string, unknown>
   accepted_at: string
+  created_at: string
+}
+
+export interface SubscriptionCancellationFeedback {
+  id: string
+  family_id: string
+  reason_code: SubscriptionCancellationReason
+  reason_label: string
+  reason_details: string | null
+  plan: SubscriptionPlan | null
+  subscription_status: SubscriptionStatus | null
+  cancel_at_period_end: boolean | null
+  current_period_end: string | null
   created_at: string
 }
 
@@ -470,6 +492,11 @@ export interface Database {
       user_consents: {
         Row: UserConsent
         Insert: Omit<UserConsent, 'id' | 'accepted_at' | 'created_at'>
+        Update: never
+      }
+      subscription_cancellation_feedback: {
+        Row: SubscriptionCancellationFeedback
+        Insert: Omit<SubscriptionCancellationFeedback, 'id' | 'created_at'>
         Update: never
       }
       caregiver_profiles: {

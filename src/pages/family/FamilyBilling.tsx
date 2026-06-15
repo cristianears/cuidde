@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Info, CreditCard, FileText, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import AppSidebar from "@/components/shared/AppSidebar";
@@ -7,6 +7,9 @@ import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +25,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { STRIPE_PRICE_IDS } from "@/lib/constants";
-import type { SubscriptionPlan } from "@/types/database";
+import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import type { SubscriptionCancellationReason, SubscriptionPlan } from "@/types/database";
 
 interface Plan {
   id: SubscriptionPlan;
@@ -107,6 +112,16 @@ const ctaLabel: Record<SubscriptionPlan, string> = {
   annual: "Assinar anual",
 };
 
+const cancellationReasons: Array<{ value: SubscriptionCancellationReason; label: string }> = [
+  { value: "found_caregiver_elsewhere", label: "Encontrei cuidador fora da plataforma" },
+  { value: "no_caregivers_region", label: "Não encontrei cuidadores na minha região" },
+  { value: "price_high", label: "Achei o valor alto" },
+  { value: "temporary_need", label: "Usei apenas por um período específico" },
+  { value: "difficult_to_use", label: "Tive dificuldade de usar a plataforma" },
+  { value: "missing_features", label: "Faltou algum recurso que eu esperava" },
+  { value: "other", label: "Outro motivo" },
+];
+
 const FamilyBilling = () => {
   const { user } = useAuth();
   const { data: familyProfileData } = useFamilyProfile();
@@ -128,8 +143,15 @@ const FamilyBilling = () => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState<SubscriptionCancellationReason | "">("");
+  const [cancelReasonDetails, setCancelReasonDetails] = useState("");
 
   const featuredPlanId: SubscriptionPlan = "quarterly";
+
+  const resetCancellationFeedback = () => {
+    setCancelReason("");
+    setCancelReasonDetails("");
+  };
 
   // Feedback de retorno do Stripe Checkout
   useEffect(() => {
@@ -161,10 +183,63 @@ const FamilyBilling = () => {
     startCheckout.mutate(priceId);
   };
 
-  const handleConfirmCancel = () => {
-    setIsCancelOpen(false);
-    cancelSubscription.mutate();
+  const submitCancellationFeedback = useMutation({
+    mutationFn: async () => {
+      if (!user || !cancelReason) {
+        throw new Error("Selecione um motivo para continuar.");
+      }
+
+      if (cancelReason === "other" && cancelReasonDetails.trim().length < 3) {
+        throw new Error("Conte em poucas palavras o motivo do cancelamento.");
+      }
+
+      const selectedReason = cancellationReasons.find((reason) => reason.value === cancelReason);
+      if (!selectedReason) {
+        throw new Error("Motivo de cancelamento inválido.");
+      }
+
+      const { error } = await supabase
+        .from("subscription_cancellation_feedback")
+        .insert({
+          family_id: user.id,
+          reason_code: selectedReason.value,
+          reason_label: selectedReason.label,
+          reason_details: cancelReasonDetails.trim() || null,
+          plan,
+          subscription_status: subscriptionStatus,
+          cancel_at_period_end: cancelAtPeriodEnd,
+          current_period_end: currentPeriodEnd,
+        });
+
+      if (error) throw error;
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Não foi possível registrar o motivo. Tente novamente.");
+    },
+  });
+
+  const handleConfirmCancel = async () => {
+    try {
+      await submitCancellationFeedback.mutateAsync();
+      setIsCancelOpen(false);
+      resetCancellationFeedback();
+      cancelSubscription.mutate();
+    } catch {
+      // O toast de erro fica no onError da mutation, próximo da ação do usuário.
+    }
   };
+
+  const handleCancelDialogOpenChange = (open: boolean) => {
+    if (submitCancellationFeedback.isPending || cancelSubscription.isPending) return;
+    setIsCancelOpen(open);
+    if (!open) resetCancellationFeedback();
+  };
+
+  const canConfirmCancel =
+    !!cancelReason &&
+    (cancelReason !== "other" || cancelReasonDetails.trim().length >= 3) &&
+    !submitCancellationFeedback.isPending &&
+    !cancelSubscription.isPending;
 
   const currentPlanDetails = plans.find((p) => p.id === plan) ?? null;
   const statusConfig = subscriptionStatusConfig[subscriptionStatus] ?? subscriptionStatusConfig.free;
@@ -463,7 +538,7 @@ const FamilyBilling = () => {
             <DialogTitle>
               {selectedPlan?.id === plan && pendingPlan ? "Manter plano atual" : "Confirmar assinatura"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-pretty">
               {selectedPlan?.id === plan && pendingPlan
                 ? "A troca agendada será cancelada e sua assinatura continuará no plano atual."
                 : "Você será redirecionada para o Stripe para finalizar o pagamento com segurança."}
@@ -511,24 +586,87 @@ const FamilyBilling = () => {
       </Dialog>
 
       {/* Modal: confirmar cancelamento */}
-      <Dialog open={isCancelOpen} onOpenChange={setIsCancelOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isCancelOpen} onOpenChange={handleCancelDialogOpenChange}>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Cancelar assinatura</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-balance">Antes de cancelar, conte o motivo</DialogTitle>
+            <DialogDescription className="text-pretty">
               A assinatura será cancelada no fim do período já pago. Você continua com acesso completo até lá
               e pode reativar a qualquer momento antes disso.
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-4">
+            <RadioGroup
+              value={cancelReason}
+              onValueChange={(value) => setCancelReason(value as SubscriptionCancellationReason)}
+              className="gap-2"
+            >
+              {cancellationReasons.map((reason) => {
+                const optionId = `cancel-reason-${reason.value}`;
+                const checked = cancelReason === reason.value;
+
+                return (
+                  <Label
+                    key={reason.value}
+                    htmlFor={optionId}
+                    className={cn(
+                      "flex cursor-pointer items-start gap-3 rounded-lg border bg-background p-3 text-sm leading-5 transition-colors",
+                      checked
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border text-foreground/80 hover:bg-muted/50"
+                    )}
+                  >
+                    <RadioGroupItem id={optionId} value={reason.value} className="mt-0.5 shrink-0" />
+                    <span>{reason.label}</span>
+                  </Label>
+                );
+              })}
+            </RadioGroup>
+
+            {cancelReason === "other" && (
+              <div className="space-y-2">
+                <Label htmlFor="cancel-reason-details">Conte em poucas palavras</Label>
+                <Textarea
+                  id="cancel-reason-details"
+                  value={cancelReasonDetails}
+                  onChange={(event) => setCancelReasonDetails(event.target.value.slice(0, 240))}
+                  placeholder="Ex.: não encontrei o tipo de atendimento que precisava"
+                  className="min-h-24 text-base md:text-sm"
+                  maxLength={240}
+                />
+                <p className="text-xs text-muted-foreground">{cancelReasonDetails.length}/240</p>
+              </div>
+            )}
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+              O cancelamento será agendado para o fim do período já pago. Você continua com acesso completo
+              até lá.
+            </div>
+
+            {submitCancellationFeedback.error && (
+              <p className="text-sm text-destructive">
+                {submitCancellationFeedback.error instanceof Error
+                  ? submitCancellationFeedback.error.message
+                  : "Não foi possível registrar o motivo. Tente novamente."}
+              </p>
+            )}
+          </div>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setIsCancelOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => handleCancelDialogOpenChange(false)}
+              disabled={submitCancellationFeedback.isPending || cancelSubscription.isPending}
+            >
               Manter assinatura
             </Button>
             <Button
               variant="destructive"
-              onClick={handleConfirmCancel}
-              disabled={cancelSubscription.isPending}
+              onClick={() => void handleConfirmCancel()}
+              disabled={!canConfirmCancel}
             >
+              {submitCancellationFeedback.isPending || cancelSubscription.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Confirmar cancelamento
             </Button>
           </DialogFooter>
