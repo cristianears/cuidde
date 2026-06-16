@@ -22,11 +22,21 @@ describe('appointment chat navigation', () => {
     ).toBe('/caregiver/appointments/appointment-1')
   })
 
-  it('keeps the family back path unchanged', () => {
+  it('sends families back to solicitations when the appointment is pending', () => {
     expect(
       getAppointmentChatBackPath({
         userRole: 'family',
         status: 'pendente',
+        appointmentId: 'appointment-1',
+      }),
+    ).toBe('/family/matches')
+  })
+
+  it('keeps families in appointment details when the appointment is active', () => {
+    expect(
+      getAppointmentChatBackPath({
+        userRole: 'family',
+        status: 'ativo',
         appointmentId: 'appointment-1',
       }),
     ).toBe('/family/appointments/appointment-1')

@@ -17,6 +17,10 @@ export function getAppointmentChatBackPath({
     return '/caregiver/solicitations'
   }
 
+  if (userRole === 'family' && status === 'pendente') {
+    return '/family/matches'
+  }
+
   if (userRole === 'caregiver') {
     return appointmentId ? `/caregiver/appointments/${appointmentId}` : '/caregiver/appointments'
   }
