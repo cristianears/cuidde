@@ -110,7 +110,7 @@ const CaregiverPublicProfile = () => {
   const canRequestAppointment = canCreatePaidAppointment(familyProfile)
   const appointmentCtaLabel = familyProfile?.subscription_status === 'past_due'
     ? 'Regularize para contato'
-    : 'Assine para contato'
+    : 'Entrar em contato'
 
   const handleRequestAppointment = () => {
     if (!canRequestAppointment) {

@@ -10,6 +10,11 @@ describe('copy de solicitar atendimento', () => {
     expect(publicProfileSource).toContain('Solicitar Atendimento/Chat')
   })
 
+  it('usa CTA neutro para familia gratuita entrar em contato', () => {
+    expect(publicProfileSource).toContain("'Entrar em contato'")
+    expect(publicProfileSource).not.toContain("'Assine para contato'")
+  })
+
   it('informa que familia e cuidador poderao trocar mensagens via chat', () => {
     expect(dialogSource).toContain('e poderão trocar mensagens via chat.')
   })
