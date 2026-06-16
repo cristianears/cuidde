@@ -129,11 +129,9 @@ A Família poderá cancelar a assinatura a qualquer momento pela área de planos
 
 O cancelamento da assinatura da icuide não cancela automaticamente acordos, atendimentos, pagamentos ou combinações feitos diretamente entre Família e Cuidador, que são de responsabilidade exclusiva dos usuários envolvidos.
 
-Em contratações realizadas pela internet, o usuário consumidor poderá exercer o direito de arrependimento no prazo legal de 7 dias, contado da contratação, com reembolso integral dos valores pagos, conforme a legislação aplicável.
+Em contratações realizadas pela internet, o usuário consumidor poderá exercer o direito de arrependimento no prazo legal de 7 dias, contado da contratação, pelos canais de atendimento informados pela icuide. O cancelamento interrompe renovações futuras e, como regra operacional da plataforma, o acesso às funcionalidades pagas permanece disponível até o fim do período contratado.
 
-Para proteger usuários, preservar a segurança da comunidade e reduzir uso indevido do direito de arrependimento, a icuide poderá, durante os primeiros 7 dias da primeira assinatura paga de uma Família, manter a comunicação entre Família e Cuidadores preferencialmente pelo chat interno da plataforma e ocultar ou restringir a visualização de contatos externos, como telefone, WhatsApp, e-mail, endereço completo, telefones de referências ou outros meios diretos de contato. Encerrado esse período inicial, os contatos externos disponíveis no plano contratado poderão ser liberados para assinaturas ativas, conforme regras da plataforma e preferências de visibilidade aplicáveis.
-
-Essa restrição temporária de contatos externos não impede o exercício do direito legal de arrependimento, não reduz os direitos do consumidor e não altera a possibilidade de solicitar cancelamento ou reembolso quando cabível. O objetivo da medida é equilibrar a segurança dos usuários, a prevenção de fraudes e a transparência da contratação.
+Caso o usuário deseje solicitar reembolso, contestar uma cobrança ou tratar de uma hipótese legal específica, deverá entrar em contato pelos canais de atendimento da icuide, incluindo contato@icuide.com.br, para análise do pedido e orientação sobre o processamento pelo intermediador de pagamento quando aplicável.
 
 Após o prazo legal de arrependimento, os valores pagos pelo ciclo vigente não serão reembolsados de forma proporcional em razão de cancelamento voluntário, salvo em caso de cobrança indevida, cobrança em duplicidade, falha comprovada da plataforma, determinação legal ou outra hipótese expressamente aceita pela icuide.
 

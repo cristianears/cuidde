@@ -25,16 +25,8 @@ declare
 begin
   select
     a.status = 'pendente'
-    or (
-      a.status = 'ativo'
-      and f.subscription_status in ('active', 'past_due')
-      and f.subscription_started_at is not null
-      and now() >= f.subscription_started_at
-      and now() < f.subscription_started_at + interval '7 days'
-    )
   into v_should_filter
   from public.appointments a
-  join public.family_profiles f on f.id = a.family_id
   where a.id = new.appointment_id;
 
   if coalesce(v_should_filter, false) then

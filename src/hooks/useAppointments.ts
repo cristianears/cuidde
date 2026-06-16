@@ -4,7 +4,6 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import { filterContactInfo } from '@/lib/contact-filter'
 import type { Appointment, AppointmentStatus, SubscriptionStatus } from '@/types/database'
 import { trackCaregiverInterest } from '@/hooks/useTrackCaregiverEvent'
 
@@ -19,7 +18,6 @@ export interface AppointmentWithNames extends Appointment {
   family_subscription: {
     subscription_status: SubscriptionStatus
     payment_failed_at: string | null
-    subscription_started_at: string | null
   } | null
 }
 
@@ -58,7 +56,6 @@ interface FamilyInfo {
   photo_url: string | null
   subscription_status: SubscriptionStatus
   payment_failed_at: string | null
-  subscription_started_at: string | null
 }
 
 async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, FamilyInfo>> {
@@ -68,7 +65,7 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
   const [{ data: familyData }, { data: profileData }] = await Promise.all([
     supabase
       .from('family_profiles')
-      .select('id, elderly_name, photo_url, subscription_status, payment_failed_at, subscription_started_at')
+      .select('id, elderly_name, photo_url, subscription_status, payment_failed_at')
       .in('id', familyIds),
     supabase
       .from('profiles')
@@ -87,7 +84,6 @@ async function fetchFamilyInfo(familyIds: string[]): Promise<Record<string, Fami
       photo_url: p.photo_url ?? null,
       subscription_status: p.subscription_status,
       payment_failed_at: p.payment_failed_at ?? null,
-      subscription_started_at: p.subscription_started_at ?? null,
     }])
   )
 }
@@ -182,7 +178,6 @@ export function useAppointments(role: 'caregiver' | 'family') {
           family_subscription: info ? {
             subscription_status: info.subscription_status,
             payment_failed_at: info.payment_failed_at,
-            subscription_started_at: info.subscription_started_at,
           } : null,
         }
       })
@@ -240,7 +235,6 @@ export function useAppointmentDetail(
         family_subscription: info ? {
           subscription_status: info.subscription_status,
           payment_failed_at: info.payment_failed_at,
-          subscription_started_at: info.subscription_started_at,
         } : null,
       } as AppointmentWithNames
     },
@@ -315,12 +309,8 @@ export function useUpdateAppointmentStatus() {
       }
 
       if (payload.status === 'cancelado') {
-        const sanitizedReason = payload.cancel_reason
-          ? filterContactInfo(payload.cancel_reason).trim()
-          : ''
-
         updateData.cancelled_by = user.id
-        updateData.cancel_reason = sanitizedReason || null
+        updateData.cancel_reason = payload.cancel_reason?.trim() || null
       }
 
       const { error } = await supabase

@@ -20,14 +20,15 @@ async function mockViaCep(page: Page) {
 }
 
 test.describe('onboarding familia', () => {
-  test('CEP na home leva para onboarding de familia com CEP preservado', async ({ page }) => {
+  test('CEP na home leva visitante anonimo para login com CEP preservado', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' })
 
     await page.getByLabel('CEP').fill('12236-063')
     await page.getByRole('button', { name: /Buscar profissionais/i }).first().click()
 
-    await expect(page).toHaveURL(/\/onboarding\?type=family&cep=12236063/)
-    await expect(page.getByRole('button', { name: /Continuar com o Google/i })).toBeVisible()
+    await expect(page).toHaveURL(/\/login\?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063/)
+    await expect(page.getByRole('heading', { name: /Entrar na icuide/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /^Google$/i })).toBeVisible()
   })
 
   test('fluxo Google simulado preserva CEP e preenche endereco', async ({ page }) => {

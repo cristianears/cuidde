@@ -68,7 +68,7 @@ Podemos coletar os seguintes dados, conforme o perfil e uso da plataforma.
 
 ### 4.4 Dados de pagamento
 
-Pagamentos e assinaturas podem ser processados por terceiros, como Stripe. A icuide poderá receber identificadores de cliente, status da assinatura, plano, faturas, eventos de pagamento, eventos de cancelamento, dados necessários para análise de reembolso ou contestação e informações necessárias para liberar ou restringir funcionalidades.
+Pagamentos e assinaturas podem ser processados por terceiros, como Stripe. A icuide poderá receber identificadores de cliente, status da assinatura, plano, faturas, eventos de pagamento, eventos de cancelamento e dados necessários para análise de reembolso, contestação ou suporte financeiro.
 
 Dados completos de cartão, quando houver, são tratados pelo intermediador de pagamento, conforme suas próprias políticas.
 
@@ -101,7 +101,7 @@ Tratamos dados pessoais para as seguintes finalidades:
 | Busca por proximidade | calcular distância aproximada entre Família e Cuidadores | execução de contrato, legítimo interesse, consentimento quando aplicável |
 | Assinaturas e cobrança | processar planos, faturas, status de pagamento | execução de contrato, cumprimento de obrigação legal |
 | Cancelamento e reembolso | registrar pedido de cancelamento, motivo informado, contestação de cobrança, reembolso e suporte financeiro | execução de contrato, legítimo interesse, cumprimento legal e exercício regular de direitos |
-| Segurança e prevenção a fraude | logs, análise de abuso, moderação, restrição temporária de contatos externos, filtragem técnica de mensagens para impedir compartilhamento de telefone, WhatsApp, e-mail ou outros contatos durante períodos de segurança, suspensão | legítimo interesse, exercício regular de direitos, cumprimento legal |
+| Segurança e prevenção a fraude | logs, análise de abuso, moderação, detecção de uso indevido, medidas de segurança da conta e suspensão quando necessária | legítimo interesse, exercício regular de direitos, cumprimento legal |
 | Suporte e comunicação | responder dúvidas, avisos transacionais, notificações | execução de contrato, legítimo interesse |
 | Documentos de Cuidadores | armazenar e exibir documentos selecionados conforme regras de visibilidade | execução de contrato, consentimento quando necessário, exercício regular de direitos |
 | Dados sensíveis de atendimento | informações de saúde/rotina fornecidas pela Família para viabilizar solicitação, acompanhamento, rotina ou exportação de relatório | consentimento específico quando aplicável, proteção da vida, tutela da saúde por profissionais habilitados quando aplicável, exercício regular de direitos |
@@ -123,8 +123,6 @@ Podemos compartilhar dados pessoais apenas quando necessário e proporcional, in
 - em operações societárias, fusão, aquisição, investimento, reorganização ou venda de ativos, observadas salvaguardas adequadas.
 
 A icuide não vende dados pessoais.
-
-Durante períodos de segurança previstos nos Termos de Uso, especialmente nos primeiros 7 dias da primeira assinatura paga de uma Família, a icuide poderá ocultar contatos externos e aplicar filtragem técnica ou moderação proporcional em mensagens para reduzir fraude, abuso ou uso indevido da plataforma. Essa medida pode envolver análise automatizada de padrões evidentes de telefone, WhatsApp, e-mail, links ou outros meios diretos de contato, sem afastar os direitos do titular previstos na LGPD.
 
 ## 8. Documentos de Cuidadores e responsabilidade sobre autenticidade
 

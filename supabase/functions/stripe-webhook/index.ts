@@ -129,7 +129,6 @@ async function syncSubscriptionToFamily(
       current_period_end: periodEndTs
         ? new Date(periodEndTs * 1000).toISOString()
         : null,
-      subscription_started_at: new Date(sub.created * 1000).toISOString(),
       payment_failed_at: sub.status === 'past_due' ? new Date().toISOString() : null,
       pending_plan: null,
     })
@@ -213,10 +212,6 @@ serve(async (req) => {
         pending_plan: pendingPlan,
       }
 
-      if (event.type === 'customer.subscription.created') {
-        updateData.subscription_started_at = new Date(sub.created * 1000).toISOString()
-      }
-
       await supabase
         .from('family_profiles')
         .update(updateData)
@@ -236,7 +231,6 @@ serve(async (req) => {
             plan: null,
             cancel_at_period_end: false,
             current_period_end: null,
-            subscription_started_at: null,
             payment_failed_at: null,
             pending_plan: null,
           })
@@ -270,7 +264,7 @@ serve(async (req) => {
       // Busca plano já salvo em family_profiles (definido pelo subscription.created)
       const { data: fp } = await supabase
         .from('family_profiles')
-        .select('plan, subscription_started_at')
+        .select('plan')
         .eq('id', familyId)
         .single()
       const plan = linePlan ?? fp?.plan ?? null
@@ -295,10 +289,6 @@ serve(async (req) => {
         subscription_status: 'active',
         payment_failed_at: null,
       }
-      if (!fp?.subscription_started_at) {
-        familyUpdate.subscription_started_at = paidAt
-      }
-
       await supabase
         .from('family_profiles')
         .update(familyUpdate)

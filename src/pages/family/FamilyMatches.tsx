@@ -18,7 +18,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useAppointments, type AppointmentWithNames } from "@/hooks/useAppointments";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
-import { filterContactInfo } from "@/lib/contact-filter";
 
 const TYPE_LABELS: Record<string, string> = {
   "plantão": "Plantão",
@@ -202,7 +201,7 @@ const FamilyMatches = () => {
               <div className="mt-3">
                 {appointment.cancel_reason && (
                   <p className="text-xs text-muted-foreground mb-2">
-                    Motivo: {filterContactInfo(appointment.cancel_reason)}
+                    Motivo: {appointment.cancel_reason}
                   </p>
                 )}
                 <Button asChild variant="outline" size="sm" className="gap-2">

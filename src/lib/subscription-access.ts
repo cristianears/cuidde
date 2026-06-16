@@ -1,12 +1,10 @@
 import type { AppointmentStatus, SubscriptionStatus, UserRole } from '@/types/database'
 
 export const PAST_DUE_GRACE_DAYS = 7
-export const CONTACT_LOCK_DAYS = 7
 
 export interface SubscriptionAccessState {
   subscription_status: SubscriptionStatus
   payment_failed_at?: string | null
-  subscription_started_at?: string | null
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
@@ -43,28 +41,6 @@ export function canCreatePaidAppointment(subscription: SubscriptionAccessState |
   return hasFullPaidAccess(subscription)
 }
 
-export function isSubscriptionContactLocked(
-  subscription: SubscriptionAccessState | null | undefined,
-  now = new Date(),
-): boolean {
-  if (!subscription || !['active', 'past_due'].includes(subscription.subscription_status)) {
-    return false
-  }
-  if (!subscription.subscription_started_at) return false
-
-  const startedAt = new Date(subscription.subscription_started_at)
-  if (Number.isNaN(startedAt.getTime())) return false
-
-  const elapsedMs = now.getTime() - startedAt.getTime()
-  return elapsedMs >= 0 && elapsedMs < CONTACT_LOCK_DAYS * MS_PER_DAY
-}
-
-export function shouldFilterAppointmentContact(
-  status: AppointmentStatus | null | undefined,
-  subscription: SubscriptionAccessState | null | undefined,
-  now = new Date(),
-): boolean {
-  if (status === 'pendente') return true
-  if (status !== 'ativo') return false
-  return isSubscriptionContactLocked(subscription, now)
+export function shouldFilterAppointmentContact(status: AppointmentStatus | null | undefined): boolean {
+  return status === 'pendente'
 }

@@ -31,7 +31,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useAppointments, useUpdateAppointmentStatus, type AppointmentWithNames } from "@/hooks/useAppointments";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
-import { filterContactInfo } from "@/lib/contact-filter";
 
 const TYPE_LABELS: Record<string, string> = {
   "plantão": "Plantão",
@@ -119,7 +118,7 @@ const CaregiverSolicitations = () => {
               id="reason"
               placeholder="Ex: Já tenho atendimentos nesse período, agenda cheia..."
               value={reason}
-              onChange={(e) => setReason(filterContactInfo(e.target.value))}
+              onChange={(e) => setReason(e.target.value)}
               rows={3}
               maxLength={300}
             />
@@ -257,7 +256,7 @@ const CaregiverSolicitations = () => {
                     Motivo da recusa
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {filterContactInfo(appointment.cancel_reason)}
+                    {appointment.cancel_reason}
                   </p>
                 </div>
               )}

@@ -4,7 +4,6 @@ import {
   canSendAppointmentChat,
   hasFullPaidAccess,
   isPastDueWithinGrace,
-  isSubscriptionContactLocked,
   shouldFilterAppointmentContact,
 } from '@/lib/subscription-access'
 
@@ -57,32 +56,10 @@ describe('subscription access policy', () => {
     })).toBe(false)
   })
 
-  it('locks external contact during the first seven days of the paid subscription', () => {
-    expect(isSubscriptionContactLocked({
-      subscription_status: 'active',
-      subscription_started_at: '2026-05-13T12:00:00.000Z',
-    }, now)).toBe(true)
-
-    expect(isSubscriptionContactLocked({
-      subscription_status: 'active',
-      subscription_started_at: '2026-05-12T12:00:00.000Z',
-    }, now)).toBe(false)
-  })
-
-  it('keeps contact filtering for pending appointments and paid subscriptions in the safety window', () => {
-    expect(shouldFilterAppointmentContact('pendente', {
-      subscription_status: 'active',
-      subscription_started_at: '2026-05-01T12:00:00.000Z',
-    }, now)).toBe(true)
-
-    expect(shouldFilterAppointmentContact('ativo', {
-      subscription_status: 'active',
-      subscription_started_at: '2026-05-13T12:00:00.000Z',
-    }, now)).toBe(true)
-
-    expect(shouldFilterAppointmentContact('ativo', {
-      subscription_status: 'active',
-      subscription_started_at: '2026-05-12T12:00:00.000Z',
-    }, now)).toBe(false)
+  it('filters external contact only while the appointment is pending', () => {
+    expect(shouldFilterAppointmentContact('pendente')).toBe(true)
+    expect(shouldFilterAppointmentContact('ativo')).toBe(false)
+    expect(shouldFilterAppointmentContact('finalizado')).toBe(false)
+    expect(shouldFilterAppointmentContact('cancelado')).toBe(false)
   })
 })

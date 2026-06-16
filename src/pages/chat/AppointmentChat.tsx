@@ -45,10 +45,7 @@ const AppointmentChat = () => {
   const status: AppointmentStatus | undefined = appointment?.status;
   const isWritable = status === "pendente" || status === "ativo";
   const isReadOnly = status === "finalizado" || status === "cancelado";
-  const contactFilterSubscription = userRole === "family"
-    ? familyProfile
-    : appointment?.family_subscription;
-  const isContactFiltered = shouldFilterAppointmentContact(status, contactFilterSubscription);
+  const isContactFiltered = shouldFilterAppointmentContact(status);
 
   // Auto-scroll ao receber novas mensagens
   useEffect(() => {
