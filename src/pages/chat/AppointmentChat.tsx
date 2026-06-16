@@ -12,6 +12,7 @@ import { useAppointmentDetail } from "@/hooks/useAppointments";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useChatMessages, useSendMessage, useChatRealtime, useMarkMessagesAsRead } from "@/hooks/useChat";
 import { filterContactInfo, hasContactInfo, CONTACT_WARNING_MESSAGE } from "@/lib/contact-filter";
+import { getAppointmentChatBackPath } from "@/lib/chat-navigation";
 import { canSendAppointmentChat, shouldFilterAppointmentContact } from "@/lib/subscription-access";
 import type { AppointmentStatus } from "@/types/database";
 
@@ -128,11 +129,7 @@ const AppointmentChat = () => {
   }, {} as Record<string, typeof messages>);
 
   const handleBack = () => {
-    if (userRole === "caregiver") {
-      navigate(`/caregiver/appointments/${id}`);
-    } else {
-      navigate(`/family/appointments/${id}`);
-    }
+    navigate(getAppointmentChatBackPath({ userRole, status, appointmentId: id }));
   };
 
   // Loading state
