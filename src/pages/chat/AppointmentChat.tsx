@@ -293,7 +293,7 @@ const AppointmentChat = () => {
           <div className="max-w-3xl mx-auto flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
             <p className="text-xs text-amber-800">
-              Sua mensagem foi enviada, mas telefone, WhatsApp, e-mail, links e endereço foram removidos enquanto o bloqueio de segurança está ativo.
+              Sua mensagem foi enviada, mas telefone, WhatsApp, e-mail e links foram removidos enquanto o bloqueio de segurança está ativo.
             </p>
             <Button
               variant="ghost"

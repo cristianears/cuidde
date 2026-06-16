@@ -9,17 +9,17 @@ describe('contact filter', () => {
     expect(filterContactInfo(message)).toBe('Pode me chamar no [contato removido]')
   })
 
-  it('detects and removes Brazilian postal codes', () => {
+  it('keeps Brazilian postal codes visible', () => {
     const message = 'Meu CEP e 01310-100'
 
-    expect(hasContactInfo(message)).toBe(true)
-    expect(filterContactInfo(message)).toBe('Meu CEP e [contato removido]')
+    expect(hasContactInfo(message)).toBe(false)
+    expect(filterContactInfo(message)).toBe(message)
   })
 
-  it('detects and removes street addresses with numbers', () => {
+  it('keeps street addresses with numbers visible', () => {
     const message = 'Encontro na Rua das Flores, 123 amanha'
 
-    expect(hasContactInfo(message)).toBe(true)
-    expect(filterContactInfo(message)).toBe('Encontro na [contato removido] amanha')
+    expect(hasContactInfo(message)).toBe(false)
+    expect(filterContactInfo(message)).toBe(message)
   })
 })

@@ -10,13 +10,6 @@ declare
 begin
   v_content := regexp_replace(v_content, 'https?://[^\s]+|www\.[^\s]+', '[contato removido]', 'gi');
   v_content := regexp_replace(v_content, '[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}', '[contato removido]', 'g');
-  v_content := regexp_replace(
-    v_content,
-    '\m(rua|r\.|avenida|av\.?|alameda|travessa|estrada|rodovia|praca|largo|condominio|residencial)\s+[a-zA-Z0-9][a-zA-Z0-9\s.''-]{1,80}?(,\s*|\s+n[o.]?\s*|\s+)[0-9]{1,6}(\s*[-,/]\s*[a-zA-Z0-9][a-zA-Z0-9\s.''-]{0,40})?',
-    '[contato removido]',
-    'gi'
-  );
-  v_content := regexp_replace(v_content, '\m[0-9]{5}-?[0-9]{3}\M', '[contato removido]', 'g');
   v_content := regexp_replace(v_content, '\(?[0-9]{2}\)?[\s.-]?[0-9]{4,5}[\s.-]?[0-9]{4}', '[contato removido]', 'g');
 
   return v_content;
