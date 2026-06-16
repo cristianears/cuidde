@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
@@ -14,7 +14,7 @@ const Hero = () => {
   const cepDigits = cleanCep(cepRaw);
   const cepFormatted = formatCep(cepDigits);
   const isCepValid = cepDigits.length === 8;
-  const goFamilyFlow = () => {
+  const submitFamilyFlow = () => {
     setTouched(true);
     if (!isCepValid || isLoading) return;
     navigate(getLandingCepTarget({
@@ -22,6 +22,15 @@ const Hero = () => {
       isAuthenticated: Boolean(user),
       role,
     }));
+  };
+  const goFamilyFlow = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    submitFamilyFlow();
+  };
+  const handleCepKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    submitFamilyFlow();
   };
   return (
     <section className="relative h-[100dvh] flex flex-col pt-16">
@@ -47,7 +56,7 @@ const Hero = () => {
               <span className="text-primary-foreground/90">com transparência e calma</span>
             </h1>
             {/* CEP Search */}
-            <div className="mx-auto max-w-lg">
+            <form className="mx-auto max-w-lg" onSubmit={goFamilyFlow}>
               <div className="relative mb-2">
                 <label className="sr-only" htmlFor="cep">CEP</label>
                 <input
@@ -60,10 +69,11 @@ const Hero = () => {
                     setTouched(true);
                     setCepRaw(e.target.value);
                   }}
+                  onKeyDown={handleCepKeyDown}
                   className="w-full rounded-xl pl-4 pr-2 py-2 text-foreground bg-background/95 placeholder:text-muted-foreground/70 border border-white/10 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg text-sm h-14 sm:pr-[200px]"
                 />
                 <Button
-                  onClick={goFamilyFlow}
+                  type="submit"
                   className="mt-2 w-full sm:mt-0 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-5 text-sm rounded-lg shadow-md hover:shadow-lg transition-colors duration-300 h-11 group animate-soft-pulse"
                 >
                   <CheckCircle className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform" />
@@ -78,7 +88,7 @@ const Hero = () => {
               <p className="text-xs text-primary-foreground/55 mb-4 mt-2">
                 Usamos seu CEP para encontrar profissionais na sua região.
               </p>
-            </div>
+            </form>
             {/* Secondary CTA */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-3">
               <Button
