@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import type { SearchFilters } from '@/hooks/useSearchCaregivers'
 import {
+  buildHourlyPriceFilter,
   hasFamilyCoordinates,
   hasLocationTextFilters,
+  normalizeHourlyPriceRange,
   textIncludesNormalized,
 } from '@/lib/search-filter-logic'
 
@@ -81,6 +83,14 @@ describe('SearchFilters', () => {
     }
     expect(filters.minPrice).toBe(30)
     expect(filters.maxPrice).toBe(100)
+  })
+
+  it('trata o slider de valor por hora como teto maximo, nao faixa exata', () => {
+    expect(normalizeHourlyPriceRange([50, 50], 200)).toEqual([0, 50])
+    expect(normalizeHourlyPriceRange([40, 100], 200)).toEqual([0, 100])
+
+    expect(buildHourlyPriceFilter([0, 50], 200)).toEqual({ maxPrice: 50 })
+    expect(buildHourlyPriceFilter([0, 200], 200)).toEqual({})
   })
 
   it('suporta filtros de modalidades e idiomas', () => {

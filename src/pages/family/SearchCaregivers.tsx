@@ -23,6 +23,7 @@ import { geocodeAddress, geocodeByCity } from "@/lib/geocode";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from "@/lib/constants";
 import { hasFullPaidAccess } from "@/lib/subscription-access";
+import { buildHourlyPriceFilter, normalizeHourlyPriceRange } from "@/lib/search-filter-logic";
 import { cn } from "@/lib/utils";
 
 // Idiomas exibíveis no filtro (sem "Outro")
@@ -61,7 +62,9 @@ const SearchCaregivers = () => {
   const stored = useMemo(() => loadStoredFilters(), []);
   const [searchQuery, setSearchQuery] = useState(stored.searchQuery ?? "");
   const [showFilters, setShowFilters] = useState(stored.showFilters ?? true);
-  const [priceRange, setPriceRange] = useState(stored.priceRange ?? [0, MAX_PRICE_PER_HOUR]);
+  const [priceRange, setPriceRange] = useState(() =>
+    normalizeHourlyPriceRange(stored.priceRange, MAX_PRICE_PER_HOUR)
+  );
   const [minRating, setMinRating] = useState(stored.minRating ?? 0);
   const [selectedModalities, setSelectedModalities] = useState<string[]>(stored.selectedModalities ?? []);
   const [selectedIdiomas, setSelectedIdiomas] = useState<string[]>(stored.selectedIdiomas ?? []);
@@ -126,8 +129,7 @@ const SearchCaregivers = () => {
     modalities: selectedModalities.length > 0 ? selectedModalities : undefined,
     idiomas: selectedIdiomas.length > 0 ? selectedIdiomas : undefined,
     withReferences: withReferences || undefined,
-    minPrice: priceRange[0] > 0 ? priceRange[0] : undefined,
-    maxPrice: priceRange[1] < MAX_PRICE_PER_HOUR ? priceRange[1] : undefined,
+    ...buildHourlyPriceFilter(priceRange, MAX_PRICE_PER_HOUR),
     minRating: minRating > 0 ? minRating : undefined,
     emergencyOnly: emergencyOnly || undefined,
     radiusKm: familyHasLocation ? radiusKm : undefined,
@@ -169,7 +171,7 @@ const SearchCaregivers = () => {
   };
 
   const hasActiveFilters =
-    priceRange[0] > 0 || priceRange[1] < MAX_PRICE_PER_HOUR ||
+    priceRange[1] < MAX_PRICE_PER_HOUR ||
     minRating > 0 ||
     selectedModalities.length > 0 ||
     selectedIdiomas.length > 0 ||
@@ -179,7 +181,7 @@ const SearchCaregivers = () => {
     neighborhoodFilter.trim() !== "";
 
   const activeFilterCount =
-    (priceRange[0] > 0 || priceRange[1] < MAX_PRICE_PER_HOUR ? 1 : 0) +
+    (priceRange[1] < MAX_PRICE_PER_HOUR ? 1 : 0) +
     (minRating > 0 ? 1 : 0) +
     (selectedModalities.length > 0 ? 1 : 0) +
     (selectedIdiomas.length > 0 ? 1 : 0) +
@@ -350,15 +352,15 @@ const SearchCaregivers = () => {
                     Valor por hora
                   </Label>
                   <Slider
-                    value={priceRange}
-                    onValueChange={setPriceRange}
+                    value={[priceRange[1]]}
+                    onValueChange={(value) => setPriceRange(normalizeHourlyPriceRange(value, MAX_PRICE_PER_HOUR))}
                     max={MAX_PRICE_PER_HOUR}
                     step={5}
                     className="mb-2"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>R$ {priceRange[0]}</span>
-                    <span>R$ {priceRange[1]}</span>
+                    <span>R$ 0</span>
+                    <span>Até R$ {priceRange[1]}</span>
                   </div>
                 </div>
 

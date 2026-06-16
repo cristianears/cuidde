@@ -21,3 +21,22 @@ export function textIncludesNormalized(value: string | null | undefined, search:
   if (!term) return true
   return normalizeSearchText(value ?? '').includes(term)
 }
+
+export function normalizeHourlyPriceRange(value: number[] | undefined, maxPrice: number): [number, number] {
+  const fallback: [number, number] = [0, maxPrice]
+  if (!value || value.length === 0) return fallback
+
+  const ceiling = value.length === 1 ? value[0] : value[value.length - 1]
+  const normalizedCeiling = Math.min(Math.max(Number(ceiling) || 0, 0), maxPrice)
+
+  return [0, normalizedCeiling]
+}
+
+export function buildHourlyPriceFilter(
+  value: number[] | undefined,
+  maxPrice: number,
+): Pick<SearchFilters, 'maxPrice'> {
+  const [, ceiling] = normalizeHourlyPriceRange(value, maxPrice)
+
+  return ceiling < maxPrice ? { maxPrice: ceiling } : {}
+}
