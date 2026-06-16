@@ -2,10 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { cleanCep, formatCep } from "@/lib/formatters";
+import { getLandingCepTarget } from "@/lib/landing-cep-flow";
 import heroBg from "@/assets/hero-bg.jpg";
 const Hero = () => {
   const navigate = useNavigate();
+  const { user, role, isLoading } = useAuth();
   const [cepRaw, setCepRaw] = useState("");
   const [touched, setTouched] = useState(false);
   const cepDigits = cleanCep(cepRaw);
@@ -13,8 +16,12 @@ const Hero = () => {
   const isCepValid = cepDigits.length === 8;
   const goFamilyFlow = () => {
     setTouched(true);
-    if (!isCepValid) return;
-    navigate(`/onboarding?type=family&cep=${encodeURIComponent(cepDigits)}`);
+    if (!isCepValid || isLoading) return;
+    navigate(getLandingCepTarget({
+      cepDigits,
+      isAuthenticated: Boolean(user),
+      role,
+    }));
   };
   return (
     <section className="relative h-[100dvh] flex flex-col pt-16">

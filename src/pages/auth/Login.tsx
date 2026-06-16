@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { signInWithEmail, signInWithGoogle, resetPasswordForEmail } from '@/lib/auth'
 import { useAuth } from '@/contexts/AuthContext'
+import { getLoginRegisterTarget } from '@/lib/landing-cep-flow'
 import { toast } from 'sonner'
 
 type View = 'email' | 'password'
@@ -43,6 +44,7 @@ export default function Login() {
   // Ref para preservar redirect/cep dos searchParams
   const redirectRef = useRef(searchParams.get('redirect'))
   const cepRef = useRef(searchParams.get('cep'))
+  const typeRef = useRef(searchParams.get('type'))
 
   // ─── REDIRECT AUTOMÁTICO ───
   // Se o usuário JÁ está logado ao abrir /login, ou acabou de logar com
@@ -71,7 +73,11 @@ export default function Login() {
   }, [user, role, isLoading, loginSuccess, navigate])
 
   function goToRegister() {
-    navigate('/onboarding' + (email ? `?email=${encodeURIComponent(email)}` : ''))
+    navigate(getLoginRegisterTarget({
+      email: email || null,
+      cep: cepRef.current,
+      type: typeRef.current,
+    }))
   }
 
   const isLocked = lockedUntil !== null && Date.now() < lockedUntil
@@ -113,6 +119,12 @@ export default function Login() {
   async function handleGoogleLogin() {
     setIsGoogleLoading(true)
     try {
+      if (cepRef.current || typeRef.current) {
+        localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
+          type: typeRef.current || 'family',
+          cep: cepRef.current || '',
+        }))
+      }
       const { error } = await signInWithGoogle()
       if (error) {
         toast.error(error.message)
