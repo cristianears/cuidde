@@ -12,7 +12,7 @@ import { toast } from "sonner";
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile, role } = useAuth();
+  const { user, profile, role, isLoading } = useAuth();
   const { canShowInstallAction, installApp } = useInstallApp();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -142,7 +142,15 @@ const Header = () => {
                 Instalar app
               </Button>
             )}
-            {user ? (
+            {isLoading ? (
+              <div
+                aria-label="Carregando conta"
+                className={cn(
+                  "h-9 w-28 rounded-md animate-pulse",
+                  isSolid ? "bg-muted" : "bg-white/20",
+                )}
+              />
+            ) : user ? (
               <Button
                 size="sm"
                 onClick={() => navigate(dashboardPath)}
@@ -221,7 +229,12 @@ const Header = () => {
                   Instalar app
                 </Button>
               )}
-              {user ? (
+              {isLoading ? (
+                <div
+                  aria-label="Carregando conta"
+                  className="h-16 w-full rounded-xl bg-muted animate-pulse"
+                />
+              ) : user ? (
                 <button
                   type="button"
                   onClick={() => {

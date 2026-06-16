@@ -11,6 +11,7 @@ const mockAuthState = vi.hoisted(() => ({
   },
   profile: { full_name: 'Jose da Silva' },
   role: 'family' as const,
+  isLoading: false,
 }))
 
 vi.mock('react-router-dom', async () => {
@@ -49,6 +50,13 @@ function renderHeader() {
 describe('Header', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAuthState.user = {
+      email: 'jose@example.com',
+      user_metadata: { full_name: 'Jose da Silva' },
+    }
+    mockAuthState.profile = { full_name: 'Jose da Silva' }
+    mockAuthState.role = 'family'
+    mockAuthState.isLoading = false
   })
 
   it('renders the signed-in mobile menu account action as a full-width row', () => {
@@ -64,5 +72,18 @@ describe('Header', () => {
 
     fireEvent.click(accountButton!)
     expect(mockNavigate).toHaveBeenCalledWith('/family')
+  })
+
+  it('does not show logged-out desktop actions while the session is restoring', () => {
+    mockAuthState.user = null
+    mockAuthState.profile = null
+    mockAuthState.role = null
+    mockAuthState.isLoading = true
+
+    renderHeader()
+
+    expect(screen.queryByText('Entrar')).not.toBeInTheDocument()
+    expect(screen.queryByText('Criar conta grÃ¡tis')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Carregando conta')).toBeInTheDocument()
   })
 })

@@ -18,16 +18,27 @@ const roleHomePath: Record<UserRole, string> = {
   admin: '/admin',
 }
 
+function getFamilySearchPath(cepDigits: string): string {
+  const params = new URLSearchParams()
+  params.set('cep', cepDigits)
+  return `/family/search?${params.toString()}`
+}
+
 export function getLandingCepTarget({
   cepDigits,
   isAuthenticated,
   role,
 }: LandingCepTargetParams): string {
   if (isAuthenticated) {
-    return role ? roleHomePath[role] : '/family'
+    if (role === 'caregiver' || role === 'admin') {
+      return roleHomePath[role]
+    }
+
+    return getFamilySearchPath(cepDigits)
   }
 
   const params = new URLSearchParams()
+  params.set('redirect', '/family/search')
   params.set('type', 'family')
   params.set('cep', cepDigits)
 

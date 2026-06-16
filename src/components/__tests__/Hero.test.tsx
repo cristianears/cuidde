@@ -45,6 +45,6 @@ describe('Hero', () => {
     fireEvent.change(cepInput, { target: { value: '12236-063' } })
     fireEvent.keyDown(cepInput, { key: 'Enter', code: 'Enter' })
 
-    expect(mockNavigate).toHaveBeenCalledWith('/login?type=family&cep=12236063')
+    expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063')
   })
 })

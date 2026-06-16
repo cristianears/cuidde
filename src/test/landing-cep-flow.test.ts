@@ -2,24 +2,34 @@ import { describe, expect, it } from 'vitest'
 import { getLandingCepTarget, getLoginRegisterTarget } from '@/lib/landing-cep-flow'
 
 describe('landing CEP flow', () => {
-  it('sends anonymous visitors to login instead of onboarding', () => {
+  it('sends anonymous visitors to login with a search redirect instead of onboarding', () => {
     expect(
       getLandingCepTarget({
         cepDigits: '12236063',
         isAuthenticated: false,
         role: null,
       }),
-    ).toBe('/login?type=family&cep=12236063')
+    ).toBe('/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063')
   })
 
-  it('sends authenticated families to their dashboard', () => {
+  it('sends authenticated families directly to caregiver search with the landing CEP', () => {
     expect(
       getLandingCepTarget({
         cepDigits: '12236063',
         isAuthenticated: true,
         role: 'family',
       }),
-    ).toBe('/family')
+    ).toBe('/family/search?cep=12236063')
+  })
+
+  it('sends authenticated visitors without a loaded role to family search with the landing CEP', () => {
+    expect(
+      getLandingCepTarget({
+        cepDigits: '12236063',
+        isAuthenticated: true,
+        role: null,
+      }),
+    ).toBe('/family/search?cep=12236063')
   })
 
   it('sends authenticated caregivers to their dashboard', () => {

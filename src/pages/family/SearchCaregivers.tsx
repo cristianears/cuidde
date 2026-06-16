@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, Filter, DollarSign, Star, MapPin, CalendarClock, Globe, Locate } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -24,6 +24,7 @@ import { supabase } from "@/lib/supabase";
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from "@/lib/constants";
 import { hasFullPaidAccess } from "@/lib/subscription-access";
 import { buildHourlyPriceFilter, normalizeHourlyPriceRange } from "@/lib/search-filter-logic";
+import { getEffectiveFamilyCoordinates, getLandingCepFromSearchParams, type SearchCoordinates } from "@/lib/search-location";
 import { cn } from "@/lib/utils";
 
 // Idiomas exibíveis no filtro (sem "Outro")
@@ -56,6 +57,7 @@ function loadStoredFilters(): Partial<StoredFilters> {
 
 const SearchCaregivers = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: familyProfileData } = useFamilyProfile();
@@ -73,6 +75,9 @@ const SearchCaregivers = () => {
   const [cityFilter, setCityFilter] = useState(stored.cityFilter ?? "");
   const [neighborhoodFilter, setNeighborhoodFilter] = useState(stored.neighborhoodFilter ?? "");
   const [radiusKm, setRadiusKm] = useState<number>(stored.radiusKm ?? DEFAULT_RADIUS_KM);
+  const landingCep = useMemo(() => getLandingCepFromSearchParams(searchParams), [searchParams]);
+  const [landingCoordinates, setLandingCoordinates] = useState<SearchCoordinates | null>(null);
+  const [isLandingLocationLoading, setIsLandingLocationLoading] = useState(false);
 
   // Persistir filtros no sessionStorage
   const persistFilters = useCallback(() => {
@@ -86,7 +91,35 @@ const SearchCaregivers = () => {
 
   useEffect(() => { persistFilters(); }, [persistFilters]);
 
-  const familyHasLocation = familyProfileData?.lat != null && familyProfileData?.lng != null;
+  useEffect(() => {
+    setLandingCoordinates(null);
+    if (!landingCep) {
+      setIsLandingLocationLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLandingLocationLoading(true);
+    (async () => {
+      const geo = await geocodeAddress({ cep: landingCep });
+      if (!cancelled) {
+        setLandingCoordinates(geo);
+      }
+    })().finally(() => {
+      if (!cancelled) {
+        setIsLandingLocationLoading(false);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [landingCep]);
+
+  const effectiveFamilyCoordinates = getEffectiveFamilyCoordinates({
+    landingCoordinates,
+    profileLat: landingCep ? null : familyProfileData?.lat,
+    profileLng: landingCep ? null : familyProfileData?.lng,
+  });
+  const familyHasLocation = effectiveFamilyCoordinates != null;
 
   // Auto-geocodificar se o perfil não tem lat/lng
   // Dependências estáveis para evitar cancelamento prematuro por re-render
@@ -96,6 +129,7 @@ const SearchCaregivers = () => {
   const userId = user?.id;
 
   useEffect(() => {
+    if (landingCep) return;
     if (familyHasLocation || !userId) return;
     const hasCep = !!familyCep;
     const hasCity = !!familyCity && !!familyState;
@@ -120,7 +154,7 @@ const SearchCaregivers = () => {
       qc.invalidateQueries({ queryKey: queryKeys.familyProfile(userId) });
     })();
     return () => { cancelled = true; };
-  }, [familyHasLocation, familyCep, familyCity, familyState, userId, qc]);
+  }, [landingCep, familyHasLocation, familyCep, familyCity, familyState, userId, qc]);
 
   const filters: SearchFilters = useMemo(() => ({
     query: searchQuery || undefined,
@@ -133,19 +167,26 @@ const SearchCaregivers = () => {
     minRating: minRating > 0 ? minRating : undefined,
     emergencyOnly: emergencyOnly || undefined,
     radiusKm: familyHasLocation ? radiusKm : undefined,
-    familyLat: familyProfileData?.lat ?? undefined,
-    familyLng: familyProfileData?.lng ?? undefined,
-  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly, radiusKm, familyHasLocation, familyProfileData?.lat, familyProfileData?.lng]);
+    familyLat: effectiveFamilyCoordinates?.lat,
+    familyLng: effectiveFamilyCoordinates?.lng,
+  }), [searchQuery, cityFilter, neighborhoodFilter, selectedModalities, selectedIdiomas, withReferences, priceRange, minRating, emergencyOnly, radiusKm, familyHasLocation, effectiveFamilyCoordinates?.lat, effectiveFamilyCoordinates?.lng]);
 
-  const { data: caregivers = [], isLoading } = useSearchCaregivers(filters);
+  const { data: rawCaregivers = [], isLoading } = useSearchCaregivers(filters);
+  const shouldWaitForLandingLocation = !!landingCep && isLandingLocationLoading;
+  const landingLocationFailed = !!landingCep && !isLandingLocationLoading && !landingCoordinates;
+  const caregivers = useMemo(
+    () => (shouldWaitForLandingLocation || landingLocationFailed ? [] : rawCaregivers),
+    [landingLocationFailed, rawCaregivers, shouldWaitForLandingLocation],
+  );
+  const isResultsLoading = isLoading || shouldWaitForLandingLocation;
 
   // Tracking de aparições em busca: dispara uma vez por conjunto de IDs renderizados.
   // O dedup por (família, cuidador, dia) é feito no banco — chamadas extras são no-op.
   useEffect(() => {
-    if (!isLoading && caregivers.length > 0) {
+    if (!isResultsLoading && caregivers.length > 0) {
       trackSearchAppearances(caregivers.map((c) => c.id));
     }
-  }, [isLoading, caregivers]);
+  }, [isResultsLoading, caregivers]);
 
   const { data: favoriteIdsList = [] } = useFavoriteIds();
   const favoriteIds = new Set(favoriteIdsList);
@@ -438,7 +479,7 @@ const SearchCaregivers = () => {
           {/* Resultados */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-3">
-              {isLoading ? (
+              {isResultsLoading ? (
                 <p className="text-sm text-muted-foreground">Buscando cuidadores...</p>
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -447,7 +488,7 @@ const SearchCaregivers = () => {
               )}
             </div>
 
-            {isLoading ? (
+            {isResultsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <Card key={i} className="h-36 animate-pulse bg-muted" />
