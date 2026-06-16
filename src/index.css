@@ -92,14 +92,14 @@
   }
 
   .landing-hero-bg {
-    background-color: #8b5a2b;
+    background-color: #f0a766;
     background-position: center;
     background-size: cover;
   }
 
   @media (max-width: 767px) {
     .landing-hero-bg {
-      background-position: 48% center;
+      background-position: 48% top;
       background-size: auto 70%;
     }
 
