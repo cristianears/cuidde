@@ -20,7 +20,7 @@ const Hero = () => {
     <section className="relative h-[100dvh] flex flex-col pt-16">
       {/* Background Image */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="landing-hero-bg absolute inset-0 bg-no-repeat"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       {/* Multi-layer Overlay for depth */}

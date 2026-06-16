@@ -91,7 +91,18 @@
     font-family: 'Inter', sans-serif;
   }
 
+  .landing-hero-bg {
+    background-color: #8b5a2b;
+    background-position: center;
+    background-size: cover;
+  }
+
   @media (max-width: 767px) {
+    .landing-hero-bg {
+      background-position: 48% center;
+      background-size: auto 70%;
+    }
+
     .app-shell-sidebar + main {
       min-width: 0;
       width: 100%;
