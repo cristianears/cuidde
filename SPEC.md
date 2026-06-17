@@ -93,7 +93,7 @@ UNIQUE(family_id, caregiver_id)
 
 - **`on_auth_user_created`** — INSERT em `profiles`; se role='caregiver' cria `caregiver_profiles`; se role='family' cria `family_profiles`. Google OAuth cria com role=NULL (definido depois no onboarding).
 - **`on_review_inserted`** — atualiza `average_rating` e `review_count` em `caregiver_profiles`.
-- **`profile_complete`** — recalcula ao alterar perfil/referências/documentos. Critérios: cidade+bairro + bio ≥10 chars + specialties[] + referência + rg_cnh (sent/approved).
+- **`profile_complete`** — recalcula ao alterar perfil/referencias/documentos. Critérios: cidade+bairro + bio ≥10 chars + specialties[] + rg_cnh (sent/approved). As referencias profissionais sao opcionais: contam como sinal de confianca, filtro e ranking, mas nao podem bloquear visibilidade na busca.
 
 ---
 

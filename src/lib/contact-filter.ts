@@ -1,6 +1,6 @@
 // ─── Filtro de contato para chat ──────────────────────────────────────────────
 // Detecta contatos externos em mensagens e substitui por placeholder.
-// Usado quando a conversa esta em uma janela de bloqueio de seguranca.
+// Usado enquanto a solicitacao ainda esta pendente.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Padrões base (sem flags) — usados para derivar versões com e sem /g
@@ -17,7 +17,7 @@ const URL_PATTERN = new RegExp(URL_SRC, 'i')
 const CONTACT_PLACEHOLDER = '[contato removido]'
 
 export const CONTACT_WARNING_MESSAGE =
-  'Para sua segurança, telefone, WhatsApp, e-mail e links ficam ocultos enquanto o atendimento está pendente e durante os 7 primeiros dias da assinatura. A liberação acontece a partir do 8º dia.'
+  'Para sua seguranca, telefone, WhatsApp, e-mail e links ficam ocultos enquanto o atendimento esta pendente. Quando a solicitacao for aceita, o contato direto fica liberado.'
 
 export const MAX_MESSAGE_LENGTH = 2000
 
