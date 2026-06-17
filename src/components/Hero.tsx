@@ -33,17 +33,17 @@ const Hero = () => {
     submitFamilyFlow();
   };
   return (
-    <section className="relative h-[100dvh] flex flex-col pt-16">
+    <section className="relative flex h-[82svh] min-h-[620px] max-h-[720px] flex-col overflow-hidden pt-16 md:h-[100dvh] md:min-h-0 md:max-h-none">
       {/* Background Image */}
       <div
         className="landing-hero-bg absolute inset-0 bg-no-repeat"
         style={{ backgroundImage: `url(${heroBg})` }}
       />
       {/* Multi-layer Overlay for depth */}
-      <div className="absolute inset-0 bg-foreground/50" />
+      <div className="absolute inset-0 bg-gradient-to-b from-foreground/50 via-foreground/45 to-foreground/25 md:bg-foreground/50 md:bg-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/20 to-primary/20" />
       {/* Bottom fade for seamless transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#f4f8fc] via-background/80 to-transparent md:h-24 md:from-background md:via-transparent" />
 
       {/* Conteúdo centralizado verticalmente */}
       <div className="relative flex-1 flex items-center">
