@@ -1,6 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'npm:stripe@14'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getInvoicePaymentIntentId } from './invoice-payment.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-06-20',
@@ -66,12 +67,6 @@ function toISODate(ts: number): string {
     String(d.getUTCMonth() + 1).padStart(2, '0'),
     String(d.getUTCDate()).padStart(2, '0'),
   ].join('-')
-}
-
-function getPaymentIntentId(paymentIntent: string | Stripe.PaymentIntent | null): string | null {
-  return typeof paymentIntent === 'string'
-    ? paymentIntent
-    : paymentIntent?.id ?? null
 }
 
 function getPlanFromInvoiceLine(
@@ -273,7 +268,7 @@ serve(async (req) => {
         {
           family_id: familyId,
           stripe_invoice_id: inv.id,
-          stripe_payment_intent_id: getPaymentIntentId(inv.payment_intent),
+          stripe_payment_intent_id: getInvoicePaymentIntentId(inv),
           amount: inv.amount_paid / 100,
           status: 'paid',
           plan,
@@ -309,7 +304,7 @@ serve(async (req) => {
         {
           family_id: familyId,
           stripe_invoice_id: inv.id,
-          stripe_payment_intent_id: getPaymentIntentId(inv.payment_intent),
+          stripe_payment_intent_id: getInvoicePaymentIntentId(inv),
           amount: inv.amount_due / 100,
           status: 'overdue',
           plan,
