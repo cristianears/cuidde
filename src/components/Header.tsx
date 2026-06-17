@@ -110,7 +110,7 @@ const Header = () => {
             />
           </button>
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-8">
             {navItems.map((item) => (
               <button
                 key={item.hash ?? item.href}
@@ -125,7 +125,7 @@ const Header = () => {
               </button>
             ))}
           </nav>
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-3">
             {canShowInstallAction && (
               <Button
                 variant="ghost"
@@ -186,7 +186,7 @@ const Header = () => {
           </div>
           {/* Mobile Menu Button */}
           <button
-            className={cn("md:hidden p-2 transition-colors cursor-pointer", isSolid ? "text-foreground" : "text-white")}
+            className={cn("lg:hidden p-2 transition-colors cursor-pointer", isSolid ? "text-foreground" : "text-white")}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             type="button"
             aria-label={isMenuOpen ? "Fechar menu" : "Abrir menu"}
@@ -198,7 +198,7 @@ const Header = () => {
         {isMenuOpen && (
           <nav
             className={cn(
-              "md:hidden -mx-2 mt-4 flex flex-col gap-2 rounded-2xl border p-3 shadow-xl backdrop-blur-md",
+              "lg:hidden -mx-2 mt-4 flex flex-col gap-2 rounded-2xl border p-3 shadow-xl backdrop-blur-md",
               isSolid
                 ? "border-border bg-background/95"
                 : "border-white/20 bg-background/95",

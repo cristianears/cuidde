@@ -33,7 +33,7 @@ const Hero = () => {
     submitFamilyFlow();
   };
   return (
-    <section className="relative flex h-[82svh] min-h-[620px] max-h-[720px] flex-col overflow-hidden pt-16 md:h-[100dvh] md:min-h-0 md:max-h-none">
+    <section className="relative flex h-[100svh] min-h-[600px] flex-col overflow-hidden pt-16">
       {/* Background Image */}
       <div
         className="landing-hero-bg absolute inset-0 bg-no-repeat"
@@ -43,14 +43,14 @@ const Hero = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-foreground/50 via-foreground/45 to-foreground/25 md:bg-foreground/50 md:bg-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-foreground/40 via-foreground/20 to-primary/20" />
       {/* Bottom fade for seamless transition */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#f4f8fc] via-background/80 to-transparent md:h-24 md:from-background md:via-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-[30svh] min-h-40 bg-gradient-to-t from-background via-background/90 to-transparent lg:h-24 lg:min-h-0 lg:via-transparent" />
 
       {/* Conteúdo centralizado verticalmente */}
       <div className="relative flex-1 flex items-center">
         <div className="container mx-auto px-8 md:px-12">
-          <div className="max-w-2xl mx-auto text-center text-primary-foreground">
+          <div className="max-w-2xl mx-auto translate-y-6 text-center text-primary-foreground lg:translate-y-0">
             {/* Title */}
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[1.2] mb-3 md:mb-4 tracking-tight">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[1.2] mb-4 tracking-tight">
               Encontre o cuidador certo
               <br />
               <span className="text-primary-foreground/90">com transparência e calma</span>
@@ -63,21 +63,21 @@ const Hero = () => {
                   id="cep"
                   inputMode="numeric"
                   autoComplete="postal-code"
-                  placeholder="Digite seu CEP (ex: 12236-063)"
+                  placeholder="Digite seu CEP"
                   value={cepFormatted}
                   onChange={(e) => {
                     setTouched(true);
                     setCepRaw(e.target.value);
                   }}
                   onKeyDown={handleCepKeyDown}
-                  className="w-full rounded-xl pl-4 pr-2 py-2 text-foreground bg-background/95 placeholder:text-muted-foreground/70 border border-white/10 focus:outline-none focus:ring-2 focus:ring-accent shadow-lg text-sm h-14 sm:pr-[200px]"
+                  className="h-14 w-full rounded-xl border border-white/10 bg-background/95 py-2 pl-4 pr-[166px] text-sm text-foreground shadow-lg placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-accent sm:pr-[200px]"
                 />
                 <Button
                   type="submit"
-                  className="mt-2 w-full sm:mt-0 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground font-semibold px-5 text-sm rounded-lg shadow-md hover:shadow-lg transition-colors duration-300 h-11 group animate-soft-pulse"
+                  className="group absolute right-1.5 top-1/2 h-11 w-auto -translate-y-1/2 rounded-lg bg-accent px-2.5 text-[11px] font-semibold text-accent-foreground shadow-md transition-colors duration-300 hover:bg-accent/90 hover:shadow-lg sm:px-5 sm:text-sm"
                 >
-                  <CheckCircle className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform" />
-                  Buscar profissionais
+                  <CheckCircle className="mr-1 h-3.5 w-3.5 transition-transform group-hover:scale-110 sm:mr-1.5 sm:h-4 sm:w-4" />
+                  <span>Buscar profissionais</span>
                 </Button>
               </div>
               {touched && !isCepValid && (
@@ -85,12 +85,13 @@ const Hero = () => {
                   Informe um CEP válido com 8 números.
                 </p>
               )}
-              <p className="text-xs text-primary-foreground/55 mb-4 mt-2">
-                Usamos seu CEP para encontrar profissionais na sua região.
+              <p className="mb-2 mt-1.5 text-xs leading-relaxed text-primary-foreground/55">
+                Usamos seu CEP para encontrar profissionais
+                <br className="sm:hidden" /> na sua região.
               </p>
             </form>
             {/* Secondary CTA */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-2">
               <Button
                 variant="outline"
                 onClick={() => navigate("/para-cuidadores")}
