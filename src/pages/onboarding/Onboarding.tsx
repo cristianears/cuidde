@@ -33,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { queuePendingUserConsents, recordUserConsents } from '@/lib/user-consents'
+import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
 
 type ProfileType = 'family' | 'caregiver' | null
 
@@ -79,6 +80,7 @@ const Onboarding = () => {
   const queryClient = useQueryClient()
 
   const isGoogleFlow = searchParams.get('from') === 'google'
+  const redirectParam = searchParams.get('redirect')
 
   // Google flow: skip step 3 (email/password) — shows steps [1,2,4,5,6,7]
   const steps = isGoogleFlow ? ALL_STEPS.filter((s) => s.id !== 3) : ALL_STEPS
@@ -179,11 +181,13 @@ const Onboarding = () => {
     try {
       const typeParam = searchParams.get('type') as ProfileType
       const cepParam = searchParams.get('cep')
+      const redirectParam = searchParams.get('redirect')
       localStorage.setItem('cuidde_pending_signup', 'true')
       // Preservar dados do onboarding para recuperar após callback OAuth
       localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
         type: formData.profileType ?? typeParam,
         cep: formData.cep || cepParam || '',
+        redirect: redirectParam || '',
       }))
       const { error } = await signInWithGoogle()
       if (error) {
@@ -333,7 +337,10 @@ const Onboarding = () => {
         if (formData.profileType === 'caregiver') {
           navigate('/caregiver', { replace: true })
         } else {
-          navigate(formData.cep ? '/family/search' : '/family', { replace: true })
+          navigate(getFamilyOnboardingCompleteTarget({
+            redirect: redirectParam,
+            cep: formData.cep,
+          }), { replace: true })
         }
       } else {
         const { data, error } = await signUpWithEmail(formData.email, formData.password, {

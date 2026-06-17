@@ -1,6 +1,8 @@
 import { Check } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { getLandingPlanTarget } from "@/lib/landing-cep-flow";
 const plans = [
   {
     name: "Gratuito",
@@ -83,6 +85,16 @@ const plans = [
 ];
 const Pricing = () => {
   const navigate = useNavigate();
+  const { user, role } = useAuth();
+
+  function handlePlanClick(isPaidPlan: boolean) {
+    navigate(getLandingPlanTarget({
+      isAuthenticated: !!user,
+      role,
+      isPaidPlan,
+    }));
+  }
+
   return (
     <section id="planos" className="py-12 md:py-14 bg-background relative">
       <div className="absolute top-0 left-0 right-0 h-px bg-section-divider" />
@@ -148,7 +160,7 @@ const Pricing = () => {
               </ul>
               <div className="mt-auto pt-3">
                 <Button
-                  onClick={() => navigate("/onboarding")}
+                  onClick={() => handlePlanClick(plan.price !== "0")}
                   variant={plan.buttonVariant}
                   className={`w-full rounded-lg py-2 text-xs font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
                     plan.highlighted

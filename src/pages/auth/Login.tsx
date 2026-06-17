@@ -77,6 +77,7 @@ export default function Login() {
       email: email || null,
       cep: cepRef.current,
       type: typeRef.current,
+      redirect: redirectRef.current,
     }))
   }
 
@@ -119,10 +120,11 @@ export default function Login() {
   async function handleGoogleLogin() {
     setIsGoogleLoading(true)
     try {
-      if (cepRef.current || typeRef.current) {
+      if (cepRef.current || typeRef.current || redirectRef.current) {
         localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
           type: typeRef.current || 'family',
           cep: cepRef.current || '',
+          redirect: redirectRef.current || '',
         }))
       }
       const { error } = await signInWithGoogle()

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { getLandingCepTarget, getLoginRegisterTarget } from '@/lib/landing-cep-flow'
+import {
+  getFamilyOnboardingCompleteTarget,
+  getLandingCepTarget,
+  getLandingPlanTarget,
+  getLoginRegisterTarget,
+} from '@/lib/landing-cep-flow'
 
 describe('landing CEP flow', () => {
   it('sends anonymous visitors to login with a search redirect instead of onboarding', () => {
@@ -50,5 +55,49 @@ describe('landing CEP flow', () => {
         type: 'family',
       }),
     ).toBe('/onboarding?type=family&cep=12236063&email=maria%40example.com')
+  })
+
+  it('sends anonymous visitors from paid plans to login with a billing redirect', () => {
+    expect(
+      getLandingPlanTarget({
+        isAuthenticated: false,
+        role: null,
+        isPaidPlan: true,
+      }),
+    ).toBe('/login?redirect=%2Ffamily%2Fbilling&type=family')
+  })
+
+  it('sends authenticated families from paid plans directly to billing', () => {
+    expect(
+      getLandingPlanTarget({
+        isAuthenticated: true,
+        role: 'family',
+        isPaidPlan: true,
+      }),
+    ).toBe('/family/billing')
+  })
+
+  it('preserves the billing redirect when the visitor chooses to register from login', () => {
+    expect(
+      getLoginRegisterTarget({
+        email: 'maria@example.com',
+        type: 'family',
+        redirect: '/family/billing',
+      }),
+    ).toBe('/onboarding?type=family&email=maria%40example.com&redirect=%2Ffamily%2Fbilling')
+  })
+
+  it('sends family onboarding completion to a safe billing redirect', () => {
+    expect(getFamilyOnboardingCompleteTarget({
+      redirect: '/family/billing',
+      cep: null,
+    })).toBe('/family/billing')
+  })
+
+  it('ignores unsafe onboarding completion redirects', () => {
+    expect(getFamilyOnboardingCompleteTarget({
+      redirect: 'https://example.com/phishing',
+      cep: null,
+    })).toBe('/family')
   })
 })

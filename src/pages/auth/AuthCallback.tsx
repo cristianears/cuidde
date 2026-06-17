@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BrandMark from '@/components/shared/BrandMark'
 import { useAuth } from '@/contexts/AuthContext'
+import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
 import { supabase } from '@/lib/supabase'
 
 const roleHomeMap: Record<string, string> = {
@@ -11,7 +12,7 @@ const roleHomeMap: Record<string, string> = {
 }
 
 /** Recupera e limpa dados do onboarding salvos antes do OAuth redirect */
-function consumeOnboardingData(): { type?: string; cep?: string; phone?: string } | null {
+function consumeOnboardingData(): { type?: string; cep?: string; phone?: string; redirect?: string } | null {
   try {
     const raw = localStorage.getItem('cuidde_onboarding_data')
     localStorage.removeItem('cuidde_onboarding_data')
@@ -54,7 +55,14 @@ export default function AuthCallback() {
         if (profile?.role && !isPendingSignup) {
           // Usuário existente fazendo login com Google → dashboard
           localStorage.removeItem('cuidde_pending_signup')
-          navigate(roleHomeMap[profile.role] ?? '/', { replace: true })
+          const familyRedirect = profile.role === 'family'
+            ? getFamilyOnboardingCompleteTarget({
+              redirect: onboardingData?.redirect,
+              cep: onboardingData?.cep,
+            })
+            : null
+
+          navigate(familyRedirect ?? roleHomeMap[profile.role] ?? '/', { replace: true })
         } else {
           // Novo usuário OU veio do onboarding (pending_signup) → completar cadastro
           localStorage.removeItem('cuidde_pending_signup')
@@ -63,6 +71,7 @@ export default function AuthCallback() {
           const params = new URLSearchParams({ from: 'google' })
           if (onboardingData?.cep) params.set('cep', onboardingData.cep)
           if (onboardingData?.type) params.set('type', onboardingData.type)
+          if (onboardingData?.redirect) params.set('redirect', onboardingData.redirect)
 
           navigate(`/onboarding?${params.toString()}`, { replace: true })
         }
@@ -73,6 +82,7 @@ export default function AuthCallback() {
         const params = new URLSearchParams({ from: 'google' })
         if (onboardingData?.cep) params.set('cep', onboardingData.cep)
         if (onboardingData?.type) params.set('type', onboardingData.type)
+        if (onboardingData?.redirect) params.set('redirect', onboardingData.redirect)
 
         navigate(`/onboarding?${params.toString()}`, { replace: true })
       }
