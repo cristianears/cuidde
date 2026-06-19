@@ -99,6 +99,7 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Atendimentos')).toBeInTheDocument()
     expect(screen.getByText('Avaliações')).toBeInTheDocument()
     expect(screen.getByText('Suporte')).toBeInTheDocument()
+    expect(screen.getByText('Guia')).toBeInTheDocument()
   })
 
   it('renderiza itens de menu da família', () => {
@@ -109,6 +110,7 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Solicitações/Chat')).toBeInTheDocument()
     expect(screen.getByText('Plano & Assinatura')).toBeInTheDocument()
     expect(screen.getByText('Meu Perfil')).toBeInTheDocument()
+    expect(screen.getByText('Guia')).toBeInTheDocument()
   })
 
   it('renderiza itens de menu do admin', () => {
@@ -116,6 +118,18 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Revisões')).toBeInTheDocument()
     expect(screen.getByText('Financeiro')).toBeInTheDocument()
+    expect(screen.queryByText('Guia')).not.toBeInTheDocument()
+  })
+
+  it('abre o guia de onboarding pelo item do sidebar', () => {
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    renderSidebar()
+
+    fireEvent.click(screen.getByText('Guia'))
+
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'icuide:open-onboarding-guide',
+    }))
   })
 
   it('colapsa sidebar ao clicar no botão de toggle', () => {

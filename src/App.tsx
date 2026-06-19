@@ -51,6 +51,7 @@ import { usePendingUserConsents } from '@/hooks/usePendingUserConsents'
 import FreeFamilyBanner from '@/components/shared/FreeFamilyBanner'
 import InstallAppPrompt from '@/components/shared/InstallAppPrompt'
 import CookieConsentBanner from '@/components/shared/CookieConsentBanner'
+import RoleOnboardingGuide from '@/components/shared/RoleOnboardingGuide'
 
 // Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
 const AppInit = () => {
@@ -70,6 +71,7 @@ const App = () => (
           <FreeFamilyBanner />
           <InstallAppPrompt />
           <CookieConsentBanner />
+          <RoleOnboardingGuide />
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />

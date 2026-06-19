@@ -45,6 +45,7 @@ import {
 } from "@/hooks/useCaregiverProfile";
 import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
 import { recordUserConsents } from "@/lib/user-consents";
+import { useSearchParams } from "react-router-dom";
 
 const profileSteps = [
   { id: 1, title: "Dados básicos" },
@@ -53,12 +54,19 @@ const profileSteps = [
   { id: 4, title: "Referências" },
 ];
 
+const PROFILE_STEP_BY_QUERY: Record<string, number> = {
+  bio: 2,
+  specialties: 3,
+  references: 4,
+};
+
 type NewRef = Omit<ProfessionalReference, 'id' | 'caregiver_id' | 'created_at'>
 type ProfessionFormValue = "" | "cuidador" | "tecnico_enfermagem" | "auxiliar_enfermagem" | "enfermeiro" | "fisioterapeuta" | "terapeuta_ocupacional" | "outro"
 type CnhCategoryFormValue = "" | "A" | "B" | "AB" | "C" | "D" | "E"
 
 const CaregiverProfile = () => {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
   const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(user?.id, "thirdPartyConsent")
   const { data: profileData, isLoading } = useCaregiverProfile()
   const { data: refsData } = useProfessionalReferences()
@@ -124,6 +132,13 @@ const CaregiverProfile = () => {
   const [editingRefId, setEditingRefId] = useState<string | null>(null);
   const [editRef, setEditRef] = useState<NewRef>({ name: "", phone: "", workplace: "", position: "", work_duration: "", notes: "" });
   const [editRefErrors, setEditRefErrors] = useState({ name: false, phone: false });
+
+  useEffect(() => {
+    const requestedStep = PROFILE_STEP_BY_QUERY[searchParams.get('step') ?? ""]
+    if (requestedStep) {
+      setCurrentStep(requestedStep)
+    }
+  }, [searchParams])
 
   // Sincronizar form com dados do Supabase quando carregarem
   useEffect(() => {

@@ -23,12 +23,14 @@ import {
   Briefcase,
   UserCheck,
   CreditCard,
+  CircleHelp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useUnreadCounts, useUnreadRealtime } from "@/hooks/useUnreadCounts";
 import BrandMark from "@/components/shared/BrandMark";
 import { getFirstName, getInitials } from "@/lib/display-name";
+import { ONBOARDING_GUIDE_OPEN_EVENT } from "@/components/shared/RoleOnboardingGuide";
 
 import type { UserRole } from '@/types/database';
 
@@ -143,6 +145,10 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
     navigate('/login', { replace: true })
   }
 
+  function handleOpenGuide() {
+    window.dispatchEvent(new CustomEvent(ONBOARDING_GUIDE_OPEN_EVENT));
+  }
+
   return (
     <aside
       className={cn(
@@ -234,6 +240,23 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
             </Link>
           );
         })}
+        {(role === 'caregiver' || role === 'family') && (
+          <button
+            type="button"
+            onClick={handleOpenGuide}
+            className="relative flex w-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:w-auto md:flex-row md:justify-start md:gap-3 md:px-3 md:py-2.5 md:text-left"
+          >
+            <CircleHelp className="w-5 h-5 flex-shrink-0" />
+            <span
+              className={cn(
+                "w-full truncate text-[10px] leading-tight md:w-auto md:text-sm md:leading-normal",
+                collapsed ? "md:hidden" : "md:flex-1",
+              )}
+            >
+              Guia
+            </span>
+          </button>
+        )}
         <button
           type="button"
           onClick={handleLogout}

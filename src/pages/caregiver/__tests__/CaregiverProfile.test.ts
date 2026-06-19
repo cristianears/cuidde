@@ -10,4 +10,13 @@ describe('CaregiverProfile contact field', () => {
     expect(source).not.toContain('Label htmlFor="phone"')
     expect(source).not.toContain('Label htmlFor="whatsapp"')
   })
+
+  it('opens the requested profile step from onboarding tour links', () => {
+    expect(source).toContain('useSearchParams')
+    expect(source).toContain('PROFILE_STEP_BY_QUERY')
+    expect(source).toContain('bio: 2')
+    expect(source).toContain('specialties: 3')
+    expect(source).toContain('references: 4')
+    expect(source).toContain('setCurrentStep(requestedStep)')
+  })
 })
