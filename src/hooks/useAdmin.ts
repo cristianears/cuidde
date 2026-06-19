@@ -6,9 +6,12 @@ import type { CaregiverStatus } from '@/types/database'
 
 // ─── Tipos retornados pela Edge Function admin-actions ────────────────────────
 
+export type AdminCaregiverStatusFilter = CaregiverStatus | 'all'
+
 export interface AdminCaregiverRow {
   id: string
   photo_url: string | null
+  neighborhood: string | null
   city: string | null
   state: string | null
   status: CaregiverStatus
@@ -18,6 +21,8 @@ export interface AdminCaregiverRow {
   professional_reg_number: string | null
   professional_reg_uf: string | null
   rejection_reason: string | null
+  profile_complete: boolean
+  is_visible: boolean
   full_name: string | null
   phone: string | null
 }
@@ -30,11 +35,35 @@ export interface AdminCaregiverDetail extends AdminCaregiverRow {
   modalities: string[]
   idiomas: string[]
   experience_years: number
+  formacao_complementar: string | null
   possui_cnh: boolean
+  categoria_cnh: string | null
   has_insurance: boolean
   emergency_available: boolean
+  is_available_for_new: boolean
+  journey_types: string[]
+  area_type: string | null
+  area_radius: string | null
+  availability_notes: string | null
   price_per_hour: number | null
   price_per_day: number | null
+  pricing_note: string | null
+  cep: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  has_rg_cnh: boolean
+  has_antecedentes: boolean
+  has_certificado: boolean
+  has_references: boolean
+  show_refs_to_subscribers: boolean
+  mask_reference_phones: boolean
+  show_reference_full_names: boolean
+  average_rating: number
+  review_count: number
+  profile_views_30d: number
+  search_appearances_30d: number
+  interested_families_30d: number
 }
 
 export interface AdminDocumentRow {
@@ -111,7 +140,7 @@ async function callAdminAction<T>(action: string, params: Record<string, unknown
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
-export function useAdminCaregivers(status: CaregiverStatus) {
+export function useAdminCaregivers(status: AdminCaregiverStatusFilter) {
   return useQuery({
     queryKey: queryKeys.adminCaregivers(status),
     queryFn: () => callAdminAction<AdminCaregiverRow[]>('list_caregivers', { status }),
@@ -177,7 +206,7 @@ export function useAdminApprove() {
     mutationFn: (caregiverId: string) =>
       callAdminAction<void>('approve', { caregiver_id: caregiverId }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin', 'caregivers'] })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverCounts })
       qc.invalidateQueries({ queryKey: queryKeys.adminMetrics })
       toast.success('Cuidador aprovado com sucesso.')
@@ -192,7 +221,7 @@ export function useAdminReject() {
     mutationFn: ({ caregiverId, reason }: { caregiverId: string; reason: string }) =>
       callAdminAction<void>('reject', { caregiver_id: caregiverId, reason }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['admin', 'caregivers'] })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverCounts })
       qc.invalidateQueries({ queryKey: queryKeys.adminMetrics })
       toast.error('Cuidador reprovado.')
@@ -210,7 +239,7 @@ export function useAdminMarkIllegible() {
         reason: 'Documento não legível, enviar novamente.',
       }),
     onSuccess: (_data, caregiverId) => {
-      qc.invalidateQueries({ queryKey: ['admin', 'caregivers'] })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverDetail(caregiverId) })
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverCounts })
       toast.warning('Cuidador notificado: documento não legível.')
@@ -226,7 +255,7 @@ export function useAdminApproveDocument() {
       callAdminAction<void>('approve_document', { document_id: documentId, caregiver_id: caregiverId }),
     onSuccess: (_data, { caregiverId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverDocuments(caregiverId) })
-      qc.invalidateQueries({ queryKey: ['admin', 'caregivers'] })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverCounts })
       toast.success('Documento aprovado.')
     },
@@ -241,7 +270,7 @@ export function useAdminMarkDocumentIllegible() {
       callAdminAction<void>('mark_document_illegible', { document_id: documentId, caregiver_id: caregiverId }),
     onSuccess: (_data, { caregiverId }) => {
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverDocuments(caregiverId) })
-      qc.invalidateQueries({ queryKey: ['admin', 'caregivers'] })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
       qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverCounts })
       toast.warning('Cuidador notificado: documento ilegível.')
     },

@@ -41,6 +41,7 @@ export const queryKeys = {
   invoices: (userId: string) => ['invoices', userId] as const,
   invoice: (id: string) => ['invoice', id] as const,
   // ─── Admin ────────────────────────────────────────────────────────────────
+  adminCaregiversRoot: ['admin', 'caregivers'] as const,
   adminCaregivers: (status: string) => ['admin', 'caregivers', status] as const,
   adminCaregiverDetail: (id: string) => ['admin', 'caregiver', id] as const,
   adminCaregiverDocuments: (id: string) => ['admin', 'documents', id] as const,

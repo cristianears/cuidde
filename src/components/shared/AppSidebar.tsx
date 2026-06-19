@@ -62,6 +62,7 @@ const sidebarItems: Record<UserRole, SidebarItem[]> = {
   ],
   admin: [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
+    { icon: Users, label: 'Cuidadores', href: '/admin/caregivers' },
     { icon: ClipboardCheck, label: 'Revisões', href: '/admin/approvals' },
     { icon: DollarSign, label: 'Financeiro', href: '/admin/finance' },
   ],

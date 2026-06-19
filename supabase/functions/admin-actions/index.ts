@@ -62,11 +62,14 @@ serve(async (req) => {
   // ─── list_caregivers ──────────────────────────────────────────────────────
   if (action === 'list_caregivers') {
     const { status } = body
-    const { data: cps, error } = await supabase
+    let query = supabase
       .from('caregiver_profiles')
-      .select('id, photo_url, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason')
-      .eq('status', status)
+      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible')
       .order('created_at', { ascending: false })
+
+    if (status && status !== 'all') query = query.eq('status', status)
+
+    const { data: cps, error } = await query
     if (error) return json({ error: error.message }, 500, cors)
     if (!cps?.length) return json({ data: [] }, 200, cors)
 
@@ -314,7 +317,7 @@ serve(async (req) => {
       .from('caregiver_documents')
       .update({
         status: 'rejected',
-        rejection_reason: 'Documento não legível. Envie novamente com boa iluminação e sem cortes.',
+        rejection_reason: 'Documento nao legivel. Envie novamente com boa iluminacao e sem cortes.',
         reviewed_at: new Date().toISOString(),
       })
       .eq('id', document_id)
@@ -339,7 +342,7 @@ serve(async (req) => {
     // Validar formato: {uuid}/{tipo}.{ext} — rejeita path traversal e buckets arbitrários
     const PATH_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[a-z_]+\.(pdf|jpg|jpeg|png|webp)$/i
     if (!PATH_PATTERN.test(file_url)) {
-      return json({ error: 'Caminho de arquivo inválido' }, 400, cors)
+      return json({ error: 'Caminho de arquivo invalido' }, 400, cors)
     }
 
     const { data, error } = await supabase.storage
