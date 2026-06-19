@@ -27,4 +27,9 @@ describe('CaregiverDashboard profile completeness labels', () => {
     expect(source).toContain('Registrar rotina')
     expect(source).toContain('/care-routine')
   })
+  it('shows profile adjustment guidance with the missing items in recommended actions', () => {
+    expect(source).toContain('Seu perfil precisa de ajustes antes de ficar vis')
+    expect(source).toContain('recommendedActions.map')
+    expect(source).toContain('{action.label}')
+  })
 })

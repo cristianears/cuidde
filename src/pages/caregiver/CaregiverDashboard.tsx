@@ -522,9 +522,9 @@ const CaregiverDashboard = () => {
         {recommendedActions.length > 0 && (
           <Card className="mb-6 md:mb-8 shadow-sm border-0">
             <CardHeader className="pb-3 md:pb-4">
-              <CardTitle className="text-base md:text-lg font-semibold">Ações recomendadas</CardTitle>
+              <CardTitle className="text-base md:text-lg font-semibold">Seu perfil precisa de ajustes antes de ficar visível para famílias</CardTitle>
               <p className="text-xs md:text-sm text-muted-foreground">
-                Complete estes itens para aumentar suas chances de ser encontrado pelas famílias.
+                Corrija os itens abaixo para completar seu perfil e aumentar suas chances de ser encontrado.
               </p>
             </CardHeader>
             <CardContent>

@@ -6,6 +6,7 @@ const appSource = readFileSync(resolve(__dirname, '../../../App.tsx'), 'utf8')
 const sidebarSource = readFileSync(resolve(__dirname, '../../../components/shared/AppSidebar.tsx'), 'utf8')
 const adminHookSource = readFileSync(resolve(__dirname, '../../../hooks/useAdmin.ts'), 'utf8')
 const adminActionsSource = readFileSync(resolve(__dirname, '../../../../supabase/functions/admin-actions/index.ts'), 'utf8')
+const reviewSource = readFileSync(resolve(__dirname, '../CaregiverProfilesReview.tsx'), 'utf8')
 
 describe('Admin caregiver profile review', () => {
   it('exposes an admin route and sidebar entry for reviewing caregiver profiles', () => {
@@ -27,5 +28,19 @@ describe('Admin caregiver profile review', () => {
     expect(adminActionsSource).toContain('profile_complete')
     expect(adminActionsSource).toContain('is_visible')
     expect(adminActionsSource).toContain('neighborhood')
+  })
+
+  it('does not expose manual profile approval or improvement request buttons', () => {
+    expect(reviewSource).not.toContain('useAdminApprove')
+    expect(reviewSource).not.toContain('useAdminReject')
+    expect(reviewSource).not.toContain('RejectionDialog')
+    expect(reviewSource).not.toContain('Aprovar')
+    expect(reviewSource).not.toContain('Pedir melhoria')
+  })
+
+  it('keeps status filters readable inside the narrow admin sidebar column', () => {
+    expect(reviewSource).not.toContain('md:grid-cols-5')
+    expect(reviewSource).toContain('overflow-x-auto')
+    expect(reviewSource).toContain('whitespace-nowrap')
   })
 })

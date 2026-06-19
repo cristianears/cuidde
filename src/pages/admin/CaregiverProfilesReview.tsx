@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, BadgeCheck, CheckCircle2, FileText, MapPin, MessageCircle, Search, User, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileText, MessageCircle, Search, User } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
-import RejectionDialog from "@/components/admin/RejectionDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
-import { useAdminApprove, useAdminCaregiverDetail, useAdminCaregiverDocuments, useAdminCaregivers, useAdminReject } from "@/hooks/useAdmin";
+import { useAdminCaregiverDetail, useAdminCaregiverDocuments, useAdminCaregivers } from "@/hooks/useAdmin";
 import type { AdminCaregiverDetail, AdminCaregiverRow, AdminDocumentRow } from "@/hooks/useAdmin";
 import type { CaregiverStatus } from "@/types/database";
 
@@ -90,8 +89,7 @@ function CaregiverListItem({ caregiver, selected, onSelect }: { caregiver: Admin
   );
 }
 
-function ProfileDetail({ detail, documents, onReject }: { detail: AdminCaregiverDetail; documents: AdminDocumentRow[]; onReject: () => void }) {
-  const approve = useAdminApprove();
+function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; documents: AdminDocumentRow[] }) {
   const items = getReviewItems(detail, documents);
   const completed = items.filter((item) => item.done).length;
   const score = Math.round((completed / items.length) * 100);
@@ -126,12 +124,6 @@ function ProfileDetail({ detail, documents, onReject }: { detail: AdminCaregiver
                   </a>
                 </Button>
               )}
-              <Button size="sm" onClick={() => approve.mutate(detail.id)} disabled={approve.isPending || detail.status === "verified"}>
-                <BadgeCheck className="mr-2 h-4 w-4" /> Aprovar
-              </Button>
-              <Button variant="outline" size="sm" onClick={onReject}>
-                <XCircle className="mr-2 h-4 w-4" /> Pedir melhoria
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -199,11 +191,9 @@ const CaregiverProfilesReview = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [rejectingCaregiver, setRejectingCaregiver] = useState<AdminCaregiverDetail | null>(null);
   const { data: caregivers = [], isLoading } = useAdminCaregivers("all");
   const { data: detail, isLoading: loadingDetail } = useAdminCaregiverDetail(selectedId);
   const { data: documents = [], isLoading: loadingDocuments } = useAdminCaregiverDocuments(selectedId);
-  const reject = useAdminReject();
 
   const filteredCaregivers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -225,11 +215,6 @@ const CaregiverProfilesReview = () => {
     setSelectedId(filteredCaregivers[0]?.id ?? null);
   }, [filteredCaregivers, selectedId]);
 
-  const handleReject = (reason: string) => {
-    if (!rejectingCaregiver) return;
-    reject.mutate({ caregiverId: rejectingCaregiver.id, reason }, { onSuccess: () => setRejectingCaregiver(null) });
-  };
-
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar role="admin" userName="Administrador" />
@@ -243,10 +228,10 @@ const CaregiverProfilesReview = () => {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar por nome, telefone ou cidade" className="pl-9" />
               </div>
-              <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-                <TabsList className="grid h-auto w-full grid-cols-2 gap-1 md:grid-cols-5">
+              <Tabs value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)} className="min-w-0">
+                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto p-1">
                   {(Object.keys(STATUS_LABELS) as StatusFilter[]).map((status) => (
-                    <TabsTrigger key={status} value={status} className="text-xs">{STATUS_LABELS[status]} ({counts[status]})</TabsTrigger>
+                    <TabsTrigger key={status} value={status} className="shrink-0 whitespace-nowrap px-3 text-xs">{STATUS_LABELS[status]} ({counts[status]})</TabsTrigger>
                   ))}
                 </TabsList>
               </Tabs>
@@ -266,7 +251,7 @@ const CaregiverProfilesReview = () => {
           {selectedId && (loadingDetail || loadingDocuments) ? (
             <Card className="lg:col-span-2"><CardContent className="space-y-4 p-6"><Skeleton className="h-24 w-full" /><Skeleton className="h-64 w-full" /></CardContent></Card>
           ) : detail ? (
-            <ProfileDetail detail={detail} documents={documents} onReject={() => setRejectingCaregiver(detail)} />
+            <ProfileDetail detail={detail} documents={documents} />
           ) : (
             <Card className="flex min-h-[420px] items-center justify-center lg:col-span-2">
               <div className="text-center"><User className="mx-auto mb-3 h-10 w-10 text-muted-foreground" /><p className="text-sm text-muted-foreground">Selecione um cuidador para revisar o perfil.</p></div>
@@ -274,7 +259,6 @@ const CaregiverProfilesReview = () => {
           )}
         </div>
       </main>
-      <RejectionDialog open={!!rejectingCaregiver} caregiverName={rejectingCaregiver?.full_name ?? "cuidador"} onClose={() => setRejectingCaregiver(null)} onConfirm={handleReject} />
     </div>
   );
 };
