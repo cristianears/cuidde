@@ -25,35 +25,7 @@ import {
 import type { CaregiverDocument, DocumentType, ProfessionalRegType } from "@/types/database";
 import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
 import { recordUserConsents } from "@/lib/user-consents";
-
-// ─── Definições fixas de documentos ──────────────────────────────────────────
-
-const DOC_DEFINITIONS: { type: DocumentType; label: string; required: boolean; hint: string }[] = [
-  {
-    type: "rg_cnh",
-    label: "RG ou CNH",
-    required: true,
-    hint: "Envie frente e verso em uma única imagem ou PDF.",
-  },
-  {
-    type: "curriculo",
-    label: "Currículo",
-    required: false,
-    hint: "Formatos aceitos: PDF, JPG ou PNG.",
-  },
-  {
-    type: "certificacao",
-    label: "Certificações",
-    required: false,
-    hint: "Se tiver mais de uma, junte todas em um único PDF antes de enviar.",
-  },
-  {
-    type: "antecedentes",
-    label: "Antecedentes Criminais",
-    required: false,
-    hint: "Certidão negativa emitida nos últimos 90 dias. Junte federal e estadual em um único PDF.",
-  },
-];
+import { DOC_DEFINITIONS, buildDocumentSlots } from "./caregiverDocumentSlots";
 
 const UF_OPTIONS = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
@@ -62,25 +34,6 @@ const UF_OPTIONS = [
 ];
 
 type ProfessionalRegistrationType = "" | ProfessionalRegType;
-
-// ─── Documento vazio (slot sem upload ainda) ──────────────────────────────────
-
-function makeEmptyDoc(type: DocumentType, required: boolean): CaregiverDocument {
-  return {
-    id: `empty-${type}`,
-    caregiver_id: "",
-    type,
-    file_url: null,
-    file_name: null,
-    status: "pending",
-    is_visible: true,
-    required,
-    rejection_reason: null,
-    reviewed_at: null,
-    uploaded_at: null,
-    created_at: "",
-  };
-}
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
@@ -113,9 +66,7 @@ const CaregiverDocuments = () => {
   }, [profileData]);
 
   // ── Mapear slots de documentos ─────────────────────────────────────────────
-  const documents: CaregiverDocument[] = DOC_DEFINITIONS.map(({ type, required }) => {
-    return realDocs.find((d) => d.type === type) ?? makeEmptyDoc(type, required);
-  });
+  const documents = buildDocumentSlots(realDocs);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleAcceptDocumentConsent = async (checked: boolean) => {
