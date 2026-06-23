@@ -47,6 +47,7 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
   const [dismissedForSession, setDismissedForSession] = React.useState(false);
   const [pendingStepId, setPendingStepId] = React.useState<string | null>(null);
   const [storageVersion, setStorageVersion] = React.useState(0);
+  const [showCompletedGuide, setShowCompletedGuide] = React.useState(false);
   const videoUrl = onboardingVideoLinks[role].trim();
 
   const getNextStep = React.useCallback(
@@ -62,6 +63,7 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
   React.useEffect(() => {
     if (steps.length === 0) {
       setActiveStep(null);
+      setShowCompletedGuide(false);
       return;
     }
 
@@ -69,6 +71,7 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
       const pendingStep = steps.find((step) => step.id === pendingStepId);
       if (pendingStep && !pendingStep.done) {
         setActiveStep(null);
+        setShowCompletedGuide(false);
         return;
       }
       setPendingStepId(null);
@@ -76,17 +79,22 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
 
     if (dismissedForSession) {
       setActiveStep(null);
+      setShowCompletedGuide(false);
       return;
     }
 
     setActiveStep(getNextStep(false));
+    setShowCompletedGuide(false);
   }, [dismissedForSession, getNextStep, location.pathname, pendingStepId, steps, storageVersion]);
 
   const openGuide = React.useCallback(() => {
+    const nextStep = getNextStep(true);
+
     setDismissedForSession(false);
     setPendingStepId(null);
-    setActiveStep(getNextStep(true));
-  }, [getNextStep]);
+    setActiveStep(nextStep);
+    setShowCompletedGuide(!nextStep && steps.length > 0);
+  }, [getNextStep, steps.length]);
 
   React.useEffect(() => {
     window.addEventListener(ONBOARDING_GUIDE_OPEN_EVENT, openGuide);
@@ -96,6 +104,7 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
   const closeGuideForNow = () => {
     setDismissedForSession(true);
     setActiveStep(null);
+    setShowCompletedGuide(false);
   };
 
   const skipStep = () => {
@@ -122,18 +131,25 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
     window.open(videoUrl, "_blank", "noopener,noreferrer");
   };
 
-  if (!steps.some((step) => !step.done)) return null;
+  const dialogOpen = !!activeStep || showCompletedGuide;
+  const isCompletedGuide = showCompletedGuide && !activeStep;
+
+  if (steps.length === 0) return null;
 
   return (
     <>
-      <Dialog open={!!activeStep} onOpenChange={(open) => !open && closeGuideForNow()}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => !open && closeGuideForNow()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
               <User className="h-5 w-5" />
             </div>
-            <DialogTitle>{activeStep?.title}</DialogTitle>
-            <DialogDescription>{activeStep?.description}</DialogDescription>
+            <DialogTitle>{isCompletedGuide ? "Guia completo" : activeStep?.title}</DialogTitle>
+            <DialogDescription>
+              {isCompletedGuide
+                ? "Seu cadastro esta com as etapas principais em dia. Voce ainda pode rever o video ou fechar este guia."
+                : activeStep?.description}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="rounded-lg border border-border bg-muted/40 p-3">
@@ -141,10 +157,12 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {activeStep?.statusLabel} precisa de ajuste
+                  {isCompletedGuide ? "Tudo certo por agora" : `${activeStep?.statusLabel} precisa de ajuste`}
                 </p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {activeStep?.detail}
+                  {isCompletedGuide
+                    ? "Quando surgir uma nova pendencia, o guia volta a indicar o proximo passo."
+                    : activeStep?.detail}
                 </p>
               </div>
             </div>
@@ -162,14 +180,20 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
               <PlayCircle className="mr-2 h-4 w-4" />
               Ver vídeo
             </Button>
-            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
-              <Button variant="ghost" onClick={skipStep} className="w-full whitespace-normal">
-                Não mostrar esta etapa
+            {isCompletedGuide ? (
+              <Button onClick={closeGuideForNow} className="w-full">
+                Fechar
               </Button>
-              <Button onClick={goToStep} className="w-full">
-                Preencher
-              </Button>
-            </div>
+            ) : (
+              <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
+                <Button variant="ghost" onClick={skipStep} className="w-full whitespace-normal">
+                  Não mostrar esta etapa
+                </Button>
+                <Button onClick={goToStep} className="w-full">
+                  Preencher
+                </Button>
+              </div>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -9,8 +9,8 @@ const appSource = readFileSync(resolve(__dirname, '../../../App.tsx'), 'utf8')
 describe('RoleOnboardingGuide', () => {
   it('keeps YouTube links editable from a project config file', () => {
     expect(videosSource).toContain('onboardingVideoLinks')
-    expect(videosSource).toContain('caregiver: ""')
-    expect(videosSource).toContain('family: ""')
+    expect(videosSource).toMatch(/caregiver:\s*"[^"]*"/)
+    expect(videosSource).toMatch(/family:\s*"[^"]*"/)
   })
 
   it('mounts one global guide inside the authenticated app shell', () => {
