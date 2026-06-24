@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getFamilyOnboardingCompleteTarget,
+  getIncompleteOnboardingTarget,
   getLandingCepTarget,
   getLandingPlanTarget,
   getLoginRegisterTarget,
@@ -27,14 +28,32 @@ describe('landing CEP flow', () => {
     ).toBe('/family/search?cep=12236063')
   })
 
-  it('sends authenticated visitors without a loaded role to family search with the landing CEP', () => {
+  it('sends authenticated visitors without a completed role back to onboarding with the landing CEP', () => {
     expect(
       getLandingCepTarget({
         cepDigits: '12236063',
         isAuthenticated: true,
         role: null,
       }),
-    ).toBe('/family/search?cep=12236063')
+    ).toBe('/onboarding?from=google&type=family&cep=12236063&redirect=%2Ffamily%2Fsearch%3Fcep%3D12236063')
+  })
+
+  it('sends authenticated visitors without a completed role back to onboarding for paid plans', () => {
+    expect(
+      getLandingPlanTarget({
+        isAuthenticated: true,
+        role: null,
+        isPaidPlan: true,
+      }),
+    ).toBe('/onboarding?from=google&type=family&redirect=%2Ffamily%2Fbilling')
+  })
+
+  it('builds a safe onboarding target for incomplete authenticated profiles', () => {
+    expect(getIncompleteOnboardingTarget({
+      type: 'caregiver',
+      cep: '01001-000',
+      redirect: 'https://example.com/phishing',
+    })).toBe('/onboarding?from=google&type=caregiver&cep=01001-000')
   })
 
   it('sends authenticated caregivers to their dashboard', () => {

@@ -24,6 +24,12 @@ type FamilyOnboardingCompleteTargetParams = {
   cep?: string | null
 }
 
+type IncompleteOnboardingTargetParams = {
+  type?: string | null
+  cep?: string | null
+  redirect?: string | null
+}
+
 const roleHomePath: Record<UserRole, string> = {
   caregiver: '/caregiver',
   family: '/family',
@@ -43,12 +49,39 @@ function isSafeAppRedirect(redirect?: string | null): redirect is string {
     && !redirect.includes('://')
 }
 
+function isValidProfileType(type?: string | null): type is 'caregiver' | 'family' {
+  return type === 'caregiver' || type === 'family'
+}
+
+export function getIncompleteOnboardingTarget({
+  type,
+  cep,
+  redirect,
+}: IncompleteOnboardingTargetParams = {}): string {
+  const params = new URLSearchParams()
+  params.set('from', 'google')
+  if (isValidProfileType(type)) params.set('type', type)
+  if (cep) params.set('cep', cep)
+  if (isSafeAppRedirect(redirect)) params.set('redirect', redirect)
+
+  return `/onboarding?${params.toString()}`
+}
+
 export function getLandingCepTarget({
   cepDigits,
   isAuthenticated,
   role,
 }: LandingCepTargetParams): string {
   if (isAuthenticated) {
+    if (!role) {
+      const familySearchPath = getFamilySearchPath(cepDigits)
+      return getIncompleteOnboardingTarget({
+        type: 'family',
+        cep: cepDigits,
+        redirect: familySearchPath,
+      })
+    }
+
     if (role === 'caregiver' || role === 'admin') {
       return roleHomePath[role]
     }
@@ -88,6 +121,13 @@ export function getLandingPlanTarget({
   isPaidPlan,
 }: LandingPlanTargetParams): string {
   if (isAuthenticated) {
+    if (!role) {
+      return getIncompleteOnboardingTarget({
+        type: 'family',
+        redirect: isPaidPlan ? '/family/billing' : '/family',
+      })
+    }
+
     if (role === 'caregiver' || role === 'admin') {
       return roleHomePath[role]
     }

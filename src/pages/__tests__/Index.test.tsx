@@ -7,6 +7,7 @@ import Index from '../Index'
 
 const mockAuthState = vi.hoisted(() => ({
   user: null as { id: string } | null,
+  profile: null as { id: string, role: 'family' | 'caregiver' | 'admin' | null } | null,
   role: null as 'family' | 'caregiver' | 'admin' | null,
   isLoading: false,
 }))
@@ -44,6 +45,7 @@ function renderIndex() {
         <Route path="/family" element={<><div>Family Dashboard</div><LocationProbe /></>} />
         <Route path="/caregiver" element={<><div>Caregiver Dashboard</div><LocationProbe /></>} />
         <Route path="/admin" element={<><div>Admin Dashboard</div><LocationProbe /></>} />
+        <Route path="/onboarding" element={<><div>Complete seu cadastro</div><LocationProbe /></>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -52,6 +54,7 @@ function renderIndex() {
 describe('Index', () => {
   beforeEach(() => {
     mockAuthState.user = null
+    mockAuthState.profile = null
     mockAuthState.role = null
     mockAuthState.isLoading = false
   })
@@ -65,12 +68,23 @@ describe('Index', () => {
 
   it('redireciona usuario logado para o dashboard do perfil', () => {
     mockAuthState.user = { id: 'user-1' }
+    mockAuthState.profile = { id: 'user-1', role: 'family' }
     mockAuthState.role = 'family'
 
     renderIndex()
 
     expect(screen.getByText('Family Dashboard')).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/family')
+  })
+
+  it('redireciona usuario logado sem role para concluir o onboarding', async () => {
+    mockAuthState.user = { id: 'google-user' }
+    mockAuthState.profile = { id: 'google-user', role: null }
+
+    renderIndex()
+
+    expect(await screen.findByText('Complete seu cadastro')).toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent('/onboarding')
   })
 
   it('mostra Guias da icuide depois do FAQ na landing', () => {

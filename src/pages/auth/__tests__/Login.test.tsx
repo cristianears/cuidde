@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Login from '../Login'
 
 // Mock auth functions
@@ -15,12 +15,15 @@ vi.mock('@/lib/auth', () => ({
 }))
 
 // Mock AuthContext
+const mockAuthState = vi.hoisted(() => ({
+  user: null as { id: string } | null,
+  profile: null as { id: string, role: 'family' | 'caregiver' | 'admin' | null } | null,
+  role: null as 'family' | 'caregiver' | 'admin' | null,
+  isLoading: false,
+}))
+
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: null,
-    role: null,
-    isLoading: false,
-  }),
+  useAuth: () => mockAuthState,
 }))
 
 // Mock sonner
@@ -33,10 +36,13 @@ vi.mock('sonner', () => ({
   },
 }))
 
-function renderLogin() {
+function renderLogin(initialEntry = '/login') {
   return render(
-    <MemoryRouter initialEntries={['/login']}>
-      <Login />
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/onboarding" element={<div>Complete seu cadastro</div>} />
+      </Routes>
     </MemoryRouter>
   )
 }
@@ -44,6 +50,10 @@ function renderLogin() {
 describe('Login', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAuthState.user = null
+    mockAuthState.profile = null
+    mockAuthState.role = null
+    mockAuthState.isLoading = false
   })
 
   it('renders initial email view', () => {
@@ -54,6 +64,15 @@ describe('Login', () => {
     expect(screen.getByText('Avançar')).toBeInTheDocument()
     expect(screen.getByText('Cadastrar-se')).toBeInTheDocument()
     expect(screen.getByText('Google')).toBeInTheDocument()
+  })
+
+  it('sends authenticated users without a role back to onboarding', async () => {
+    mockAuthState.user = { id: 'google-user' }
+    mockAuthState.profile = { id: 'google-user', role: null }
+
+    renderLogin('/login?redirect=%2Ffamily%2Fbilling&type=family')
+
+    expect(await screen.findByText('Complete seu cadastro')).toBeInTheDocument()
   })
 
   it('disables Avançar button when email is invalid', () => {

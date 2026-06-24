@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { signInWithEmail, signInWithGoogle, resetPasswordForEmail } from '@/lib/auth'
 import { useAuth } from '@/contexts/AuthContext'
-import { getLoginRegisterTarget } from '@/lib/landing-cep-flow'
+import { getIncompleteOnboardingTarget, getLoginRegisterTarget } from '@/lib/landing-cep-flow'
 import { toast } from 'sonner'
 
 type View = 'email' | 'password'
@@ -25,7 +25,7 @@ const GoogleLogo = () => (
 export default function Login() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user, role, isLoading } = useAuth()
+  const { user, profile, role, isLoading } = useAuth()
 
   const [view, setView] = useState<View>('email')
   const [email, setEmail] = useState('')
@@ -52,6 +52,15 @@ export default function Login() {
   useEffect(() => {
     if (isLoading) return
 
+    if (user && profile && !role) {
+      navigate(getIncompleteOnboardingTarget({
+        type: typeRef.current,
+        cep: cepRef.current,
+        redirect: redirectRef.current,
+      }), { replace: true })
+      return
+    }
+
     // Só redireciona se: já estava logado OU acabou de logar com sucesso
     if (user && (loginSuccess || role)) {
       const redirect = redirectRef.current
@@ -70,7 +79,7 @@ export default function Login() {
       // Se user existe mas role ainda é null, espera o próximo render
       // (o AuthContext ainda está carregando o profile)
     }
-  }, [user, role, isLoading, loginSuccess, navigate])
+  }, [user, profile, role, isLoading, loginSuccess, navigate])
 
   function goToRegister() {
     navigate(getLoginRegisterTarget({

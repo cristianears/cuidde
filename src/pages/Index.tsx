@@ -16,6 +16,7 @@ import FinalCTA from "@/components/FinalCTA";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { getIncompleteOnboardingTarget } from "@/lib/landing-cep-flow";
 import type { UserRole } from "@/types/database";
 
 const roleHomeMap: Record<UserRole, string> = {
@@ -25,7 +26,7 @@ const roleHomeMap: Record<UserRole, string> = {
 };
 
 const Index = () => {
-  const { user, role, isLoading } = useAuth();
+  const { user, profile, role, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -37,6 +38,10 @@ const Index = () => {
 
   if (user && role) {
     return <Navigate to={roleHomeMap[role]} replace />;
+  }
+
+  if (user && profile && !role) {
+    return <Navigate to={getIncompleteOnboardingTarget()} replace />;
   }
 
   return (

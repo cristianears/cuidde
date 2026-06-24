@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { getIncompleteOnboardingTarget } from '@/lib/landing-cep-flow'
 import type { UserRole } from '@/types/database'
 
 interface ProtectedRouteProps {
@@ -40,6 +41,19 @@ export default function ProtectedRoute({ children, role }: ProtectedRouteProps) 
   // Autenticado mas email não confirmado → /verify-email
   if (user && !user.email_confirmed_at) {
     return <Navigate to="/verify-email" replace />
+  }
+
+  if (profile && !profile.role) {
+    const currentPath = `${location.pathname}${location.search}`
+    const cep = new URLSearchParams(location.search).get('cep')
+    const type = role === 'caregiver' || role === 'family' ? role : null
+
+    return (
+      <Navigate
+        to={getIncompleteOnboardingTarget({ type, cep, redirect: currentPath })}
+        replace
+      />
+    )
   }
 
   // Role mismatch: redireciona para a home correta do role do usuário
