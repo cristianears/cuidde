@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, MapPin, Briefcase, Star, Clock, CalendarClock, Shield, Car,
   Award, FileCheck, FileText, User, BadgeCheck, Zap, Globe, Heart, Send,
-  GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock,
+  GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock, ExternalLink,
 } from "lucide-react"
 import AppSidebar from "@/components/shared/AppSidebar"
 import StarRating from "@/components/shared/StarRating"
@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -131,7 +132,7 @@ const CaregiverPublicProfile = () => {
         return
       }
       const blobUrl = URL.createObjectURL(data)
-      const isPdf = fileUrl.toLowerCase().endsWith('.pdf')
+      const isPdf = data.type === 'application/pdf' || fileUrl.toLowerCase().endsWith('.pdf')
       setViewingDoc({ url: blobUrl, name: fileName ?? 'Documento', isPdf })
     } finally {
       setLoadingDocId(null)
@@ -785,14 +786,27 @@ const CaregiverPublicProfile = () => {
             <DialogTitle className="text-sm font-medium truncate pr-8">
               {viewingDoc?.name}
             </DialogTitle>
+            {viewingDoc?.isPdf && (
+              <DialogDescription className="text-xs">
+                Se o PDF não aparecer abaixo, abra em uma nova aba.
+              </DialogDescription>
+            )}
           </DialogHeader>
           <div className="flex-1 overflow-hidden px-4 pb-4">
             {viewingDoc?.isPdf ? (
-              <iframe
-                src={`${viewingDoc.url}#toolbar=0&navpanes=0&scrollbar=1`}
-                className="w-full h-full rounded-lg border"
-                title={viewingDoc.name}
-              />
+              <div className="flex h-full flex-col gap-2">
+                <iframe
+                  src={`${viewingDoc.url}#toolbar=0&navpanes=0&scrollbar=1`}
+                  className="min-h-0 flex-1 w-full rounded-lg border"
+                  title={viewingDoc.name}
+                />
+                <Button asChild variant="outline" size="sm" className="w-full sm:w-auto self-start gap-2">
+                  <a href={viewingDoc.url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="w-4 h-4" />
+                    Abrir PDF em nova aba
+                  </a>
+                </Button>
+              </div>
             ) : (
               <div className="w-full h-full flex items-center justify-center overflow-auto">
                 <img
