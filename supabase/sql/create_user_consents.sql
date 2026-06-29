@@ -21,13 +21,13 @@ create policy "Users can read own consents"
   on public.user_consents
   for select
   to authenticated
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 drop policy if exists "Users can insert own consents" on public.user_consents;
 create policy "Users can insert own consents"
   on public.user_consents
   for insert
   to authenticated
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 grant select, insert on public.user_consents to authenticated;

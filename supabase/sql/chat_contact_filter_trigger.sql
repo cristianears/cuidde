@@ -2,6 +2,7 @@ create or replace function public.sanitize_chat_contact_content(p_content text)
 returns text
 language plpgsql
 immutable
+set search_path = public, pg_temp
 as $$
 declare
   v_content text := coalesce(p_content, '');
@@ -18,7 +19,7 @@ create or replace function public.apply_chat_contact_filter()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, pg_temp
 as $$
 declare
   v_should_filter boolean := false;
@@ -44,3 +45,5 @@ create trigger messages_contact_filter
   on public.messages
   for each row
   execute function public.apply_chat_contact_filter();
+
+revoke execute on function public.apply_chat_contact_filter() from public, anon, authenticated;
