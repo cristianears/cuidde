@@ -104,6 +104,7 @@ const CaregiverProfile = () => {
   const uploadPhoto = useUploadCaregiverPhoto()
 
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const profileFormRef = useRef<HTMLDivElement>(null)
   const hydratedProfileIdRef = useRef<string | null>(null)
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -398,6 +399,13 @@ const CaregiverProfile = () => {
   const nextProfileStep = profileGuide.nextStep
   const profileGuideProgress = Math.round((profileGuide.completedCount / profileGuide.totalSteps) * 100)
 
+  function handleProfileStepChange(stepId: number) {
+    setCurrentStep(stepId)
+    window.requestAnimationFrame(() => {
+      profileFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
+
   const toggleSpecialty = (specialty: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -528,7 +536,7 @@ const CaregiverProfile = () => {
                 <Button
                   type="button"
                   size="sm"
-                  onClick={() => setCurrentStep(nextProfileStep.id)}
+                  onClick={() => handleProfileStepChange(nextProfileStep.id)}
                   className="w-full min-w-0 shrink-0 gap-2 text-xs md:w-auto"
                 >
                   {nextProfileStep.actionLabel}
@@ -553,7 +561,7 @@ const CaregiverProfile = () => {
                   key={step.id}
                   type="button"
                   aria-pressed={currentStep === step.id}
-                  onClick={() => setCurrentStep(step.id)}
+                  onClick={() => handleProfileStepChange(step.id)}
                   className={cn(
                     "min-h-[132px] min-w-0 rounded-lg border p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4",
                     statusStyle.card,
@@ -589,7 +597,7 @@ const CaregiverProfile = () => {
           onChange={handlePhotoChange}
         />
 
-        <div className="max-w-4xl">
+        <div ref={profileFormRef} className="max-w-4xl scroll-mt-4 md:scroll-mt-6">
           {/* STEP 1 — Dados básicos */}
           {currentStep === 1 && (
             <Card className="animate-fade-in">
@@ -1282,7 +1290,7 @@ const CaregiverProfile = () => {
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 md:mt-6">
             <Button
               variant="outline"
-              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+              onClick={() => handleProfileStepChange(Math.max(1, currentStep - 1))}
               disabled={currentStep === 1}
               className="min-w-0 flex-1 text-xs sm:flex-none md:text-sm"
             >
@@ -1303,7 +1311,7 @@ const CaregiverProfile = () => {
             </Button>
 
             <Button
-              onClick={() => setCurrentStep(Math.min(profileSteps.length, currentStep + 1))}
+              onClick={() => handleProfileStepChange(Math.min(profileSteps.length, currentStep + 1))}
               disabled={currentStep === profileSteps.length}
               className="min-w-0 flex-1 bg-primary text-xs hover:bg-primary/90 sm:flex-none md:text-sm"
             >

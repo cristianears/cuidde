@@ -19,4 +19,10 @@ describe('CaregiverProfile contact field', () => {
     expect(source).toContain('references: 4')
     expect(source).toContain('setCurrentStep(requestedStep)')
   })
+
+  it('scrolls to the form content when a profile guide step is selected', () => {
+    expect(source).toContain('profileFormRef')
+    expect(source).toContain('handleProfileStepChange')
+    expect(source).toContain('scrollIntoView')
+  })
 })
