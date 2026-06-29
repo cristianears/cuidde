@@ -12,10 +12,13 @@ import {
   Car,
   GraduationCap,
   Globe,
+  CheckCircle2,
+  CircleAlert,
+  CircleDashed,
+  ArrowRight,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
-import Stepper from "@/components/shared/Stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +49,7 @@ import {
 import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
 import { recordUserConsents } from "@/lib/user-consents";
 import { useSearchParams } from "react-router-dom";
+import { buildCaregiverProfileGuide, type CaregiverProfileGuideStatus } from "./caregiverProfileGuide";
 
 const profileSteps = [
   { id: 1, title: "Dados básicos" },
@@ -59,6 +63,28 @@ const PROFILE_STEP_BY_QUERY: Record<string, number> = {
   specialties: 3,
   references: 4,
 };
+
+const profileGuideStatusStyles: Record<CaregiverProfileGuideStatus, {
+  card: string
+  icon: string
+  badge: string
+}> = {
+  complete: {
+    card: "border-emerald-200 bg-emerald-50/60 hover:border-emerald-300",
+    icon: "bg-emerald-100 text-emerald-700",
+    badge: "bg-emerald-100 text-emerald-800 border-emerald-200",
+  },
+  pending: {
+    card: "border-amber-200 bg-amber-50/70 hover:border-amber-300",
+    icon: "bg-amber-100 text-amber-700",
+    badge: "bg-amber-100 text-amber-800 border-amber-200",
+  },
+  optional: {
+    card: "border-sky-200 bg-sky-50/60 hover:border-sky-300",
+    icon: "bg-sky-100 text-sky-700",
+    badge: "bg-sky-100 text-sky-800 border-sky-200",
+  },
+}
 
 type NewRef = Omit<ProfessionalReference, 'id' | 'caregiver_id' | 'created_at'>
 type ProfessionFormValue = "" | "cuidador" | "tecnico_enfermagem" | "auxiliar_enfermagem" | "enfermeiro" | "fisioterapeuta" | "terapeuta_ocupacional" | "outro"
@@ -355,6 +381,23 @@ const CaregiverProfile = () => {
     updateSpecialties.isPending ||
     updateReferences.isPending
 
+  const profileGuide = buildCaregiverProfileGuide({
+    name: formData.name,
+    phone: formData.phone,
+    cep: formData.cep,
+    street: formData.street,
+    number: formData.number,
+    neighborhood: formData.neighborhood,
+    city: formData.city,
+    state: formData.state,
+    bio: formData.bio,
+    profissaoFormacao: formData.profissaoFormacao,
+    specialties: formData.specialties,
+    referencesCount: references.length,
+  })
+  const nextProfileStep = profileGuide.nextStep
+  const profileGuideProgress = Math.round((profileGuide.completedCount / profileGuide.totalSteps) * 100)
+
   const toggleSpecialty = (specialty: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -447,12 +490,94 @@ const CaregiverProfile = () => {
         userPhoto={profileData?.photo_url ?? undefined}
       />
 
-      <main className="flex-1 p-4 md:p-6 lg:p-8">
+      <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8">
         <PageHeader title="Meu Perfil" description="Gerencie suas informações pessoais e profissionais" />
 
-        {/* Steps */}
-        <div className="mb-6 md:mb-8">
-          <Stepper steps={profileSteps} currentStep={currentStep} onStepClick={setCurrentStep} />
+        {/* Guia de preenchimento */}
+        <div className="mb-6 max-w-4xl space-y-3 md:mb-8">
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm md:p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground">Guia do perfil</p>
+                <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground md:text-sm">
+                  Complete as etapas para deixar seu perfil mais claro e confiável para as famílias.
+                </p>
+              </div>
+              <Badge variant="outline" className="w-fit shrink-0 text-xs">
+                {profileGuide.completedCount} de {profileGuide.totalSteps} etapas em dia
+              </Badge>
+            </div>
+
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${profileGuideProgress}%` }}
+              />
+            </div>
+
+            {nextProfileStep && (
+              <div className="mt-4 flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {nextProfileStep.status === "optional" ? "Diferencial recomendado" : "Próximo passo"}: {nextProfileStep.title}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    {nextProfileStep.helperText}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextProfileStep.id)}
+                  className="w-full min-w-0 shrink-0 gap-2 text-xs md:w-auto"
+                >
+                  {nextProfileStep.actionLabel}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {profileGuide.steps.map((step) => {
+              const statusStyle = profileGuideStatusStyles[step.status]
+              const StatusIcon =
+                step.status === "complete"
+                  ? CheckCircle2
+                  : step.status === "pending"
+                    ? CircleAlert
+                    : CircleDashed
+
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  aria-pressed={currentStep === step.id}
+                  onClick={() => setCurrentStep(step.id)}
+                  className={cn(
+                    "min-h-[132px] min-w-0 rounded-lg border p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4",
+                    statusStyle.card,
+                    currentStep === step.id && "border-primary bg-card ring-2 ring-primary/20",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-full", statusStyle.icon)}>
+                      <StatusIcon className="h-4 w-4" />
+                    </div>
+                    <Badge variant="outline" className={cn("max-w-[8.75rem] min-w-0 whitespace-normal break-words text-center text-[11px] leading-tight [overflow-wrap:anywhere]", statusStyle.badge)}>
+                      {step.statusLabel}
+                    </Badge>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                    <p className="mt-1 break-words text-xs leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                      {step.helperText}
+                    </p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Hidden file input for photo upload */}
@@ -1154,12 +1279,12 @@ const CaregiverProfile = () => {
           )}
 
           {/* Step Navigation */}
-          <div className="flex items-center justify-between mt-4 md:mt-6 gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 md:mt-6">
             <Button
               variant="outline"
               onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
               disabled={currentStep === 1}
-              className="text-xs md:text-sm"
+              className="min-w-0 flex-1 text-xs sm:flex-none md:text-sm"
             >
               Anterior
             </Button>
@@ -1167,7 +1292,7 @@ const CaregiverProfile = () => {
             <Button
               onClick={handleSaveAllVisibleSteps}
               disabled={isSaving}
-              className="gap-2 bg-accent hover:bg-accent/90 text-xs md:text-sm"
+              className="order-3 w-full gap-2 bg-accent text-xs hover:bg-accent/90 sm:order-none sm:w-auto md:text-sm"
             >
               {isSaving ? (
                 <div className="w-3.5 h-3.5 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
@@ -1180,7 +1305,7 @@ const CaregiverProfile = () => {
             <Button
               onClick={() => setCurrentStep(Math.min(profileSteps.length, currentStep + 1))}
               disabled={currentStep === profileSteps.length}
-              className="bg-primary hover:bg-primary/90 text-xs md:text-sm"
+              className="min-w-0 flex-1 bg-primary text-xs hover:bg-primary/90 sm:flex-none md:text-sm"
             >
               Próximo
             </Button>
