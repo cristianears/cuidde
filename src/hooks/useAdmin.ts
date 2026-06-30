@@ -148,6 +148,14 @@ export function useAdminCaregivers(status: AdminCaregiverStatusFilter) {
   })
 }
 
+export function useAdminReviewCaregivers() {
+  return useQuery({
+    queryKey: queryKeys.adminReviewCaregivers,
+    queryFn: () => callAdminAction<AdminCaregiverRow[]>('list_review_caregivers'),
+    staleTime: 30_000,
+  })
+}
+
 export function useAdminCaregiverDetail(id: string | null) {
   return useQuery({
     queryKey: queryKeys.adminCaregiverDetail(id ?? ''),

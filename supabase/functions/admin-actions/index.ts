@@ -89,6 +89,50 @@ serve(async (req) => {
     return json({ data }, 200, cors)
   }
 
+  // ─── list_review_caregivers ───────────────────────────────────────────────
+  if (action === 'list_review_caregivers') {
+    const { data: sentDocs, error: docsError } = await supabase
+      .from('caregiver_documents')
+      .select('caregiver_id')
+      .eq('status', 'sent')
+
+    if (docsError) return json({ error: docsError.message }, 500, cors)
+
+    const documentCaregiverIds = [
+      ...new Set((sentDocs ?? []).map((doc: any) => doc.caregiver_id).filter(Boolean)),
+    ] as string[]
+
+    let query = supabase
+      .from('caregiver_profiles')
+      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible')
+      .order('created_at', { ascending: false })
+
+    if (documentCaregiverIds.length > 0) {
+      query = query.or(`status.eq.pending,id.in.(${documentCaregiverIds.join(',')})`)
+    } else {
+      query = query.eq('status', 'pending')
+    }
+
+    const { data: cps, error } = await query
+    if (error) return json({ error: error.message }, 500, cors)
+    if (!cps?.length) return json({ data: [] }, 200, cors)
+
+    const ids = cps.map((r: any) => r.id)
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, full_name, phone')
+      .in('id', ids)
+    const profileMap: Record<string, any> = {}
+    for (const p of profiles ?? []) profileMap[p.id] = p
+
+    const data = cps.map((r: any) => ({
+      ...r,
+      full_name: profileMap[r.id]?.full_name ?? null,
+      phone: profileMap[r.id]?.phone ?? null,
+    }))
+    return json({ data }, 200, cors)
+  }
+
   // ─── get_caregiver_detail ─────────────────────────────────────────────────
   if (action === 'get_caregiver_detail') {
     const { caregiver_id } = body

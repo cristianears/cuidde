@@ -43,6 +43,7 @@ export const queryKeys = {
   // ─── Admin ────────────────────────────────────────────────────────────────
   adminCaregiversRoot: ['admin', 'caregivers'] as const,
   adminCaregivers: (status: string) => ['admin', 'caregivers', status] as const,
+  adminReviewCaregivers: ['admin', 'caregivers', 'review'] as const,
   adminCaregiverDetail: (id: string) => ['admin', 'caregiver', id] as const,
   adminCaregiverDocuments: (id: string) => ['admin', 'documents', id] as const,
   adminCaregiverCounts: ['admin', 'counts'] as const,

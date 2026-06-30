@@ -6,16 +6,13 @@ import ApprovalCaregiverList, { ApprovalListSkeleton } from "@/components/admin/
 import ApprovalDetailPanel, { DetailPanelSkeleton } from "@/components/admin/ApprovalDetailPanel";
 import { Card } from "@/components/ui/card";
 import {
-  useAdminCaregivers,
+  useAdminReviewCaregivers,
   useAdminCaregiverDetail,
   useAdminCaregiverDocuments,
   useAdminCaregiverCounts,
 } from "@/hooks/useAdmin";
 import type { AdminCaregiverRow, AdminCaregiverDetail } from "@/hooks/useAdmin";
 import type { Caregiver } from "@/data/mockData";
-import type { CaregiverStatus } from "@/types/database";
-
-type ApprovalTab = "pending";
 
 const PROFISSAO_LABEL: Record<string, string> = {
   cuidador: "Cuidador",
@@ -68,7 +65,7 @@ function toMockCaregiver(row: AdminCaregiverRow, detail?: AdminCaregiverDetail):
 const ApprovalQueue = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const { data: caregivers = [], isLoading: loadingList } = useAdminCaregivers("pending" as CaregiverStatus);
+  const { data: caregivers = [], isLoading: loadingList } = useAdminReviewCaregivers();
   const { data: detail, isLoading: loadingDetail } = useAdminCaregiverDetail(selectedId);
   const { data: documents = [], isLoading: loadingDocs } = useAdminCaregiverDocuments(selectedId);
   const { data: counts } = useAdminCaregiverCounts();
@@ -77,7 +74,7 @@ const ApprovalQueue = () => {
   const selectedCaregiver = selectedRow ? toMockCaregiver(selectedRow, detail) : null;
   const mockCaregivers: Caregiver[] = caregivers.map((c) => toMockCaregiver(c));
 
-  const pendingCount   = counts?.["pending"]   ?? caregivers.length;
+  const reviewCount = caregivers.length;
   const analyzingCount = counts?.["analyzing"] ?? 0;
 
   return (
@@ -87,16 +84,16 @@ const ApprovalQueue = () => {
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader
           title="Revisões"
-          description="Revisão de documentos de identificação dos cuidadores"
+          description="Revise documentos obrigatórios e opcionais enviados pelos cuidadores"
         />
 
         <div className="mt-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">Pendentes</span>
-              {pendingCount > 0 && (
+              <span className="text-sm font-medium text-foreground">Para revisar</span>
+              {reviewCount > 0 && (
                 <span className="text-[11px] bg-muted px-1.5 py-0.5 rounded-full">
-                  {pendingCount}
+                  {reviewCount}
                 </span>
               )}
             </div>
@@ -119,7 +116,7 @@ const ApprovalQueue = () => {
                 caregivers={mockCaregivers}
                 selectedId={selectedId}
                 onSelect={(c) => setSelectedId(c.id)}
-                tabLabel="Pendentes"
+                tabLabel="Para revisar"
               />
             )}
 
