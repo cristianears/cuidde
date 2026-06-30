@@ -30,4 +30,28 @@ describe('DocumentUpload', () => {
 
     expect(screen.getByText('.pdf')).toHaveClass('whitespace-nowrap')
   })
+
+  it('shows a view action for uploaded documents', () => {
+    render(
+      <DocumentUpload
+        document={documentBase}
+        label="Antecedentes Criminais"
+        onView={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /visualizar/i })).toBeVisible()
+  })
+
+  it('keeps approved caregiver documents labeled as sent', () => {
+    render(
+      <DocumentUpload
+        document={{ ...documentBase, status: 'approved' }}
+        label="Antecedentes Criminais"
+      />,
+    )
+
+    expect(screen.getByText('Enviado')).toBeVisible()
+    expect(screen.queryByText('Aprovado')).not.toBeInTheDocument()
+  })
 })

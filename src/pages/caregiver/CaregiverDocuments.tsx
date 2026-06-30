@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FileText, AlertCircle, CheckCircle2, Briefcase, Eye, EyeOff, Lock, Users, ShieldCheck, Loader2 } from "lucide-react";
+import { FileText, AlertCircle, CheckCircle2, Briefcase, Eye, EyeOff, Lock, Users, ShieldCheck, Loader2, ExternalLink } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import DocumentUpload from "@/components/shared/DocumentUpload";
@@ -11,8 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
 import {
@@ -34,6 +42,11 @@ const UF_OPTIONS = [
 ];
 
 type ProfessionalRegistrationType = "" | ProfessionalRegType;
+type ViewingDocument = {
+  url: string;
+  name: string;
+  isPdf: boolean;
+};
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
@@ -53,6 +66,8 @@ const CaregiverDocuments = () => {
   const [otherRegistrationDesc, setOtherRegistrationDesc] = useState("");
   const [hasAcceptedDocumentConsent, setHasAcceptedDocumentConsent] = useState(false);
   const [isSavingDocumentConsent, setIsSavingDocumentConsent] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState<ViewingDocument | null>(null);
+  const [loadingPreviewId, setLoadingPreviewId] = useState<string | null>(null);
 
   const documentConsentAccepted = hasAcceptedThirdPartyConsent || hasAcceptedDocumentConsent;
 
@@ -64,6 +79,12 @@ const CaregiverDocuments = () => {
     setRegistrationUF(profileData.professional_reg_uf ?? "");
     setOtherRegistrationDesc(profileData.professional_reg_other_desc ?? "");
   }, [profileData]);
+
+  useEffect(() => {
+    return () => {
+      if (viewingDoc?.url.startsWith("blob:")) URL.revokeObjectURL(viewingDoc.url);
+    };
+  }, [viewingDoc?.url]);
 
   // ── Mapear slots de documentos ─────────────────────────────────────────────
   const documents = buildDocumentSlots(realDocs);
@@ -102,6 +123,33 @@ const CaregiverDocuments = () => {
   const handleRemove = (doc: CaregiverDocument) => {
     if (doc.id.startsWith("empty-")) return;
     removeDocument.mutate(doc);
+  };
+
+  const handleViewDocument = async (doc: CaregiverDocument) => {
+    if (!doc.file_url || doc.id.startsWith("empty-")) return;
+
+    setLoadingPreviewId(doc.id);
+    try {
+      const { data, error } = await supabase.storage.from("documents").download(doc.file_url);
+      if (error || !data) throw error ?? new Error("Documento não encontrado.");
+
+      const url = URL.createObjectURL(data);
+      const lowerName = (doc.file_name ?? doc.file_url).toLowerCase();
+      setViewingDoc({
+        url,
+        name: doc.file_name ?? "Documento",
+        isPdf: data.type === "application/pdf" || lowerName.endsWith(".pdf"),
+      });
+    } catch {
+      toast.error("Não foi possível abrir o documento. Tente novamente.");
+    } finally {
+      setLoadingPreviewId(null);
+    }
+  };
+
+  const handleClosePreview = () => {
+    if (viewingDoc?.url.startsWith("blob:")) URL.revokeObjectURL(viewingDoc.url);
+    setViewingDoc(null);
   };
 
   const handleToggleVisibility = (doc: CaregiverDocument, checked: boolean) => {
@@ -265,7 +313,9 @@ const CaregiverDocuments = () => {
                       label={def.label}
                       hint={def.hint}
                       onUpload={handleUpload}
+                      onView={handleViewDocument}
                       onRemove={handleRemove}
+                      isViewing={loadingPreviewId === doc.id}
                     />
                   );
                 })}
@@ -492,6 +542,46 @@ const CaregiverDocuments = () => {
           </div>
         )}
       </main>
+
+      <Dialog open={!!viewingDoc} onOpenChange={(open) => !open && handleClosePreview()}>
+        <DialogContent className="flex h-[85vh] w-[95vw] max-w-3xl flex-col p-0">
+          <DialogHeader className="shrink-0 px-4 pb-2 pt-4">
+            <DialogTitle className="truncate pr-8 text-sm font-medium">
+              {viewingDoc?.name}
+            </DialogTitle>
+            {viewingDoc?.isPdf && (
+              <DialogDescription className="text-xs">
+                Se o PDF não aparecer abaixo, abra em uma nova aba.
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="min-w-0 flex-1 overflow-hidden px-4 pb-4">
+            {viewingDoc?.isPdf ? (
+              <div className="flex h-full min-h-0 flex-col gap-2">
+                <iframe
+                  src={`${viewingDoc.url}#toolbar=0&navpanes=0&scrollbar=1`}
+                  className="min-h-0 w-full flex-1 rounded-lg border"
+                  title={viewingDoc.name}
+                />
+                <Button asChild variant="outline" size="sm" className="w-full gap-2 sm:w-auto sm:self-start">
+                  <a href={viewingDoc.url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                    Abrir PDF em nova aba
+                  </a>
+                </Button>
+              </div>
+            ) : (
+              <div className="flex h-full w-full items-center justify-center overflow-auto">
+                <img
+                  src={viewingDoc?.url}
+                  alt={viewingDoc?.name}
+                  className="max-h-full max-w-full object-contain"
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

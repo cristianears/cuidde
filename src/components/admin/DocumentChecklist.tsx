@@ -20,22 +20,20 @@ import {
 import { useAdminDocumentUrl, useAdminApproveDocument, useAdminMarkDocumentIllegible } from "@/hooks/useAdmin";
 import type { AdminDocumentRow } from "@/hooks/useAdmin";
 
-const REQUIRED_DOCS = [
+const REVIEW_DOCS = [
   { type: "rg_cnh", label: "RG ou CNH" },
+  { type: "curriculo", label: "Currículo" },
+  { type: "certificacao", label: "Certificações" },
+  { type: "antecedentes", label: "Antecedentes Criminais" },
 ];
 
-type DisplayStatus = "enviado" | "ausente" | "ilegível" | "aprovado" | "reprovado";
+type DisplayStatus = "enviado" | "ausente" | "ilegível" | "aprovado";
 
 function getDisplayStatus(doc: AdminDocumentRow | undefined): DisplayStatus {
   if (!doc || !doc.uploaded_at) return "ausente";
   if (doc.status === "approved") return "aprovado";
   if (doc.status === "sent") return "enviado";
-  if (doc.status === "rejected") {
-    if (doc.rejection_reason?.toLowerCase().includes("legível") || doc.rejection_reason?.toLowerCase().includes("borrada")) {
-      return "ilegível";
-    }
-    return "reprovado";
-  }
+  if (doc.status === "rejected") return "ilegível";
   return "ausente";
 }
 
@@ -59,11 +57,6 @@ const statusDisplay: Record<DisplayStatus, { label: string; className: string; i
     label: "Aprovado",
     className: "bg-emerald-50 text-emerald-700 border-emerald-200",
     icon: <CheckCircle2 className="w-3.5 h-3.5" />,
-  },
-  reprovado: {
-    label: "Reprovado",
-    className: "bg-red-50 text-red-700 border-red-200",
-    icon: <XCircle className="w-3.5 h-3.5" />,
   },
 };
 
@@ -115,7 +108,7 @@ const DocumentChecklist = ({ caregiverId, documents }: DocumentChecklistProps) =
   return (
     <>
       <div className="space-y-2">
-        {REQUIRED_DOCS.map((req) => {
+        {REVIEW_DOCS.map((req) => {
           const doc = documents.find(
             (d) => d.type === req.type || (req.type === "rg_cnh" && d.type === "rg")
           );
@@ -128,7 +121,7 @@ const DocumentChecklist = ({ caregiverId, documents }: DocumentChecklistProps) =
           return (
             <div
               key={req.type}
-              className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/50"
+              className="flex flex-col gap-3 rounded-xl border border-border/50 bg-muted/40 p-3 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <FileText className="w-4.5 h-4.5 text-muted-foreground shrink-0" />
@@ -150,7 +143,7 @@ const DocumentChecklist = ({ caregiverId, documents }: DocumentChecklistProps) =
                 </div>
               </div>
 
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex w-full flex-wrap items-center gap-1.5 sm:w-auto sm:justify-end">
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${config.className}`}
                 >

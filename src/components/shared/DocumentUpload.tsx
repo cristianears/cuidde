@@ -1,4 +1,4 @@
-import { Upload, FileText, Check, X, AlertCircle, Clock, Camera } from "lucide-react";
+import { Upload, FileText, Check, X, AlertCircle, Clock, Camera, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CaregiverDocument } from "@/types/database";
@@ -8,7 +8,9 @@ interface DocumentUploadProps {
   label: string;
   hint?: string;
   onUpload?: (docType: CaregiverDocument["type"], file: File) => void;
+  onView?: (doc: CaregiverDocument) => void;
   onRemove?: (doc: CaregiverDocument) => void;
+  isViewing?: boolean;
   className?: string;
 }
 
@@ -23,7 +25,7 @@ function splitFileName(fileName: string) {
   };
 }
 
-const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }: DocumentUploadProps) => {
+const DocumentUpload = ({ document, label, hint, onUpload, onView, onRemove, isViewing, className }: DocumentUploadProps) => {
   const statusConfig = {
     pending: {
       icon: <Upload className="w-5 h-5" />,
@@ -51,9 +53,9 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
     },
   };
 
-  const isRgCnh = document.type === 'rg_cnh';
-  const config = statusConfig[document.status];
+  const config = document.status === 'approved' ? statusConfig.sent : statusConfig[document.status];
   const fileNameParts = document.file_name ? splitFileName(document.file_name) : null;
+  const canView = !!document.file_url && (document.status === 'sent' || document.status === 'approved');
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -94,7 +96,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
               {config.icon}
               {document.status === 'pending' && 'Pendente'}
               {document.status === 'sent' && 'Enviado'}
-              {document.status === 'approved' && (isRgCnh ? 'Legível' : 'Aprovado')}
+              {document.status === 'approved' && 'Enviado'}
               {document.status === 'rejected' && 'Rejeitado'}
             </span>
           </div>
@@ -126,7 +128,7 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
           )}
         </div>
 
-        <div className="flex shrink-0 flex-row gap-1.5 sm:flex-col">
+        <div className="flex shrink-0 flex-row flex-wrap gap-1.5 sm:flex-col">
           {(document.status === 'pending' || document.status === 'rejected') && (() => {
             const isRejected = document.status === 'rejected';
             const btnClass = isRejected
@@ -169,15 +171,32 @@ const DocumentUpload = ({ document, label, hint, onUpload, onRemove, className }
             );
           })()}
 
-          {(document.status === 'sent' || document.status === 'approved') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onRemove?.(document)}
-              className="text-muted-foreground hover:text-destructive"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+          {canView && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onView?.(document)}
+                disabled={isViewing}
+                className="gap-2"
+              >
+                {isViewing ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+                Visualizar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onRemove?.(document)}
+                className="text-muted-foreground hover:text-destructive"
+                aria-label="Remover documento"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </>
           )}
         </div>
       </div>

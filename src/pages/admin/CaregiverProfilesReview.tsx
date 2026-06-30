@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, CheckCircle2, FileText, MessageCircle, Search, User } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
+import DocumentChecklist from "@/components/admin/DocumentChecklist";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -174,6 +175,15 @@ function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; do
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Documentos enviados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DocumentChecklist caregiverId={detail.id} documents={documents} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

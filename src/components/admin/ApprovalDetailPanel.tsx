@@ -147,7 +147,7 @@ const ApprovalDetailPanel = ({
         {/* Document Checklist */}
         <section>
           <h4 className="text-sm font-semibold text-foreground mb-3">
-            Documento a ser revisado
+            Documentos a serem revisados
           </h4>
           <DocumentChecklist caregiverId={caregiver.id} documents={documents} />
         </section>
