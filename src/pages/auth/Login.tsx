@@ -28,7 +28,7 @@ export default function Login() {
   const { user, profile, role, isLoading } = useAuth()
 
   const [view, setView] = useState<View>('email')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => searchParams.get('email') ?? '')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)

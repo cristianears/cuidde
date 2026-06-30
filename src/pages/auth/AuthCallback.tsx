@@ -42,7 +42,6 @@ export default function AuthCallback() {
     setChecking(true)
 
     async function checkProfileAndRedirect() {
-      const isPendingSignup = localStorage.getItem('cuidde_pending_signup') === 'true'
       const onboardingData = consumeOnboardingData()
 
       try {
@@ -52,7 +51,7 @@ export default function AuthCallback() {
           .eq('id', user!.id)
           .single()
 
-        if (profile?.role && !isPendingSignup) {
+        if (profile?.role) {
           // Usuário existente fazendo login com Google → dashboard
           localStorage.removeItem('cuidde_pending_signup')
           const familyRedirect = profile.role === 'family'

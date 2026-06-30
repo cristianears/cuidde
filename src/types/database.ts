@@ -573,6 +573,10 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      caregiver_phone_already_registered: {
+        Args: { p_phone: string }
+        Returns: boolean
+      }
       search_caregivers_by_proximity: {
         Args: { p_lat: number; p_lng: number; p_radius_km?: number }
         Returns: { id: string; distance_km: number }[]

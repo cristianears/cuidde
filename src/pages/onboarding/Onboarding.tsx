@@ -13,6 +13,7 @@ import {
   EyeOff,
   Circle,
   Phone,
+  AlertCircle,
 } from 'lucide-react'
 import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
@@ -24,7 +25,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-import { signUpWithEmail, signInWithGoogle } from '@/lib/auth'
+import { signUpWithEmail, signInWithGoogle, resetPasswordForEmail, signOut } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
 import { formatPhone } from '@/lib/formatters'
 import { supabase } from '@/lib/supabase'
@@ -36,6 +37,11 @@ import { queuePendingUserConsents, recordUserConsents } from '@/lib/user-consent
 import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
 
 type ProfileType = 'family' | 'caregiver' | null
+
+const DUPLICATE_CAREGIVER_PHONE_MESSAGE =
+  'Já existe um cadastro de cuidador com este telefone. Tente entrar com Google se usou Google antes, ou com e-mail e senha. Se não lembrar a senha, use recuperar a senha na tela de login ou fale com o suporte.'
+const DUPLICATE_EMAIL_MESSAGE =
+  'Este e-mail já tem cadastro. Entre com e-mail e senha, use recuperar senha ou tente entrar com Google se usou Google antes.'
 
 interface FormData {
   profileType: ProfileType
@@ -111,6 +117,9 @@ const Onboarding = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isCheckingDuplicatePhone, setIsCheckingDuplicatePhone] = useState(false)
+  const [isRecoveringPassword, setIsRecoveringPassword] = useState(false)
+  const [duplicateCaregiverPhoneDetected, setDuplicateCaregiverPhoneDetected] = useState(false)
   const [hasAcceptedPlatformTerms, setHasAcceptedPlatformTerms] = useState(false)
 
   // Pre-fill from query params (?type, ?cep, ?email)
@@ -168,6 +177,9 @@ const Onboarding = () => {
   const isPasswordStrong = hasMinLength && hasUpperCase && hasSpecialChar
 
   const updateFormData = (field: keyof FormData, value: string | ProfileType) => {
+    if (field === 'phone' || field === 'profileType') {
+      setDuplicateCaregiverPhoneDetected(false)
+    }
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -175,6 +187,83 @@ const Onboarding = () => {
 
   const phoneDigitsCount = formData.phone.replace(/\D/g, '').length
   const isPhoneValid = phoneDigitsCount === 11
+
+  const checkDuplicateCaregiverPhone = async () => {
+    if (formData.profileType !== 'caregiver') return false
+    if (!isPhoneValid) return false
+
+    setIsCheckingDuplicatePhone(true)
+    try {
+      const { data, error } = await supabase.rpc('caregiver_phone_already_registered', {
+        p_phone: formData.phone,
+      })
+
+      if (error) {
+        toast.error('Não foi possível validar este telefone. Tente novamente.')
+        return true
+      }
+
+      setDuplicateCaregiverPhoneDetected(data === true)
+      return data === true
+    } finally {
+      setIsCheckingDuplicatePhone(false)
+    }
+  }
+
+  const clearPendingSignupState = () => {
+    localStorage.removeItem('cuidde_pending_signup')
+    localStorage.removeItem('cuidde_onboarding_data')
+  }
+
+  const getExistingEmailLoginTarget = () => {
+    const params = new URLSearchParams()
+    if (formData.email) params.set('email', formData.email)
+    const query = params.toString()
+    return query ? `/login?${query}` : '/login'
+  }
+
+  const prepareExistingAccountLogin = async () => {
+    clearPendingSignupState()
+    await signOut().catch(() => null)
+  }
+
+  const handleExistingEmailLogin = async () => {
+    await prepareExistingAccountLogin()
+    navigate(getExistingEmailLoginTarget(), { replace: true })
+  }
+
+  const handleExistingGoogleLogin = async () => {
+    setIsGoogleLoading(true)
+    try {
+      await prepareExistingAccountLogin()
+      const { error } = await signInWithGoogle()
+      if (error) {
+        toast.error(error.message)
+        setIsGoogleLoading(false)
+      }
+    } catch {
+      setIsGoogleLoading(false)
+    }
+  }
+
+  const handleDuplicatePhonePasswordReset = async () => {
+    if (!formData.email.includes('@')) {
+      toast.error('Digite seu e-mail na etapa anterior para recuperar a senha.')
+      return
+    }
+
+    setIsRecoveringPassword(true)
+    try {
+      const { error } = await resetPasswordForEmail(formData.email)
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('E-mail de recuperação enviado. Verifique sua caixa de entrada.')
+      }
+    } finally {
+      setIsRecoveringPassword(false)
+    }
+  }
 
   const handleGoogleSignup = async () => {
     setIsGoogleLoading(true)
@@ -225,8 +314,9 @@ const Onboarding = () => {
     }
   }
 
-  const nextStep = () => {
+  const nextStep = async () => {
     if (currentStepIndex < steps.length - 1) {
+      if (currentStepId === 4 && await checkDuplicateCaregiverPhone()) return
       setCurrentStepId(steps[currentStepIndex + 1].id)
     }
   }
@@ -263,6 +353,11 @@ const Onboarding = () => {
     if (!formData.profileType) return
     if (!hasAcceptedPlatformTerms) {
       toast.error('Para criar sua conta, aceite os termos e politicas da plataforma.')
+      return
+    }
+    if (await checkDuplicateCaregiverPhone()) {
+      setCurrentStepId(4)
+      toast.error(DUPLICATE_CAREGIVER_PHONE_MESSAGE, { duration: 9000 })
       return
     }
 
@@ -349,11 +444,15 @@ const Onboarding = () => {
           phone: formData.phone,
         })
         if (error) {
-          toast.error(error.message)
+          toast.error(
+            error.message.toLowerCase().includes('already')
+              ? DUPLICATE_EMAIL_MESSAGE
+              : error.message,
+          )
           return
         }
         if (data.user && data.user.identities?.length === 0) {
-          toast.error('Este e-mail já está cadastrado. Tente fazer login.')
+          toast.error(DUPLICATE_EMAIL_MESSAGE)
           return
         }
 
@@ -414,7 +513,11 @@ const Onboarding = () => {
         navigate('/verify-email', { replace: true })
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao finalizar cadastro. Tente novamente.')
+      if (error instanceof Error && error.message.includes('caregiver_phone_already_registered')) {
+        toast.error(DUPLICATE_CAREGIVER_PHONE_MESSAGE, { duration: 9000 })
+      } else {
+        toast.error(error instanceof Error ? error.message : 'Erro ao finalizar cadastro. Tente novamente.')
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -436,7 +539,7 @@ const Onboarding = () => {
           passwordsMatch
         )
       case 4:
-        return isPhoneValid
+        return isPhoneValid && !duplicateCaregiverPhoneDetected && !isCheckingDuplicatePhone
       case 5:
         return !!(formData.cep && formData.street && formData.number && formData.city && formData.state)
 
@@ -746,6 +849,60 @@ const Onboarding = () => {
                       Digite o DDD + 9 dígitos (ex: (11) 99999-9999)
                     </p>
                   )}
+                  {duplicateCaregiverPhoneDetected && (
+                    <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/5 p-4 space-y-4">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-semibold text-foreground">
+                            Já existe um cadastro com este telefone
+                          </p>
+                          <p className="text-sm leading-relaxed text-muted-foreground">
+                            Para proteger seus dados, entre pela conta que você já usou. Se não lembrar se foi Google ou e-mail e senha, tente uma das opções abaixo.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleExistingGoogleLogin}
+                          disabled={isGoogleLoading}
+                          className="min-h-11 h-auto w-full gap-2 whitespace-normal rounded-xl px-3 text-sm"
+                        >
+                          {isGoogleLoading ? (
+                            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
+                          ) : (
+                            <GoogleIcon />
+                          )}
+                          Entrar com Google
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleExistingEmailLogin}
+                          className="min-h-11 h-auto w-full gap-2 whitespace-normal rounded-xl px-3 text-sm"
+                        >
+                          <Mail className="h-4 w-4 shrink-0" />
+                          Entrar com e-mail
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleDuplicatePhonePasswordReset}
+                          disabled={isRecoveringPassword}
+                          className="min-h-11 h-auto w-full gap-2 whitespace-normal rounded-xl px-3 text-sm"
+                        >
+                          {isRecoveringPassword ? (
+                            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground border-t-transparent animate-spin" />
+                          ) : (
+                            <Lock className="h-4 w-4 shrink-0" />
+                          )}
+                          Recuperar senha
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -986,8 +1143,17 @@ const Onboarding = () => {
                     disabled={!canProceed()}
                     className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Continuar
-                    <ArrowRight className="w-4 h-4" />
+                    {isCheckingDuplicatePhone && currentStepId === 4 ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
+                        Verificando
+                      </>
+                    ) : (
+                      <>
+                        Continuar
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <Button
