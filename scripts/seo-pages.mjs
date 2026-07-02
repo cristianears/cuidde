@@ -377,7 +377,7 @@ export function renderPageHtml(shellHtml, page) {
 
   return withoutSeoTags
     .replace('</head>', `    ${headTags}\n  </head>`)
-    .replace('<div id="root"></div>', `<div id="root">${page.bodyHtml}</div>`)
+    .replace('<div id="root"></div>', `<div id="root"></div>\n    <noscript data-seo-fallback>${page.bodyHtml}</noscript>`)
 }
 
 export function renderSitemap() {

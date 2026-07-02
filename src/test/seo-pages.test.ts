@@ -47,6 +47,23 @@ describe('SEO static page generator', () => {
     expect(html).toContain('"@type":"Article"')
   })
 
+  it('keeps static SEO body out of the visible React root to avoid a text-only loading flash', async () => {
+    const { renderPageHtml } = await import('../../scripts/seo-pages.mjs')
+    const shell = '<!doctype html><html><head><title>Old</title></head><body><div id="root"></div></body></html>'
+
+    const html = renderPageHtml(shell, {
+      path: '/',
+      title: 'icuide',
+      description: 'Encontre cuidadores de idosos',
+      bodyHtml: '<main><h1>Texto estatico SEO</h1><p>Fallback para indexacao.</p></main>',
+    })
+
+    expect(html).toContain('<div id="root"></div>')
+    expect(html).not.toContain('<div id="root"><main>')
+    expect(html).toContain('<noscript data-seo-fallback>')
+    expect(html).toContain('<h1>Texto estatico SEO</h1>')
+  })
+
   it('keeps CEP and pricing flows out of the static SEO generator', async () => {
     const { renderLandingBody, renderCaregiverLandingBody } = await import('../../scripts/seo-pages.mjs')
 
