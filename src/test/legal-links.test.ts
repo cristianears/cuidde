@@ -25,7 +25,12 @@ describe('legal document links', () => {
 
   it('keeps footer navigation pointed at real landing sections', () => {
     const footer = read('src/components/Footer.tsx')
+    const app = read('src/App.tsx')
+    const familiesColumn = footer.slice(footer.indexOf('Para Famílias'), footer.indexOf('{/* For Professionals */}'))
 
+    expect(familiesColumn).toContain('href="/sobre"')
+    expect(familiesColumn.indexOf('href="/sobre"')).toBeLessThan(familiesColumn.indexOf('href="/#como-funciona"'))
+    expect(app).toContain('path="/sobre"')
     expect(footer).toContain('href="/#como-funciona"')
     expect(footer).toContain('href="/onboarding?type=family"')
     expect(footer).toContain('href="/#planos"')

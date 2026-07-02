@@ -39,6 +39,7 @@ const Header = () => {
         { label: "Como Funciona", hash: "#como-funciona-cuidador" },
         { label: "Benefícios", hash: "#beneficios-cuidador" },
         { label: "Perfil Forte", hash: "#perfil-forte" },
+        { label: "Sobre", href: "/sobre" },
         { label: "Dúvidas", hash: "#duvidas-cuidadores" },
         { label: "Blog", href: "/blog" },
       ]
@@ -46,6 +47,7 @@ const Header = () => {
         { label: "Como Funciona", hash: "#como-funciona" },
         { label: "Recursos", hash: "#beneficios" },
         { label: "Planos", hash: "#planos" },
+        { label: "Sobre", href: "/sobre" },
         { label: "Dúvidas", hash: "#faq" },
         { label: "Blog", href: "/blog" },
       ];

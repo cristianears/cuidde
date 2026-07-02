@@ -51,9 +51,12 @@ const Hero = () => {
           <div className="max-w-2xl mx-auto translate-y-6 text-center text-primary-foreground lg:translate-y-0">
             {/* Title */}
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[1.2] mb-4 tracking-tight">
-              Encontre o cuidador certo
-              <br />
-              <span className="text-primary-foreground/90">com transparência e calma</span>
+              <span className="block sm:hidden">Encontre cuidadores</span>
+              <span className="block sm:hidden">de idosos perto de você</span>
+              <span className="block sm:hidden text-primary-foreground/90">com transparência e calma</span>
+              <span className="hidden sm:block">Encontre cuidadores de idosos</span>
+              <span className="hidden sm:block">perto de você</span>
+              <span className="hidden sm:block text-primary-foreground/90">com transparência e calma</span>
             </h1>
             {/* CEP Search */}
             <form className="mx-auto max-w-lg" onSubmit={goFamilyFlow}>

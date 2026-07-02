@@ -54,4 +54,22 @@ describe('Pricing', () => {
 
     expect(mockNavigate).toHaveBeenCalledWith('/family/billing')
   })
+
+  it('shows the approved plan copy, totals, and discount badges', () => {
+    renderPricing()
+
+    expect(screen.getByText('Planos para encontrar cuidadores de idosos')).toBeInTheDocument()
+    expect(screen.getByText('Chat, documentos e perfis completos por 30 dias.')).toBeInTheDocument()
+    expect(screen.getByText('Acesso a certificados, antecedentes e referências')).toBeInTheDocument()
+    expect(screen.getAllByText('Acesso ao histórico de cuidados e registros de ocorrências')).toHaveLength(3)
+
+    expect(screen.getByText('R$ 84,99')).toBeInTheDocument()
+    expect(screen.getByText('total R$ 254,97')).toBeInTheDocument()
+    expect(screen.getByText('Melhor custo-benefício · 33% off')).toBeInTheDocument()
+    expect(screen.getByText('35% off')).toBeInTheDocument()
+
+    expect(screen.queryByText(/Acesso a documentos enviados pelo profissional/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/\d+% de desconto/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Rotina de Cuidados e registro de ocorrências/i)).not.toBeInTheDocument()
+  })
 })

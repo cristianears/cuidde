@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Index from './pages/Index'
+import About from './pages/About'
 import CaregiversLanding from './pages/CaregiversLanding'
 import BlogIndex from './pages/BlogIndex'
 import BlogPost from './pages/BlogPost'
@@ -75,6 +76,7 @@ const App = () => (
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
+            <Route path="/sobre" element={<About />} />
             <Route path="/para-cuidadores" element={<CaregiversLanding />} />
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPost />} />

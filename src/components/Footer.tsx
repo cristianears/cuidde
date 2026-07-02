@@ -32,6 +32,14 @@ const Footer = () => {
             <ul className="space-y-3">
               <li>
                 <a
+                  href="/sobre"
+                  className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
+                >
+                  Sobre a icuide
+                </a>
+              </li>
+              <li>
+                <a
                   href="/#como-funciona"
                   className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
                 >

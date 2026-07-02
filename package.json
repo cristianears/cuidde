@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/seo-pages.mjs",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "legal:pdf": "node scripts/generate-legal-pdfs.mjs",

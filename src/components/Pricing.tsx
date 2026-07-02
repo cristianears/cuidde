@@ -25,7 +25,7 @@ const plans = [
   },
   {
     name: "Mensal",
-    description: "Acesso completo por 30 dias.",
+    description: "Chat, documentos e perfis completos por 30 dias.",
     price: "127",
     priceLabel: "/mês",
     priceDiscount: null,
@@ -33,11 +33,11 @@ const plans = [
     features: [
       "Visualização completa de perfis",
       "Veja o que outras famílias dizem antes de contratar",
-      "Acesso a documentos enviados pelo profissional (quando disponíveis)",
+      "Acesso a certificados, antecedentes e referências",
       "Contato direto ilimitado via chat",
       "Filtros avançados por região e disponibilidade",
       "Favoritar perfis",
-      "Rotina de Cuidados e registro de ocorrências",
+      "Acesso ao histórico de cuidados e registros de ocorrências",
     ],
     highlighted: false,
     buttonVariant: "outline" as const,
@@ -48,31 +48,31 @@ const plans = [
   {
     name: "Trimestral",
     description: "Mais tempo para decidir com tranquilidade.",
-    price: "99",
+    price: "84,99",
     priceLabel: "/mês",
-    priceDiscount: "22% de desconto",
-    priceTotal: "total R$ 297",
+    priceDiscount: null,
+    priceTotal: "total R$ 254,97",
     features: [
       "Todos os recursos do plano mensal",
-      "Rotina de Cuidados e registro de ocorrências",
+      "Acesso ao histórico de cuidados e registros de ocorrências",
       "Melhor custo mensal",
     ],
     highlighted: true,
     buttonVariant: "default" as const,
     gradient: "from-indigo-100/95 to-purple-50/80",
     cta: "Assinar 3 meses",
-    badge: "Melhor custo-benefício",
+    badge: "Melhor custo-benefício · 33% off",
   },
   {
     name: "Anual",
     description: "Ideal para cuidado contínuo.",
     price: "83",
     priceLabel: "/mês",
-    priceDiscount: "35% de desconto",
+    priceDiscount: null,
     priceTotal: "total R$ 997",
     features: [
       "Todos os recursos do plano completo",
-      "Rotina de Cuidados e registro de ocorrências",
+      "Acesso ao histórico de cuidados e registros de ocorrências",
       "Maior economia no longo prazo",
       "Acesso contínuo durante todo o ano",
     ],
@@ -80,7 +80,7 @@ const plans = [
     buttonVariant: "outline" as const,
     gradient: "from-emerald-100/95 to-teal-50/80",
     cta: "Assinar anual",
-    badge: null,
+    badge: "35% off",
   },
 ];
 const Pricing = () => {
@@ -101,10 +101,10 @@ const Pricing = () => {
       <div className="container mx-auto px-6 md:px-10">
         <div className="text-center mb-8">
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
-            Planos e investimento
+            Planos para encontrar cuidadores de idosos
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
-            Comece gratuitamente. Quando quiser liberar chat e documentos completos, escolha o tempo de acesso ideal para você.
+            Comece gratuitamente. Quando quiser liberar chat, documentos e perfis completos, escolha o tempo de acesso ideal para você.
           </p>
           <p className="text-xs text-muted-foreground/70 mt-1.5">
             Cancele quando quiser. Sem fidelidade.
@@ -140,10 +140,14 @@ const Pricing = () => {
                         <span className="text-muted-foreground ml-1 text-xs">{plan.priceLabel}</span>
                       )}
                     </div>
-                    {plan.priceDiscount && plan.priceTotal && (
+                    {plan.priceTotal && (
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
-                        <span className="whitespace-nowrap">{plan.priceDiscount}</span>
-                        <span aria-hidden="true">•</span>
+                        {plan.priceDiscount && (
+                          <>
+                            <span className="whitespace-nowrap">{plan.priceDiscount}</span>
+                            <span aria-hidden="true">•</span>
+                          </>
+                        )}
                         <span className="whitespace-nowrap">{plan.priceTotal}</span>
                       </div>
                     )}
