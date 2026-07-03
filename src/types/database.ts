@@ -114,6 +114,7 @@ export interface Profile {
   role: UserRole | null  // nullable para cadastro Google (role definido no onboarding)
   full_name: string | null
   phone: string | null
+  cpf: string | null
   created_at: string
   updated_at: string
 }
@@ -486,7 +487,7 @@ export interface Database {
     Tables: {
       profiles: {
         Row: Profile
-        Insert: Omit<Profile, 'created_at' | 'updated_at'>
+        Insert: Omit<Profile, 'created_at' | 'updated_at' | 'cpf'> & { cpf?: string | null }
         Update: Partial<Omit<Profile, 'id' | 'created_at'>>
       }
       user_consents: {
@@ -576,6 +577,14 @@ export interface Database {
       caregiver_phone_already_registered: {
         Args: { p_phone: string }
         Returns: boolean
+      }
+      caregiver_cpf_already_registered: {
+        Args: { p_cpf: string }
+        Returns: boolean
+      }
+      get_own_caregiver_cpf: {
+        Args: Record<string, never>
+        Returns: string | null
       }
       search_caregivers_by_proximity: {
         Args: { p_lat: number; p_lng: number; p_radius_km?: number }

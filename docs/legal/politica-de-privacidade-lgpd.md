@@ -63,6 +63,7 @@ Podemos coletar os seguintes dados, conforme o perfil e uso da plataforma.
 - endereço, CEP, bairro, cidade, estado e localização aproximada para busca por proximidade;
 - profissão/formação, cursos, experiência, especialidades, idiomas, disponibilidade e valores;
 - documentos, certificados, comprovantes, registros profissionais e números de registro;
+- CPF, quando solicitado ao Cuidador para identificação, prevenção de cadastro duplicado, segurança da conta, moderação e prevenção a fraude;
 - referências profissionais e respectivas informações de contato;
 - avaliações, mensagens, solicitações recebidas, atendimentos, visibilidade e preferências de privacidade.
 
@@ -103,6 +104,7 @@ Tratamos dados pessoais para as seguintes finalidades:
 | Cancelamento e reembolso | registrar pedido de cancelamento, motivo informado, contestação de cobrança, reembolso e suporte financeiro | execução de contrato, legítimo interesse, cumprimento legal e exercício regular de direitos |
 | Segurança e prevenção a fraude | logs, análise de abuso, moderação, detecção de uso indevido, medidas de segurança da conta e suspensão quando necessária | legítimo interesse, exercício regular de direitos, cumprimento legal |
 | Suporte e comunicação | responder dúvidas, avisos transacionais, notificações | execução de contrato, legítimo interesse |
+| CPF e identidade de Cuidadores | identificar o Cuidador, evitar cadastros duplicados, apoiar checagens internas, prevenir fraude e proteger a segurança da plataforma | execução de contrato, legítimo interesse, exercício regular de direitos, cumprimento legal quando aplicável |
 | Documentos de Cuidadores | armazenar e exibir documentos selecionados conforme regras de visibilidade | execução de contrato, consentimento quando necessário, exercício regular de direitos |
 | Dados sensíveis de atendimento | informações de saúde/rotina fornecidas pela Família para viabilizar solicitação, acompanhamento, rotina ou exportação de relatório | consentimento específico quando aplicável, proteção da vida, tutela da saúde por profissionais habilitados quando aplicável, exercício regular de direitos |
 | Cumprimento legal | retenção contábil, fiscal, judicial, regulatória ou resposta a autoridade | cumprimento de obrigação legal/regulatória, exercício regular de direitos |
@@ -127,6 +129,8 @@ A icuide não vende dados pessoais.
 ## 8. Documentos de Cuidadores e responsabilidade sobre autenticidade
 
 Documentos enviados por Cuidadores podem conter dados pessoais, dados sensíveis, números de registro, certificados, imagens, assinaturas, datas e outras informações relevantes.
+
+Quando o documento enviado contiver CPF ou quando o CPF for informado em campo próprio, a icuide poderá tratar esse dado para identificação do Cuidador, prevenção de cadastros duplicados, segurança, moderação, suporte, prevenção a fraude e exercício regular de direitos. A icuide não solicita CPF no cadastro de Famílias, salvo se futuramente houver finalidade específica e aviso correspondente.
 
 A icuide armazena e exibe esses documentos apenas conforme funcionalidades, regras de acesso, assinatura e preferências de visibilidade. A icuide não garante autenticidade, validade, completude, regularidade, ausência de fraude, vigência, aceitação por órgãos oficiais ou suficiência jurídica desses documentos.
 

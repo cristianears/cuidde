@@ -1,10 +1,12 @@
 import { supabase } from '@/lib/supabase'
+import { normalizeCpf } from '@/lib/formatters'
 import type { UserRole } from '@/types/database'
 
 export interface SignUpMetadata {
   role: UserRole
   full_name: string
   phone: string
+  cpf?: string
 }
 
 export async function signUpWithEmail(
@@ -12,6 +14,8 @@ export async function signUpWithEmail(
   password: string,
   metadata: SignUpMetadata
 ) {
+  const cpf = metadata.cpf ? normalizeCpf(metadata.cpf) : undefined
+
   return supabase.auth.signUp({
     email,
     password,
@@ -20,6 +24,7 @@ export async function signUpWithEmail(
         role: metadata.role,
         full_name: metadata.full_name,
         phone: metadata.phone,
+        ...(cpf ? { cpf } : {}),
       },
       emailRedirectTo: `${window.location.origin}/login`,
     },

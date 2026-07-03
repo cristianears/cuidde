@@ -46,6 +46,7 @@ describe('Auth functions', () => {
         role: 'caregiver',
         full_name: 'João Silva',
         phone: '(11) 99999-9999',
+        cpf: '529.982.247-25',
       })
 
       expect(mockSignUp).toHaveBeenCalledWith({
@@ -56,6 +57,7 @@ describe('Auth functions', () => {
             role: 'caregiver',
             full_name: 'João Silva',
             phone: '(11) 99999-9999',
+            cpf: '52998224725',
           },
           emailRedirectTo: expect.stringContaining('/login'),
         },

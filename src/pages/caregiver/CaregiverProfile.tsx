@@ -31,7 +31,7 @@ import { specialtiesList, modalitiesList, idiomasList } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAddressByCep } from "@/lib/viacep";
-import { formatPhone } from "@/lib/formatters";
+import { formatCpf, formatPhone, isValidCpf } from "@/lib/formatters";
 import { getInitials } from "@/lib/display-name";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,6 +115,7 @@ const CaregiverProfile = () => {
     name: "",
     email: "",
     phone: "",
+    cpf: "",
     whatsapp: "",
     photo: "",
     cep: "",
@@ -177,6 +178,7 @@ const CaregiverProfile = () => {
         name: profileData.profiles.full_name ?? "",
         email: user?.email ?? "",
         phone: profileData.whatsapp ?? profileData.profiles.phone ?? "",
+        cpf: formatCpf(profileData.profiles.cpf ?? ""),
         whatsapp: profileData.whatsapp ?? profileData.profiles.phone ?? "",
         photo: profileData.photo_url ?? "",
         cep: profileData.cep ?? "",
@@ -259,6 +261,10 @@ const CaregiverProfile = () => {
       toast.error("Informe seu WhatsApp / telefone.")
       return false
     }
+    if (!isValidCpf(formData.cpf)) {
+      toast.error("Digite um CPF válido.")
+      return false
+    }
     if (!formData.cep.trim() || !formData.street.trim() || !formData.number.trim() || !formData.neighborhood.trim() || !formData.city.trim() || !formData.state.trim()) {
       toast.error("CEP, rua, número, bairro, cidade e estado são obrigatórios.")
       return false
@@ -316,6 +322,7 @@ const CaregiverProfile = () => {
       await updateBasic.mutateAsync({
         full_name: formData.name,
         phone: contactPhone,
+        cpf: formData.cpf,
         whatsapp: contactPhone,
         cep: formData.cep,
         street: formData.street,
@@ -385,6 +392,7 @@ const CaregiverProfile = () => {
   const profileGuide = buildCaregiverProfileGuide({
     name: formData.name,
     phone: formData.phone,
+    cpf: formData.cpf,
     cep: formData.cep,
     street: formData.street,
     number: formData.number,
@@ -675,6 +683,17 @@ const CaregiverProfile = () => {
                         setFormData((prev) => ({ ...prev, phone: value, whatsapp: value }))
                       }}
                       placeholder="(11) 99999-9999"
+                      className="mt-1.5 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cpf" className="text-xs md:text-sm">CPF</Label>
+                    <Input
+                      id="cpf"
+                      inputMode="numeric"
+                      value={formData.cpf}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, cpf: formatCpf(e.target.value) }))}
+                      placeholder="000.000.000-00"
                       className="mt-1.5 text-sm"
                     />
                   </div>

@@ -7,6 +7,7 @@ import { queryKeys } from '@/lib/query-keys'
 import type { CaregiverProfile, ProfessionalReference } from '@/types/database'
 import { resolveAndSaveCoords } from '@/lib/geocode'
 import { uploadAvatar } from '@/lib/upload-avatar'
+import { normalizeCpf } from '@/lib/formatters'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -14,12 +15,14 @@ export type CaregiverProfileFull = CaregiverProfile & {
   profiles: {
     full_name: string | null
     phone: string | null
+    cpf: string | null
   }
 }
 
 export interface UpdateBasicPayload {
   full_name: string
   phone: string
+  cpf: string
   whatsapp: string
   cep: string
   street: string
@@ -80,14 +83,26 @@ export function useCaregiverProfile() {
   return useQuery({
     queryKey: PROFILE_KEY(user?.id ?? ''),
     queryFn: async (): Promise<CaregiverProfileFull> => {
-      const { data, error } = await supabase
-        .from('caregiver_profiles')
-        .select('*, profiles!inner(full_name, phone)')
-        .eq('id', user!.id)
-        .single()
+      const [profileResult, cpfResult] = await Promise.all([
+        supabase
+          .from('caregiver_profiles')
+          .select('*, profiles!inner(full_name, phone)')
+          .eq('id', user!.id)
+          .single(),
+        supabase.rpc('get_own_caregiver_cpf'),
+      ])
 
-      if (error) throw error
-      return data as CaregiverProfileFull
+      if (profileResult.error) throw profileResult.error
+      if (cpfResult.error) throw cpfResult.error
+
+      const data = profileResult.data as CaregiverProfileFull
+      return {
+        ...data,
+        profiles: {
+          ...data.profiles,
+          cpf: cpfResult.data ?? null,
+        },
+      }
     },
     enabled: !!user,
     staleTime: 60_000,
@@ -155,7 +170,7 @@ export function useUpdateCaregiverBasic() {
       const [{ data: profileData, error: profileError }, { error: caregiverError }] = await Promise.all([
         supabase
           .from('profiles')
-          .update({ full_name: payload.full_name, phone: payload.phone })
+          .update({ full_name: payload.full_name, phone: payload.phone, cpf: normalizeCpf(payload.cpf) })
           .eq('id', user!.id)
           .select('id'),
         supabase
@@ -190,6 +205,18 @@ export function useUpdateCaregiverBasic() {
       toast.success('Dados básicos salvos com sucesso.')
     },
     onError: (error: Error) => {
+      if (error.message.includes('caregiver_cpf_already_registered')) {
+        toast.error('Já existe um cadastro de cuidador com este CPF. Entre pela conta que você já usou ou fale com o suporte.')
+        return
+      }
+      if (error.message.includes('caregiver_cpf_invalid')) {
+        toast.error('Digite um CPF válido.')
+        return
+      }
+      if (error.message.includes('caregiver_cpf_required')) {
+        toast.error('Informe seu CPF.')
+        return
+      }
       toast.error(error.message || 'Erro ao salvar. Tente novamente.')
     },
   })

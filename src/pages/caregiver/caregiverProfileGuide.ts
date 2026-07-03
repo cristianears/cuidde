@@ -3,6 +3,7 @@ export type CaregiverProfileGuideStatus = "complete" | "pending" | "optional"
 export interface CaregiverProfileGuideInput {
   name: string
   phone: string
+  cpf: string
   cep: string
   street: string
   number: string
@@ -37,6 +38,7 @@ export function buildCaregiverProfileGuide(input: CaregiverProfileGuideInput): C
   const hasBasicData = [
     input.name,
     input.phone,
+    input.cpf,
     input.cep,
     input.street,
     input.number,

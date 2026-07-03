@@ -31,6 +31,7 @@ Ao anexar ou informar documentos, certificados, registros, referências, foto, b
 - exibir documentos e referências a Famílias autorizadas, conforme regras de assinatura, visibilidade e preferências do Cuidador;
 - permitir contato, solicitação de atendimento e conversa pelo chat;
 - moderar, proteger e auditar o uso da plataforma;
+- tratar CPF do Cuidador, quando informado em campo próprio ou presente em documento enviado, para identificação, prevenção de cadastro duplicado, segurança, suporte, moderação e prevenção a fraude;
 - prevenir fraude, documentos falsos, perfis indevidos, abuso e uso inseguro;
 - cumprir obrigações legais e exercer direitos da icuide ou de terceiros.
 

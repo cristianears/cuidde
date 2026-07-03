@@ -44,6 +44,8 @@ O usuário declara que possui capacidade legal para usar a plataforma e, quando 
 
 O usuário é responsável por manter dados completos, corretos, atualizados e compatíveis com a legislação.
 
+Para cadastro de Cuidadores, a icuide poderá solicitar CPF como dado obrigatório de identificação, segurança e prevenção de cadastro duplicado. Esse tratamento observará a Política de Privacidade/LGPD e não equivale a validação oficial de identidade, idoneidade ou habilitação profissional.
+
 É proibido:
 
 - criar conta com identidade falsa;

@@ -14,6 +14,7 @@ import {
   Circle,
   Phone,
   AlertCircle,
+  IdCard,
 } from 'lucide-react'
 import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,7 @@ import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { signUpWithEmail, signInWithGoogle, resetPasswordForEmail, signOut } from '@/lib/auth'
 import { fetchAddressByCep } from '@/lib/viacep'
-import { formatPhone } from '@/lib/formatters'
+import { formatCpf, formatPhone, isValidCpf, normalizeCpf } from '@/lib/formatters'
 import { supabase } from '@/lib/supabase'
 import { geocodeAddress } from '@/lib/geocode'
 import { useAuth } from '@/contexts/AuthContext'
@@ -40,6 +41,8 @@ type ProfileType = 'family' | 'caregiver' | null
 
 const DUPLICATE_CAREGIVER_PHONE_MESSAGE =
   'Já existe um cadastro de cuidador com este telefone. Tente entrar com Google se usou Google antes, ou com e-mail e senha. Se não lembrar a senha, use recuperar a senha na tela de login ou fale com o suporte.'
+const DUPLICATE_CAREGIVER_CPF_MESSAGE =
+  'Já existe um cadastro de cuidador com este CPF. Entre pela conta que você já usou ou fale com o suporte.'
 const DUPLICATE_EMAIL_MESSAGE =
   'Este e-mail já tem cadastro. Entre com e-mail e senha, use recuperar senha ou tente entrar com Google se usou Google antes.'
 
@@ -50,6 +53,7 @@ interface FormData {
   password: string
   confirmPassword: string
   phone: string
+  cpf: string
   cep: string
   street: string
   number: string
@@ -102,6 +106,7 @@ const Onboarding = () => {
     password: '',
     confirmPassword: '',
     phone: '',
+    cpf: '',
     cep: '',
     street: '',
     number: '',
@@ -118,8 +123,10 @@ const Onboarding = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isCheckingDuplicatePhone, setIsCheckingDuplicatePhone] = useState(false)
+  const [isCheckingDuplicateCpf, setIsCheckingDuplicateCpf] = useState(false)
   const [isRecoveringPassword, setIsRecoveringPassword] = useState(false)
   const [duplicateCaregiverPhoneDetected, setDuplicateCaregiverPhoneDetected] = useState(false)
+  const [duplicateCaregiverCpfDetected, setDuplicateCaregiverCpfDetected] = useState(false)
   const [hasAcceptedPlatformTerms, setHasAcceptedPlatformTerms] = useState(false)
 
   // Pre-fill from query params (?type, ?cep, ?email)
@@ -180,6 +187,9 @@ const Onboarding = () => {
     if (field === 'phone' || field === 'profileType') {
       setDuplicateCaregiverPhoneDetected(false)
     }
+    if (field === 'cpf' || field === 'profileType') {
+      setDuplicateCaregiverCpfDetected(false)
+    }
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -187,6 +197,9 @@ const Onboarding = () => {
 
   const phoneDigitsCount = formData.phone.replace(/\D/g, '').length
   const isPhoneValid = phoneDigitsCount === 11
+  const cpfDigits = normalizeCpf(formData.cpf)
+  const isCpfRequired = formData.profileType === 'caregiver'
+  const isCpfValid = !isCpfRequired || isValidCpf(formData.cpf)
 
   const checkDuplicateCaregiverPhone = async () => {
     if (formData.profileType !== 'caregiver') return false
@@ -207,6 +220,28 @@ const Onboarding = () => {
       return data === true
     } finally {
       setIsCheckingDuplicatePhone(false)
+    }
+  }
+
+  const checkDuplicateCaregiverCpf = async () => {
+    if (formData.profileType !== 'caregiver') return false
+    if (!isValidCpf(formData.cpf)) return false
+
+    setIsCheckingDuplicateCpf(true)
+    try {
+      const { data, error } = await supabase.rpc('caregiver_cpf_already_registered', {
+        p_cpf: formData.cpf,
+      })
+
+      if (error) {
+        toast.error('Não foi possível validar este CPF. Tente novamente.')
+        return true
+      }
+
+      setDuplicateCaregiverCpfDetected(data === true)
+      return data === true
+    } finally {
+      setIsCheckingDuplicateCpf(false)
     }
   }
 
@@ -317,6 +352,7 @@ const Onboarding = () => {
   const nextStep = async () => {
     if (currentStepIndex < steps.length - 1) {
       if (currentStepId === 4 && await checkDuplicateCaregiverPhone()) return
+      if (currentStepId === 4 && await checkDuplicateCaregiverCpf()) return
       setCurrentStepId(steps[currentStepIndex + 1].id)
     }
   }
@@ -360,6 +396,11 @@ const Onboarding = () => {
       toast.error(DUPLICATE_CAREGIVER_PHONE_MESSAGE, { duration: 9000 })
       return
     }
+    if (await checkDuplicateCaregiverCpf()) {
+      setCurrentStepId(4)
+      toast.error(DUPLICATE_CAREGIVER_CPF_MESSAGE, { duration: 9000 })
+      return
+    }
 
     const buildSignupConsentPayload = (userId: string) => ({
       userId,
@@ -387,6 +428,7 @@ const Onboarding = () => {
             role: formData.profileType,
             full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? formData.name,
             phone: formData.phone,
+            cpf: formData.profileType === 'caregiver' ? cpfDigits : null,
           }, { onConflict: 'id' })
 
         if (profileError) throw profileError
@@ -442,6 +484,7 @@ const Onboarding = () => {
           role: formData.profileType,
           full_name: formData.name,
           phone: formData.phone,
+          cpf: formData.profileType === 'caregiver' ? formData.cpf : undefined,
         })
         if (error) {
           toast.error(
@@ -463,6 +506,7 @@ const Onboarding = () => {
             role: formData.profileType,
             full_name: formData.name,
             phone: formData.phone,
+            cpf: formData.profileType === 'caregiver' ? cpfDigits : null,
           }, { onConflict: 'id' })
 
           // O upsert do endereço abaixo pode falhar silenciosamente se o RLS
@@ -515,6 +559,12 @@ const Onboarding = () => {
     } catch (error) {
       if (error instanceof Error && error.message.includes('caregiver_phone_already_registered')) {
         toast.error(DUPLICATE_CAREGIVER_PHONE_MESSAGE, { duration: 9000 })
+      } else if (error instanceof Error && error.message.includes('caregiver_cpf_already_registered')) {
+        toast.error(DUPLICATE_CAREGIVER_CPF_MESSAGE, { duration: 9000 })
+      } else if (error instanceof Error && error.message.includes('caregiver_cpf_invalid')) {
+        toast.error('Digite um CPF válido para criar o cadastro de cuidador.')
+      } else if (error instanceof Error && error.message.includes('caregiver_cpf_required')) {
+        toast.error('Informe o CPF para criar o cadastro de cuidador.')
       } else {
         toast.error(error instanceof Error ? error.message : 'Erro ao finalizar cadastro. Tente novamente.')
       }
@@ -539,7 +589,14 @@ const Onboarding = () => {
           passwordsMatch
         )
       case 4:
-        return isPhoneValid && !duplicateCaregiverPhoneDetected && !isCheckingDuplicatePhone
+        return (
+          isPhoneValid &&
+          isCpfValid &&
+          !duplicateCaregiverPhoneDetected &&
+          !duplicateCaregiverCpfDetected &&
+          !isCheckingDuplicatePhone &&
+          !isCheckingDuplicateCpf
+        )
       case 5:
         return !!(formData.cep && formData.street && formData.number && formData.city && formData.state)
 
@@ -826,8 +883,12 @@ const Onboarding = () => {
                   <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Seu telefone</h2>
-                  <p className="text-muted-foreground mt-2">Informe seu número para contato com famílias</p>
+                  <h2 className="text-2xl font-bold text-foreground tracking-tight">Seus dados de contato</h2>
+                  <p className="text-muted-foreground mt-2">
+                    {formData.profileType === 'caregiver'
+                      ? 'Informe seus dados de contato e identificação'
+                      : 'Informe seu número para contato com famílias'}
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-foreground font-medium">
@@ -848,6 +909,46 @@ const Onboarding = () => {
                     <p className="text-xs text-muted-foreground mt-1.5">
                       Digite o DDD + 9 dígitos (ex: (11) 99999-9999)
                     </p>
+                  )}
+                  {formData.profileType === 'caregiver' && (
+                    <div className="mt-5">
+                      <Label htmlFor="cpf" className="text-foreground font-medium">
+                        CPF
+                      </Label>
+                      <div className="relative mt-2">
+                        <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                          id="cpf"
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="off"
+                          placeholder="000.000.000-00"
+                          value={formData.cpf}
+                          onChange={(e) => updateFormData('cpf', formatCpf(e.target.value))}
+                          className="h-12 pl-11 rounded-xl border-border/80 focus:border-primary"
+                        />
+                      </div>
+                      {formData.cpf && !isValidCpf(formData.cpf) && (
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          Digite um CPF válido.
+                        </p>
+                      )}
+                      {duplicateCaregiverCpfDetected && (
+                        <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/5 p-4">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                            <div className="space-y-1">
+                              <p className="text-sm font-semibold text-foreground">
+                                Já existe um cadastro com este CPF
+                              </p>
+                              <p className="text-sm leading-relaxed text-muted-foreground">
+                                Entre pela conta já cadastrada ou fale com o suporte para recuperar seu acesso.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                   {duplicateCaregiverPhoneDetected && (
                     <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/5 p-4 space-y-4">
@@ -1075,6 +1176,9 @@ const Onboarding = () => {
                       { label: 'Nome', value: formData.name || (user?.user_metadata?.full_name as string) || '—' },
                       { label: 'E-mail', value: formData.email || user?.email || '—' },
                       { label: 'Telefone', value: formData.phone || '—' },
+                      ...(formData.profileType === 'caregiver'
+                        ? [{ label: 'CPF', value: formData.cpf || '—' }]
+                        : []),
                       {
                         label: 'Localização',
                         value: formData.city && formData.state ? `${formData.city}, ${formData.state}` : '—',
@@ -1143,7 +1247,7 @@ const Onboarding = () => {
                     disabled={!canProceed()}
                     className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2 h-12 px-8 rounded-xl font-semibold shadow-lg shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isCheckingDuplicatePhone && currentStepId === 4 ? (
+                    {(isCheckingDuplicatePhone || isCheckingDuplicateCpf) && currentStepId === 4 ? (
                       <>
                         <div className="w-4 h-4 border-2 border-accent-foreground border-t-transparent rounded-full animate-spin" />
                         Verificando

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatPhone } from '../formatters'
+import { formatCpf, formatPhone, isValidCpf, normalizeCpf } from '../formatters'
 
 describe('formatPhone', () => {
   it('returns empty string for empty input', () => {
@@ -38,5 +38,26 @@ describe('formatPhone', () => {
 
   it('strips letters and special chars', () => {
     expect(formatPhone('abc11def99999ghi8888')).toBe('(11) 99999-8888')
+  })
+})
+
+describe('CPF formatters', () => {
+  it('normalizes CPF to the first 11 digits', () => {
+    expect(normalizeCpf('529.982.247-25')).toBe('52998224725')
+    expect(normalizeCpf('52998224725000')).toBe('52998224725')
+  })
+
+  it('formats partial and complete CPF values', () => {
+    expect(formatCpf('529')).toBe('529')
+    expect(formatCpf('5299')).toBe('529.9')
+    expect(formatCpf('5299822')).toBe('529.982.2')
+    expect(formatCpf('52998224725')).toBe('529.982.247-25')
+  })
+
+  it('validates CPF check digits', () => {
+    expect(isValidCpf('529.982.247-25')).toBe(true)
+    expect(isValidCpf('111.111.111-11')).toBe(false)
+    expect(isValidCpf('529.982.247-24')).toBe(false)
+    expect(isValidCpf('529982247')).toBe(false)
   })
 })

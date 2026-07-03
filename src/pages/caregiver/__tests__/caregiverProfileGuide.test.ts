@@ -6,6 +6,7 @@ describe('buildCaregiverProfileGuide', () => {
     const guide = buildCaregiverProfileGuide({
       name: 'Maria Silva',
       phone: '(11) 99999-9999',
+      cpf: '529.982.247-25',
       cep: '01001-000',
       street: 'Rua A',
       number: '123',
@@ -33,6 +34,7 @@ describe('buildCaregiverProfileGuide', () => {
     const guide = buildCaregiverProfileGuide({
       name: 'Maria Silva',
       phone: '(11) 99999-9999',
+      cpf: '529.982.247-25',
       cep: '01001-000',
       street: 'Rua A',
       number: '123',
@@ -50,5 +52,26 @@ describe('buildCaregiverProfileGuide', () => {
     expect(guide.steps[1].status).toBe('pending')
     expect(guide.steps[2].status).toBe('pending')
     expect(guide.steps[3].status).toBe('complete')
+  })
+
+  it('keeps basic data pending while caregiver CPF is missing', () => {
+    const guide = buildCaregiverProfileGuide({
+      name: 'Maria Silva',
+      phone: '(11) 99999-9999',
+      cpf: '',
+      cep: '01001-000',
+      street: 'Rua A',
+      number: '123',
+      neighborhood: 'Centro',
+      city: 'Sao Paulo',
+      state: 'SP',
+      bio: 'Cuidadora com experiencia em acompanhamento de idosos, rotina de medicamentos, higiene, alimentacao, companhia e apoio familiar durante atendimentos domiciliares.',
+      profissaoFormacao: 'cuidador',
+      specialties: ['Idosos'],
+      referencesCount: 0,
+    })
+
+    expect(guide.steps[0].status).toBe('pending')
+    expect(guide.nextStep?.id).toBe(1)
   })
 })
