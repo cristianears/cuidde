@@ -61,4 +61,12 @@ describe('RoleOnboardingGuide', () => {
     expect(guideSource).toContain('Necessidades de cuidado')
     expect(guideSource).toContain('Buscar cuidadores')
   })
+  it('checks caregiver CPF before the other caregiver profile guide steps', () => {
+    expect(guideSource).toContain('CPF')
+    expect(guideSource).toContain('id: "cpf"')
+    expect(guideSource.indexOf('id: "cpf"')).toBeLessThan(guideSource.indexOf('id: "formation"'))
+    expect(guideSource).toContain('done: !!profileData?.profiles?.cpf?.trim()')
+    expect(guideSource).toContain('canSkip: false')
+    expect(guideSource).toContain('href: "/caregiver/profile"')
+  })
 })

@@ -57,6 +57,9 @@ describe('RoleOnboardingGuide behavior', () => {
       journey_types: [],
       availability_notes: '',
       has_references: true,
+      profiles: {
+        cpf: '52998224725',
+      },
     }
     mockDocuments.data = [
       {
@@ -73,5 +76,21 @@ describe('RoleOnboardingGuide behavior', () => {
 
     expect(await screen.findByText('Guia completo')).toBeInTheDocument()
     expect(screen.getByText('Tudo certo por agora')).toBeInTheDocument()
+  })
+
+  it('prompts legacy caregivers to add CPF when it is missing', async () => {
+    mockCaregiverProfile.data = {
+      ...(mockCaregiverProfile.data as Record<string, unknown>),
+      profiles: {
+        cpf: '',
+      },
+    }
+
+    renderGuide()
+
+    expect(await screen.findByText('Informe seu CPF')).toBeInTheDocument()
+    expect(screen.getByText('CPF precisa de ajuste')).toBeInTheDocument()
+    expect(screen.getByText('Agora não')).toBeInTheDocument()
+    expect(screen.getByText('Preencher')).toBeInTheDocument()
   })
 })

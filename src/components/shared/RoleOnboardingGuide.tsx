@@ -29,6 +29,7 @@ interface OnboardingStep {
   href: string;
   done: boolean;
   markSeenOnAction?: boolean;
+  canSkip?: boolean;
 }
 
 function getGuideStorageKey(role: OnboardingVideoRole, stepId: string) {
@@ -186,8 +187,12 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
               </Button>
             ) : (
               <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
-                <Button variant="ghost" onClick={skipStep} className="w-full whitespace-normal">
-                  Não mostrar esta etapa
+                <Button
+                  variant="ghost"
+                  onClick={activeStep?.canSkip === false ? closeGuideForNow : skipStep}
+                  className="w-full whitespace-normal"
+                >
+                  {activeStep?.canSkip === false ? "Agora não" : "Não mostrar esta etapa"}
                 </Button>
                 <Button onClick={goToStep} className="w-full">
                   Preencher
@@ -224,6 +229,18 @@ function CaregiverRouteOnboardingGuide() {
     const hasDocument = !!rgCnh && (rgCnh.status === "approved" || rgCnh.status === "sent");
 
     return [
+      {
+        id: "cpf",
+        title: "Informe seu CPF",
+        statusLabel: "CPF",
+        description:
+          "Atualizamos o cadastro de cuidadores para usar CPF como identificação única e evitar cadastros duplicados.",
+        detail:
+          "Abra Dados básicos e preencha seu CPF. Ele não aparece para as famílias e fica protegido no cadastro.",
+        href: "/caregiver/profile",
+        done: !!profileData?.profiles?.cpf?.trim(),
+        canSkip: false,
+      },
       {
         id: "formation",
         title: "Complete sua formação",
