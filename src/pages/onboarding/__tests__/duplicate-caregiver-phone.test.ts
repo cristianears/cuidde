@@ -9,6 +9,18 @@ const migration = readFileSync(
 )
 
 describe('duplicate caregiver phone prevention', () => {
+  it('updates the existing Google profile instead of upserting it during onboarding', () => {
+    const submitStart = source.indexOf('const handleSubmit = async () => {')
+    const googleBranchStart = source.indexOf('if (isGoogleFlow && user) {', submitStart)
+    const emailBranchStart = source.indexOf('} else {', googleBranchStart)
+    const googleBranch = source.slice(googleBranchStart, emailBranchStart)
+
+    expect(googleBranch).toContain(".from('profiles')")
+    expect(googleBranch).toContain('.update({')
+    expect(googleBranch).not.toContain('.upsert({')
+    expect(googleBranch).toContain(".eq('id', user.id)")
+  })
+
   it('checks caregiver phone before creating a signup', () => {
     expect(source).toContain('checkDuplicateCaregiverPhone')
     expect(source).toContain('const nextStep = async ()')

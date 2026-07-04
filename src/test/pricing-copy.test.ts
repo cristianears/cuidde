@@ -9,12 +9,13 @@ describe('pricing copy', () => {
   it('shows monthly equivalent, savings and total on the landing page plans', () => {
     const source = read('src/components/Pricing.tsx')
 
-    expect(source).toContain('price: "99"')
+    expect(source).toContain('price: "127"')
+    expect(source).toContain('price: "84,99"')
     expect(source).toContain('priceLabel: "/mês"')
-    expect(source).toContain('priceDiscount: "22% de desconto"')
-    expect(source).toContain('priceTotal: "total R$ 297"')
+    expect(source).toContain('33% off')
+    expect(source).toContain('priceTotal: "total R$ 254,97"')
     expect(source).toContain('price: "83"')
-    expect(source).toContain('priceDiscount: "35% de desconto"')
+    expect(source).toContain('35% off')
     expect(source).toContain('priceTotal: "total R$ 997"')
     expect(source).toContain('whitespace-nowrap')
   })

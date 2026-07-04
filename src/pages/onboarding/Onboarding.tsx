@@ -420,16 +420,17 @@ const Onboarding = () => {
           (user.user_metadata?.picture as string | undefined) ||
           null
 
-        // Upsert garante criação do row caso não exista (novo usuário Google)
+        // O trigger do Auth cria o row para usuários Google. Usar update evita o
+        // SELECT exigido pelo upsert, mantendo o CPF protegido por column grants.
         const { error: profileError } = await supabase
           .from('profiles')
-          .upsert({
-            id: user.id,
+          .update({
             role: formData.profileType,
             full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? formData.name,
             phone: formData.phone,
             cpf: formData.profileType === 'caregiver' ? cpfDigits : null,
-          }, { onConflict: 'id' })
+          })
+          .eq('id', user.id)
 
         if (profileError) throw profileError
 
