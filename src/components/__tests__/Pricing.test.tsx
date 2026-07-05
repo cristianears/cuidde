@@ -63,10 +63,13 @@ describe('Pricing', () => {
     expect(screen.getByText('Acesso a certificados, antecedentes e referências')).toBeInTheDocument()
     expect(screen.getAllByText('Acesso ao histórico de cuidados e registros de ocorrências')).toHaveLength(3)
 
-    expect(screen.getByText('R$ 84,99')).toBeInTheDocument()
-    expect(screen.getByText('total R$ 254,97')).toBeInTheDocument()
-    expect(screen.getByText('Melhor custo-benefício · 33% off')).toBeInTheDocument()
-    expect(screen.getByText('35% off')).toBeInTheDocument()
+    expect(screen.getByText('R$ 79,99')).toBeInTheDocument()
+    expect(screen.getByText('total R$ 239,97')).toBeInTheDocument()
+    expect(screen.getByText('Melhor custo-benefício')).toBeInTheDocument()
+    expect(screen.getByText('37% off')).toHaveClass('text-sm')
+    expect(screen.getByText('37% off').parentElement).toHaveClass('bg-[#22CF5C]', 'text-white', 'py-1')
+    expect(screen.getByText('35% off')).toHaveClass('text-sm')
+    expect(screen.getByText('35% off').parentElement).toHaveClass('py-1')
 
     expect(screen.queryByText(/Acesso a documentos enviados pelo profissional/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/\d+% de desconto/i)).not.toBeInTheDocument()

@@ -21,7 +21,10 @@ const plans = [
     buttonVariant: "outline" as const,
     gradient: "from-slate-100/95 to-blue-50/80",
     cta: "Criar conta grátis",
-    badge: null,
+    badgePrefix: null,
+    badgeOff: null,
+    badgeClassName: null,
+    badgeOffClassName: null,
   },
   {
     name: "Mensal",
@@ -43,15 +46,18 @@ const plans = [
     buttonVariant: "outline" as const,
     gradient: "from-amber-100/95 to-orange-50/80",
     cta: "Assinar mensal",
-    badge: null,
+    badgePrefix: null,
+    badgeOff: null,
+    badgeClassName: null,
+    badgeOffClassName: null,
   },
   {
     name: "Trimestral",
     description: "Mais tempo para decidir com tranquilidade.",
-    price: "84,99",
+    price: "79,99",
     priceLabel: "/mês",
     priceDiscount: null,
-    priceTotal: "total R$ 254,97",
+    priceTotal: "total R$ 239,97",
     features: [
       "Todos os recursos do plano mensal",
       "Acesso ao histórico de cuidados e registros de ocorrências",
@@ -61,7 +67,10 @@ const plans = [
     buttonVariant: "default" as const,
     gradient: "from-indigo-100/95 to-purple-50/80",
     cta: "Assinar 3 meses",
-    badge: "Melhor custo-benefício · 33% off",
+    badgePrefix: "Melhor custo-benefício",
+    badgeOff: "37% off",
+    badgeClassName: "bg-[#22CF5C] text-white py-1",
+    badgeOffClassName: "text-sm",
   },
   {
     name: "Anual",
@@ -80,7 +89,10 @@ const plans = [
     buttonVariant: "outline" as const,
     gradient: "from-emerald-100/95 to-teal-50/80",
     cta: "Assinar anual",
-    badge: "35% off",
+    badgePrefix: null,
+    badgeOff: "35% off",
+    badgeClassName: "bg-primary text-primary-foreground py-1",
+    badgeOffClassName: "text-sm",
   },
 ];
 const Pricing = () => {
@@ -120,9 +132,11 @@ const Pricing = () => {
                   : "shadow-card border-border/30 hover:shadow-card-hover"
               }`}
             >
-              {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full shadow-md whitespace-nowrap">
-                  {plan.badge}
+              {(plan.badgePrefix || plan.badgeOff) && (
+                <span className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 ${plan.badgeClassName} text-xs font-semibold rounded-full shadow-md whitespace-nowrap`}>
+                  {plan.badgePrefix && <span>{plan.badgePrefix}</span>}
+                  {plan.badgePrefix && plan.badgeOff && <span aria-hidden="true"> · </span>}
+                  {plan.badgeOff && <span className={plan.badgeOffClassName}>{plan.badgeOff}</span>}
                 </span>
               )}
               <div className="mb-2.5 mt-1">
