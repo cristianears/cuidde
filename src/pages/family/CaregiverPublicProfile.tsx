@@ -272,7 +272,7 @@ const CaregiverPublicProfile = () => {
                     </AvatarFallback>
                   </Avatar>
                   {caregiver.has_rg_cnh && (
-                    <IdentityVerifiedSeal className="-left-4 -top-4" size="md" />
+                    <IdentityVerifiedSeal className="-left-1.5 -top-1.5" size="md" />
                   )}
                 </div>
 

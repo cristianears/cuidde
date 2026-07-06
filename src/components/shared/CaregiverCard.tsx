@@ -141,7 +141,7 @@ const CaregiverCard = ({
               )}
             </div>
             {hasDocsSent && (
-              <IdentityVerifiedSeal className="-left-4 -top-4" />
+              <IdentityVerifiedSeal className="-left-1.5 -top-1.5" />
             )}
             <button
               onClick={handleFavorite}
