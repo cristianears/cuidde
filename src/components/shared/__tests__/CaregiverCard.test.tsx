@@ -118,4 +118,14 @@ describe('CaregiverCard', () => {
     expect(onFavorite).not.toHaveBeenCalled()
     expect(toast.error).toHaveBeenCalledWith('Assine um plano para favoritar perfis.')
   })
+
+  it('shows an identity verified seal on the photo only when identity document was sent', () => {
+    const { rerender } = render(<CaregiverCard caregiver={caregiver} />)
+
+    expect(screen.queryByLabelText('Selo Identidade Verificada')).not.toBeInTheDocument()
+
+    rerender(<CaregiverCard caregiver={caregiver} hasDocsSent />)
+
+    expect(screen.getByLabelText('Selo Identidade Verificada')).toBeInTheDocument()
+  })
 })

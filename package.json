@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build && node scripts/seo-pages.mjs",
     "build:dev": "vite build --mode development",
+    "db:impact-check": "node scripts/db-impact-check.mjs",
     "lint": "eslint .",
     "legal:pdf": "node scripts/generate-legal-pdfs.mjs",
     "preview": "vite preview",

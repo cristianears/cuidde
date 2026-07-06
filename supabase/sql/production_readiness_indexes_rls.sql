@@ -154,12 +154,11 @@ create index if not exists idx_caregiver_city_trgm
 create index if not exists idx_caregiver_neighborhood_trgm
   on public.caregiver_profiles using gin (neighborhood gin_trgm_ops);
 
--- Filtro mais comum: busca pública só lê verificados+visíveis+disponíveis.
+-- Filtro mais comum: busca pública só lê perfis completos+disponíveis.
 -- Índice parcial em "elegíveis para busca" reduz drasticamente o tamanho.
 create index if not exists idx_caregiver_searchable
   on public.caregiver_profiles (city, neighborhood)
   where profile_complete = true
-    and has_rg_cnh = true
     and is_available_for_new = true;
 
 
@@ -242,7 +241,6 @@ create policy "caregiver_public_searchable"
   for select
   using (
     profile_complete = true
-    and has_rg_cnh = true
     and is_available_for_new = true
   );
 

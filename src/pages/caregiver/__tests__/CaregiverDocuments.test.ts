@@ -16,7 +16,7 @@ describe('CaregiverDocuments copy and progress', () => {
     expect(source).not.toContain('Todos os documentos foram enviados! Nossa equipe')
   })
 
-  it('keeps RG/CNH required after an uploaded row is merged into the document slots', () => {
+  it('keeps RG/CNH optional after an uploaded row is merged into the document slots', () => {
     const uploadedRgCnh = {
       id: 'doc-rg-cnh',
       caregiver_id: 'caregiver-id',
@@ -34,7 +34,15 @@ describe('CaregiverDocuments copy and progress', () => {
 
     const documents = buildDocumentSlots([uploadedRgCnh])
 
-    expect(documents.find((doc) => doc.type === 'rg_cnh')?.required).toBe(true)
+    expect(documents.find((doc) => doc.type === 'rg_cnh')?.required).toBe(false)
     expect(documents.find((doc) => doc.type === 'curriculo')?.required).toBe(false)
+  })
+
+  it('presents RG/CNH as a trust booster with a verified badge, not a requirement', () => {
+    expect(source).toContain('Aumenta a confiança do seu perfil e recebe selo de verificado.')
+    expect(source).toContain('selfie')
+    expect(source).toContain('documento aberto')
+    expect(source).not.toContain('RG ou CNH obrigat')
+    expect(source).not.toContain('habilitar seu perfil')
   })
 })

@@ -18,4 +18,7 @@ describe('copy de solicitar atendimento', () => {
   it('informa que familia e cuidador poderao trocar mensagens via chat', () => {
     expect(dialogSource).toContain('e poderão trocar mensagens via chat.')
   })
+  it('orienta a familia a conferir seguranca antes de contratar', () => {
+    expect(dialogSource).toContain('Confirmar documento presencialmente, checar referências, experiência, certificados e fazer contrato.')
+  })
 })

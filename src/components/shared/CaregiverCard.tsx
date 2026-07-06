@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import StarRating from "@/components/shared/StarRating";
+import { IdentityVerifiedSeal } from "@/components/shared/IdentityVerifiedSeal";
 import type { CaregiverPublic } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
@@ -103,7 +104,7 @@ const CaregiverCard = ({
   const idiomasDisplay = (caregiver.idiomas ?? []).filter((i) => i.toLowerCase() !== "outro");
 
   const trustBadges = [
-    hasDocsSent       && { icon: FileText,   label: "Documentos enviados",      cls: "bg-emerald-50 text-emerald-700" },
+    hasDocsSent       && { icon: FileText,   label: "Identidade verificada",    cls: "bg-amber-50 text-amber-700" },
     hasAntecedentes   && { icon: Shield,     label: "Certidão de antecedentes", cls: "bg-violet-50 text-violet-700"  },
     hasReferencias    && { icon: User,       label: "Referências profissionais", cls: "bg-amber-50 text-amber-700"   },
     hasCertificados   && { icon: BadgeCheck, label: "Certificados informados",  cls: "bg-blue-50 text-blue-700"     },
@@ -114,28 +115,33 @@ const CaregiverCard = ({
   ].filter(Boolean) as { icon: React.ElementType; label: string; cls: string }[];
 
   return (
-    <Card className={cn("overflow-hidden hover:shadow-md transition-shadow duration-200", className)}>
+    <Card className={cn("overflow-visible hover:shadow-md transition-shadow duration-200", className)}>
       <CardContent className="p-0">
         <div className="flex min-w-0">
 
           {/* ── Foto ── */}
-          <div className="relative w-24 sm:w-36 flex-shrink-0 bg-muted self-stretch">
-            {caregiver.photo_url && !photoFailed ? (
-              <img
-                src={caregiver.photo_url}
-                alt={caregiver.full_name ?? "Cuidador"}
-                className="absolute inset-0 w-full h-full object-cover object-top"
-                onError={() => setPhotoFailed(true)}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Avatar className="w-16 h-16">
-                  <AvatarImage src={undefined} />
-                  <AvatarFallback className="text-xl bg-primary/10 text-primary">
-                    {getInitials(caregiver.full_name) || "?"}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
+          <div className="relative w-24 sm:w-36 flex-shrink-0 self-stretch">
+            <div className="absolute inset-0 overflow-hidden rounded-l-lg bg-muted">
+              {caregiver.photo_url && !photoFailed ? (
+                <img
+                  src={caregiver.photo_url}
+                  alt={caregiver.full_name ?? "Cuidador"}
+                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  onError={() => setPhotoFailed(true)}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Avatar className="w-16 h-16">
+                    <AvatarImage src={undefined} />
+                    <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                      {getInitials(caregiver.full_name) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              )}
+            </div>
+            {hasDocsSent && (
+              <IdentityVerifiedSeal className="-left-4 -top-4" />
             )}
             <button
               onClick={handleFavorite}

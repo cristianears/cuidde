@@ -231,7 +231,7 @@ const CaregiverDocuments = () => {
       <main className="flex-1 p-4 md:p-6 lg:p-8">
         <PageHeader
           title="Meus Documentos"
-          description="Envie seus documentos para completar seu perfil na plataforma."
+          description="Envie documentos para aumentar a confiança do seu perfil na plataforma."
         />
 
         {isLoading ? (
@@ -249,7 +249,7 @@ const CaregiverDocuments = () => {
                   Documentos
                 </CardTitle>
                 <CardDescription className="text-xs md:text-sm">
-                  Envie os documentos abaixo para completar seu cadastro.
+                  Envie os documentos abaixo para fortalecer seu perfil.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 md:space-y-4">
@@ -264,21 +264,24 @@ const CaregiverDocuments = () => {
                   </div>
                 )}
 
-                {/* Banner RG/CNH ausente */}
+                {/* Banner RG/CNH opcional */}
                 {rgCnhMissing && !rgCnhRejected && (
-                  <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-orange-50 border border-orange-200">
-                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-orange-600 mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-3 p-3 md:p-4 rounded-xl bg-amber-50 border border-amber-200">
+                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-amber-600 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-xs md:text-sm font-semibold text-orange-800">RG ou CNH obrigatório</p>
-                      <p className="text-xs md:text-sm text-orange-700 mt-0.5">
-                        Envie seu documento de identificação para habilitar seu perfil na plataforma.
+                      <p className="text-xs md:text-sm font-semibold text-amber-800">RG ou CNH opcional</p>
+                      <p className="text-xs md:text-sm text-amber-700 mt-0.5">
+                        Aumenta a confiança do seu perfil e recebe selo de verificado.
+                      </p>
+                      <p className="text-xs md:text-sm text-amber-700 mt-1">
+                        Para este campo, envie uma selfie segurando o documento aberto na mão, com a foto e os dados legíveis.
                       </p>
                     </div>
                   </div>
                 )}
 
                 <p className="text-xs md:text-sm text-muted-foreground pb-1">
-                  Apenas o documento de identificação é necessário para cadastro. Os demais são opcionais e podem aumentar a confiança das famílias no seu perfil.
+                  Todos os documentos são opcionais e podem aumentar a confiança das famílias no seu perfil.
                 </p>
 
                 <div className="rounded-xl border border-border bg-muted/30 p-3 md:p-4">
@@ -326,7 +329,7 @@ const CaregiverDocuments = () => {
                     <div>
                       <p className="text-xs md:text-sm font-medium text-foreground">Sobre os documentos</p>
                       <p className="text-xs md:text-sm text-muted-foreground mt-1">
-                        <strong>RG ou CNH:</strong> Documento de identificação com foto.<br />
+                        <strong>RG ou CNH:</strong> Envie uma selfie segurando o documento aberto, com foto e dados legíveis.<br />
                         <strong>Currículo:</strong> Detalhe sua experiência profissional na área de cuidados.<br />
                         <strong>Certificações:</strong> Cursos de cuidador, enfermagem, primeiros socorros, etc.<br />
                         <strong>Antecedentes Criminais:</strong> Certidão negativa emitida nos últimos 90 dias.

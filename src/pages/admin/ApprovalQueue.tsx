@@ -84,7 +84,7 @@ const ApprovalQueue = () => {
       <main className="flex-1 p-6 lg:p-8">
         <PageHeader
           title="Revisões"
-          description="Revise documentos obrigatórios e opcionais enviados pelos cuidadores"
+          description="Revise documentos enviados pelos cuidadores"
         />
 
         <div className="mt-6">

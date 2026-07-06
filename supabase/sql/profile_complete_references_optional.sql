@@ -1,4 +1,4 @@
--- References are a trust/ranking signal and an optional search filter.
+-- References and identity documents are trust/ranking signals and optional filters.
 -- They must not block caregivers from appearing in marketplace search.
 
 create or replace function public.compute_profile_complete(cp_id uuid)
@@ -12,7 +12,6 @@ declare
   v_specialties text[];
   v_city text;
   v_neighborhood text;
-  v_has_rg boolean;
 begin
   select bio, specialties, city, neighborhood
   into v_bio, v_specialties, v_city, v_neighborhood
@@ -39,23 +38,19 @@ begin
     return false;
   end if;
 
-  select exists (
-    select 1
-    from public.caregiver_documents
-    where caregiver_id = cp_id
-      and type = 'rg_cnh'
-      and status in ('sent', 'approved')
-  ) into v_has_rg;
-
-  if not v_has_rg then
-    return false;
-  end if;
-
   return true;
 end;
 $function$;
 
-update public.caregiver_profiles
-set profile_complete = public.compute_profile_complete(id);
+update public.caregiver_profiles cp
+set
+  has_rg_cnh = exists (
+    select 1
+    from public.caregiver_documents cd
+    where cd.caregiver_id = cp.id
+      and cd.type = 'rg_cnh'
+      and cd.status in ('sent', 'approved')
+  ),
+  profile_complete = public.compute_profile_complete(cp.id);
 
 notify pgrst, 'reload schema';

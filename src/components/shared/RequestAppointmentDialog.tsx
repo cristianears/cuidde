@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, ShieldCheck } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import {
@@ -235,6 +235,13 @@ export default function RequestAppointmentDialog({
               rows={3}
               maxLength={600}
             />
+          </div>
+
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+            <p className="text-xs leading-relaxed text-amber-800">
+              Confirmar documento presencialmente, checar referências, experiência, certificados e fazer contrato.
+            </p>
           </div>
         </div>
 

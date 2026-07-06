@@ -14,7 +14,6 @@ Este registro serve para rastrear o estado das policies aplicadas no Supabase e 
 O cuidador aparece no marketplace quando:
 
 - `profile_complete = true`
-- `has_rg_cnh = true`
 - `is_available_for_new = true`
 
 A busca nao depende de `status = 'verified'`.
@@ -40,4 +39,4 @@ order by tablename, policyname;
 
 - Salvar o CSV exportado junto deste arquivo ou em uma pasta de auditoria do projeto.
 - Antes de alterar RLS novamente, repetir a query acima e comparar com o backup anterior.
-- Evitar aplicar policies que condicionem a busca publica a `status = 'verified'`, pois a regra atual usa perfil minimo completo e RG/CNH valido como arquivo.
+- Evitar aplicar policies que condicionem a busca publica a `status = 'verified'` ou `has_rg_cnh = true`, pois a regra atual usa perfil minimo completo e disponibilidade. RG/CNH é sinal de confianca, nao trava de visibilidade.

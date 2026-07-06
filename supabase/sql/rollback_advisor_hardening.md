@@ -298,7 +298,7 @@ create policy "caregiver_public_searchable"
   on public.caregiver_profiles
   for select
   to public
-  using ((profile_complete = true) and (has_rg_cnh = true) and (is_available_for_new = true));
+  using ((profile_complete = true) and (is_available_for_new = true));
 ```
 
 ## Bloco D: duplicate permissive policies - caregiver_availability

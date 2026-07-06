@@ -25,15 +25,14 @@ import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
-import { useDocuments } from "@/hooks/useCaregiverDocuments";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useCareRoutineTodayStatus } from "@/hooks/useCareRoutine";
 import { useReviews } from "@/hooks/useReviews";
 import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
-import type { CaregiverDocument, CaregiverPublic } from "@/types/database";
+import type { CaregiverPublic } from "@/types/database";
 
 // ─── Completude do perfil ─────────────────────────────────────────────────────
-// 7 critérios obrigatórios para habilitar a busca. Referências são diferencial.
+// Critérios principais para busca. Documentos e referências são diferenciais de confiança.
 
 interface CompletenessCheck {
   done: boolean;
@@ -43,7 +42,6 @@ interface CompletenessCheck {
 
 function getProfileCompleteness(
   profile: CaregiverProfileFull,
-  docs: CaregiverDocument[],
 ): { pct: number; checks: CompletenessCheck[] } {
   const checks: CompletenessCheck[] = [
     {
@@ -76,21 +74,6 @@ function getProfileCompleteness(
       label: "Definir valores de atendimento",
       href: "/caregiver/pricing",
     },
-    (() => {
-      const rgCnh = docs.find((d) => d.type === "rg_cnh");
-      if (rgCnh?.status === "rejected") {
-        return {
-          done: false,
-          label: "Reenviar RG/CNH — documento ilegível",
-          href: "/caregiver/documents",
-        };
-      }
-      return {
-        done: !!rgCnh && (rgCnh.status === "approved" || rgCnh.status === "sent"),
-        label: "Enviar RG ou CNH",
-        href: "/caregiver/documents",
-      };
-    })(),
   ];
 
   const doneCount = checks.filter((c) => c.done).length;
@@ -128,14 +111,6 @@ const TIP_BY_CHECK: Record<string, { body: string; actionTarget: string }> = {
     body: "Famílias filtram por faixa de preço. Defina seus valores para aparecer nesses resultados.",
     actionTarget: "/caregiver/pricing",
   },
-  "Enviar RG ou CNH": {
-    body: "O documento de identificação é obrigatório para habilitar seu perfil. Tire uma foto clara ou faça upload do arquivo.",
-    actionTarget: "/caregiver/documents",
-  },
-  "Reenviar RG/CNH — documento ilegível": {
-    body: "Seu documento foi recusado por estar ilegível. Envie uma nova foto com boa iluminação e sem cortes.",
-    actionTarget: "/caregiver/documents",
-  },
   "Inserir referências profissionais": {
     body: "Referências profissionais são o fator de confiança mais valorizado pelas famílias.",
     actionTarget: "/caregiver/profile",
@@ -168,7 +143,6 @@ const CaregiverDashboard = () => {
   const { data: profileData, isLoading: profileLoading } = useCaregiverProfile();
   useAutoGeocodeCaregiver(profileData);
 
-  const { data: documents = [] } = useDocuments();
   const { data: appointments = [] } = useAppointments("caregiver");
   const { data: reviews = [] } = useReviews(user?.id);
 
@@ -193,7 +167,7 @@ const CaregiverDashboard = () => {
 
   // ── Completude do perfil ─────────────────────────────────────────────────
   const profileCompleteness = profileData
-    ? getProfileCompleteness(profileData, documents)
+    ? getProfileCompleteness(profileData)
     : { pct: 0, checks: [] };
 
   const incompleteChecks = profileCompleteness.checks.filter((c) => !c.done);

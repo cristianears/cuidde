@@ -1,0 +1,16 @@
+-- Manifest for preventive database impact checks.
+--
+-- The MCP execute_sql tool cannot process psql \i includes, so use:
+--
+--   npm run db:impact-check -- --print all
+--
+-- Then ask Codex to execute the printed SQL with:
+--
+--   mcp__mcp_supabase_ditti.execute_sql
+--
+-- Execution order:
+-- 1. db_impact_check_auth_profiles.sql
+-- 2. db_impact_check_subscriptions.sql
+-- 3. db_impact_check_appointments_chat.sql
+-- 4. db_impact_check_caregiver_search.sql
+-- 5. db_impact_check_storage_documents.sql

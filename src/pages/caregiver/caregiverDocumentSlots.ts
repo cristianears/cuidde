@@ -4,8 +4,8 @@ export const DOC_DEFINITIONS: { type: DocumentType; label: string; required: boo
   {
     type: "rg_cnh",
     label: "RG ou CNH",
-    required: true,
-    hint: "Envie frente e verso em uma única imagem ou PDF.",
+    required: false,
+    hint: "Envie uma selfie segurando o documento aberto, com foto e dados legíveis.",
   },
   {
     type: "curriculo",

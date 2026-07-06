@@ -229,7 +229,7 @@ const CaregiverProfilesReview = () => {
     <div className="flex min-h-screen bg-background">
       <AppSidebar role="admin" userName="Administrador" />
       <main className="flex-1 p-4 md:p-6 lg:p-8">
-        <PageHeader title="Cuidadores" description="Revise cada perfil antes de liberar visibilidade para familias" />
+        <PageHeader title="Cuidadores" description="Revise documentos e qualidade dos perfis sem bloquear a visibilidade para familias" />
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <Card>
             <CardHeader className="pb-3"><CardTitle className="text-base">Perfis cadastrados</CardTitle></CardHeader>

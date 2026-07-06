@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import AppSidebar from "@/components/shared/AppSidebar"
 import StarRating from "@/components/shared/StarRating"
+import { IdentityVerifiedSeal } from "@/components/shared/IdentityVerifiedSeal"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -180,7 +181,7 @@ const CaregiverPublicProfile = () => {
 
   const trustBadges = caregiver
     ? [
-        caregiver.has_rg_cnh && { icon: FileText, label: "Documentos enviados", cls: "bg-emerald-50 text-emerald-700" },
+        caregiver.has_rg_cnh && { icon: FileText, label: "Identidade verificada", cls: "bg-amber-50 text-amber-700" },
         caregiver.has_antecedentes && { icon: Shield, label: "Certidão de antecedentes", cls: "bg-violet-50 text-violet-700" },
         caregiver.has_references && { icon: User, label: "Referências profissionais", cls: "bg-amber-50 text-amber-700" },
         caregiver.has_certificado && { icon: BadgeCheck, label: "Certificados informados", cls: "bg-blue-50 text-blue-700" },
@@ -263,13 +264,16 @@ const CaregiverPublicProfile = () => {
           <Card className="mb-4">
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                <div className="flex-shrink-0 flex justify-center sm:justify-start">
-                  <Avatar className="w-28 h-28 sm:w-32 sm:h-32 bg-muted p-1 ring-1 ring-border">
+                <div className="relative mx-auto h-28 w-28 flex-shrink-0 sm:mx-0 sm:h-32 sm:w-32">
+                  <Avatar className="h-full w-full bg-muted p-1 ring-1 ring-border">
                     <AvatarImage src={caregiver.photo_url ?? undefined} className="rounded-full object-cover object-center" />
                     <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                       {getInitials(caregiver.full_name)}
                     </AvatarFallback>
                   </Avatar>
+                  {caregiver.has_rg_cnh && (
+                    <IdentityVerifiedSeal className="-left-4 -top-4" size="md" />
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0 text-center sm:text-left">

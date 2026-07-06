@@ -73,7 +73,7 @@ create policy "caregiver_profiles: leitura consolidada"
     id = (select auth.uid())
     or profile_complete = true
     or (status = 'verified' and is_visible = true)
-    or (profile_complete = true and has_rg_cnh = true and is_available_for_new = true)
+    or (profile_complete = true and is_available_for_new = true)
   );
 
 create policy "caregiver_profiles: dono insere"

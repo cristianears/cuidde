@@ -64,7 +64,15 @@ begin
 end;
 $function$;
 
-update public.caregiver_profiles
-set profile_complete = public.compute_profile_complete(id);
+update public.caregiver_profiles cp
+set
+  has_rg_cnh = exists (
+    select 1
+    from public.caregiver_documents cd
+    where cd.caregiver_id = cp.id
+      and cd.type = 'rg_cnh'
+      and cd.status in ('sent', 'approved')
+  ),
+  profile_complete = public.compute_profile_complete(cp.id);
 
 notify pgrst, 'reload schema';

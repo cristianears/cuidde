@@ -371,7 +371,7 @@ serve(async (req) => {
     // Mover cuidador para "em análise" — sai dos Pendentes, aguarda reenvio
     const { error: cpErr } = await supabase
       .from('caregiver_profiles')
-      .update({ status: 'analyzing', has_rg_cnh: false, is_visible: false })
+      .update({ status: 'analyzing', has_rg_cnh: false, is_visible: true })
       .eq('id', caregiver_id)
     if (cpErr) return json({ error: cpErr.message }, 500, cors)
 

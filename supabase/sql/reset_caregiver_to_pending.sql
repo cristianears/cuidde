@@ -16,8 +16,8 @@ BEGIN
 
   UPDATE caregiver_profiles
   SET status = 'pending',
-      has_rg_cnh = false,
-      is_visible = false
+      has_rg_cnh = true,
+      is_visible = true
   WHERE id = p_caregiver_id;
 END;
 $$;
