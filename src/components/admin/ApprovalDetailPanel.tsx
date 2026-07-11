@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/display-name";
 import DocumentChecklist from "./DocumentChecklist";
 import type { Caregiver } from "@/data/mockData";
 import type { AdminDocumentRow } from "@/hooks/useAdmin";
@@ -74,11 +76,10 @@ const ApprovalDetailPanel = ({
     <Card className="lg:col-span-2">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-4">
-          <img
-            src={caregiver.photo}
-            alt={caregiver.name}
-            className="w-16 h-16 rounded-2xl object-cover"
-          />
+          <Avatar className="h-16 w-16 rounded-2xl">
+            <AvatarImage src={caregiver.photo || undefined} alt={caregiver.name} />
+            <AvatarFallback className="rounded-2xl text-lg">{getInitials(caregiver.name)}</AvatarFallback>
+          </Avatar>
           <div>
             <h3 className="text-lg font-semibold text-foreground">
               {caregiver.name}

@@ -1,6 +1,8 @@
 import { MapPin, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/display-name";
 import type { Caregiver } from "@/data/mockData";
 
 interface ApprovalCaregiverListProps {
@@ -51,11 +53,10 @@ const ApprovalCaregiverList = ({
               }`}
               onClick={() => onSelect(caregiver)}
             >
-              <img
-                src={caregiver.photo}
-                alt={caregiver.name}
-                className="w-11 h-11 rounded-full object-cover flex-shrink-0"
-              />
+              <Avatar className="h-11 w-11 rounded-full">
+                <AvatarImage src={caregiver.photo || undefined} alt={caregiver.name} />
+                <AvatarFallback>{getInitials(caregiver.name)}</AvatarFallback>
+              </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-foreground text-sm truncate">
                   {caregiver.name}

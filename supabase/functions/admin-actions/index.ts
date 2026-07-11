@@ -64,7 +64,7 @@ serve(async (req) => {
     const { status } = body
     let query = supabase
       .from('caregiver_profiles')
-      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible')
+      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible, admin_contacted_at')
       .order('created_at', { ascending: false })
 
     if (status && status !== 'all') query = query.eq('status', status)
@@ -104,7 +104,7 @@ serve(async (req) => {
 
     let query = supabase
       .from('caregiver_profiles')
-      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible')
+      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible, admin_contacted_at')
       .order('created_at', { ascending: false })
 
     if (documentCaregiverIds.length > 0) {
@@ -374,6 +374,20 @@ serve(async (req) => {
       .update({ status: 'analyzing', has_rg_cnh: false, is_visible: true })
       .eq('id', caregiver_id)
     if (cpErr) return json({ error: cpErr.message }, 500, cors)
+
+    return json({ ok: true }, 200, cors)
+  }
+
+  // ─── mark_contacted ───────────────────────────────────────────────────────
+  if (action === 'mark_contacted') {
+    const { caregiver_id } = body
+    if (!caregiver_id) return json({ error: 'caregiver_id required' }, 400, cors)
+
+    const { error } = await supabase
+      .from('caregiver_profiles')
+      .update({ admin_contacted_at: new Date().toISOString() })
+      .eq('id', caregiver_id)
+    if (error) return json({ error: error.message }, 500, cors)
 
     return json({ ok: true }, 200, cors)
   }

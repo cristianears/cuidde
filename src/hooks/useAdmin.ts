@@ -23,6 +23,7 @@ export interface AdminCaregiverRow {
   rejection_reason: string | null
   profile_complete: boolean
   is_visible: boolean
+  admin_contacted_at: string | null
   full_name: string | null
   phone: string | null
 }
@@ -283,6 +284,20 @@ export function useAdminMarkDocumentIllegible() {
       toast.warning('Cuidador notificado: documento ilegível.')
     },
     onError: (err: Error) => toast.error(`Erro: ${err.message}`),
+  })
+}
+
+export function useAdminMarkContacted() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (caregiverId: string) =>
+      callAdminAction<void>('mark_contacted', { caregiver_id: caregiverId }),
+    onSuccess: (_data, caregiverId) => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverDetail(caregiverId) })
+      toast.success('Cuidador marcado como contactado.')
+    },
+    onError: (err: Error) => toast.error(`Erro ao marcar contato: ${err.message}`),
   })
 }
 

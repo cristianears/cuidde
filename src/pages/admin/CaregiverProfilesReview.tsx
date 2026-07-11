@@ -12,25 +12,27 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
-import { useAdminCaregiverDetail, useAdminCaregiverDocuments, useAdminCaregivers } from "@/hooks/useAdmin";
+import { useAdminCaregiverDetail, useAdminCaregiverDocuments, useAdminCaregivers, useAdminMarkContacted } from "@/hooks/useAdmin";
 import type { AdminCaregiverDetail, AdminCaregiverRow, AdminDocumentRow } from "@/hooks/useAdmin";
 import type { CaregiverStatus } from "@/types/database";
 
-type StatusFilter = "all" | CaregiverStatus;
+type StatusFilter = "all" | "pending" | "analyzing" | "verified" | "complete" | "contacted" | "not_contacted";
 
 const STATUS_LABELS: Record<StatusFilter, string> = {
   all: "Todos",
   pending: "Pendentes",
-  analyzing: "Em analise",
+  analyzing: "Aguardando reenvio",
   verified: "Verificados",
-  rejected: "Rejeitados",
+  complete: "Perfis completos",
+  contacted: "Contactados",
+  not_contacted: "Nao contactados",
 };
 
 const STATUS_BADGE: Record<CaregiverStatus, { label: string; className: string }> = {
   pending: { label: "Pendente", className: "border-amber-200 bg-amber-50 text-amber-700" },
-  analyzing: { label: "Em analise", className: "border-blue-200 bg-blue-50 text-blue-700" },
+  analyzing: { label: "Aguardando reenvio", className: "border-blue-200 bg-blue-50 text-blue-700" },
   verified: { label: "Verificado", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  rejected: { label: "Rejeitado", className: "border-red-200 bg-red-50 text-red-700" },
+  rejected: { label: "Status antigo", className: "border-slate-200 bg-slate-50 text-slate-700" },
 };
 
 function formatLocation(caregiver: Pick<AdminCaregiverRow, "neighborhood" | "city" | "state">) {
@@ -45,6 +47,11 @@ function formatCurrency(value: number | null) {
 
 function formatPhoneForWhatsapp(phone: string | null) {
   return phone?.replace(/\D/g, "") ?? "";
+}
+
+function formatContactedAt(value: string | null) {
+  if (!value) return "Nao contactado";
+  return `Contactado em ${new Date(value).toLocaleDateString("pt-BR")}`;
 }
 
 function getReviewItems(detail: AdminCaregiverDetail | undefined, documents: AdminDocumentRow[]) {
@@ -82,6 +89,9 @@ function CaregiverListItem({ caregiver, selected, onSelect }: { caregiver: Admin
           <p className="mt-1 truncate text-xs text-muted-foreground">{formatLocation(caregiver)}</p>
           <div className="mt-2 flex items-center gap-2">
             <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", status.className)}>{status.label}</span>
+            {caregiver.admin_contacted_at && (
+              <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700">Contactado</span>
+            )}
             <span className="text-[11px] text-muted-foreground">{new Date(caregiver.created_at).toLocaleDateString("pt-BR")}</span>
           </div>
         </div>
@@ -96,6 +106,7 @@ function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; do
   const score = Math.round((completed / items.length) * 100);
   const whatsappPhone = formatPhoneForWhatsapp(detail.whatsapp ?? detail.phone);
   const status = STATUS_BADGE[detail.status];
+  const markContacted = useAdminMarkContacted();
 
   return (
     <div className="flex flex-col gap-4 lg:col-span-2">
@@ -114,13 +125,14 @@ function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; do
                   <Badge variant="outline" className={status.className}>{status.label}</Badge>
                   <Badge variant={detail.profile_complete ? "default" : "secondary"}>{detail.profile_complete ? "Perfil completo" : "Perfil incompleto"}</Badge>
                   <Badge variant={detail.is_visible ? "default" : "outline"}>{detail.is_visible ? "Visivel" : "Oculto"}</Badge>
+                  <Badge variant={detail.admin_contacted_at ? "default" : "outline"}>{formatContactedAt(detail.admin_contacted_at)}</Badge>
                 </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {whatsappPhone && (
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noreferrer">
+                  <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noreferrer" onClick={() => markContacted.mutate(detail.id)}>
                     <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
                   </a>
                 </Button>
@@ -208,7 +220,12 @@ const CaregiverProfilesReview = () => {
   const filteredCaregivers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     return caregivers.filter((caregiver) => {
-      const matchesStatus = statusFilter === "all" || caregiver.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" ||
+        caregiver.status === statusFilter ||
+        (statusFilter === "complete" && caregiver.profile_complete) ||
+        (statusFilter === "contacted" && !!caregiver.admin_contacted_at) ||
+        (statusFilter === "not_contacted" && !caregiver.admin_contacted_at);
       const haystack = [caregiver.full_name, caregiver.phone, caregiver.city, caregiver.neighborhood, caregiver.profissao_formacao].filter(Boolean).join(" ").toLowerCase();
       return matchesStatus && (!normalizedSearch || haystack.includes(normalizedSearch));
     });
@@ -216,9 +233,14 @@ const CaregiverProfilesReview = () => {
 
   const counts = useMemo(() => caregivers.reduce<Record<StatusFilter, number>>((acc, caregiver) => {
     acc.all += 1;
-    acc[caregiver.status] += 1;
+    if (caregiver.status === "pending" || caregiver.status === "analyzing" || caregiver.status === "verified") {
+      acc[caregiver.status] += 1;
+    }
+    if (caregiver.profile_complete) acc.complete += 1;
+    if (caregiver.admin_contacted_at) acc.contacted += 1;
+    else acc.not_contacted += 1;
     return acc;
-  }, { all: 0, pending: 0, analyzing: 0, verified: 0, rejected: 0 }), [caregivers]);
+  }, { all: 0, pending: 0, analyzing: 0, verified: 0, complete: 0, contacted: 0, not_contacted: 0 }), [caregivers]);
 
   useEffect(() => {
     if (selectedId && filteredCaregivers.some((caregiver) => caregiver.id === selectedId)) return;

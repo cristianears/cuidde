@@ -20,4 +20,9 @@ describe('ApprovalQueue', () => {
     expect(adminActionsSource).toContain(".eq('status', 'sent')")
     expect(adminActionsSource).toContain("status.eq.pending")
   })
+
+  it('labels analyzing caregivers as waiting for document resend', () => {
+    expect(queueSource).toContain('Aguardando reenvio')
+    expect(queueSource).not.toContain('aguardando reenvio de documento')
+  })
 })

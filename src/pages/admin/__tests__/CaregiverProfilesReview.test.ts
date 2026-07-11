@@ -26,6 +26,7 @@ describe('Admin caregiver profile review', () => {
   it('lets the admin edge function list all caregiver profiles and return review fields', () => {
     expect(adminActionsSource).toContain("if (status && status !== 'all')")
     expect(adminActionsSource).toContain('profile_complete')
+    expect(adminActionsSource).toContain('admin_contacted_at')
     expect(adminActionsSource).toContain('is_visible')
     expect(adminActionsSource).toContain('neighborhood')
   })
@@ -42,5 +43,22 @@ describe('Admin caregiver profile review', () => {
     expect(reviewSource).not.toContain('md:grid-cols-5')
     expect(reviewSource).toContain('overflow-x-auto')
     expect(reviewSource).toContain('whitespace-nowrap')
+  })
+
+  it('uses operational admin filters instead of the unused rejected profile tab', () => {
+    expect(reviewSource).toContain('Aguardando reenvio')
+    expect(reviewSource).toContain('Perfis completos')
+    expect(reviewSource).toContain('Contactados')
+    expect(reviewSource).toContain('Nao contactados')
+    expect(reviewSource).not.toContain('Rejeitados')
+  })
+
+  it('marks a caregiver as contacted when the admin opens WhatsApp', () => {
+    expect(adminHookSource).toContain('admin_contacted_at: string | null')
+    expect(adminHookSource).toContain('useAdminMarkContacted')
+    expect(adminHookSource).toContain("callAdminAction<void>('mark_contacted'")
+    expect(adminActionsSource).toContain("action === 'mark_contacted'")
+    expect(adminActionsSource).toContain("admin_contacted_at: new Date().toISOString()")
+    expect(reviewSource).toContain('markContacted.mutate')
   })
 })

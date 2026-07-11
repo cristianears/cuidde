@@ -198,6 +198,7 @@ export interface CaregiverProfile {
   status: CaregiverStatus
   rejection_reason: string | null
   is_visible: boolean
+  admin_contacted_at: string | null
   // Completude automática (calculada por trigger — sem aprovação de admin)
   profile_complete: boolean
   // Flags de documentos enviados (calculadas por trigger — visíveis publicamente)

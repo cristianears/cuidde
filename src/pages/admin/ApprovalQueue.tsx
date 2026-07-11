@@ -102,8 +102,8 @@ const ApprovalQueue = () => {
               <div className="flex items-center gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full">
                 <Clock className="w-3.5 h-3.5" />
                 {analyzingCount === 1
-                  ? "1 cuidador aguardando reenvio de documento"
-                  : `${analyzingCount} cuidadores aguardando reenvio de documento`}
+                  ? "Aguardando reenvio: 1 cuidador"
+                  : `Aguardando reenvio: ${analyzingCount} cuidadores`}
               </div>
             )}
           </div>
