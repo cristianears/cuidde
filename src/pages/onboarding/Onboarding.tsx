@@ -36,6 +36,7 @@ import { queryKeys } from '@/lib/query-keys'
 import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { queuePendingUserConsents, recordUserConsents } from '@/lib/user-consents'
 import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
+import { getPersonNameError, isValidPersonName, normalizePersonName } from '@/lib/person-name'
 
 type ProfileType = 'family' | 'caregiver' | null
 
@@ -351,6 +352,13 @@ const Onboarding = () => {
 
   const nextStep = async () => {
     if (currentStepIndex < steps.length - 1) {
+      if (currentStepId === 3) {
+        const nameError = getPersonNameError(formData.name)
+        if (nameError) {
+          toast.error(nameError)
+          return
+        }
+      }
       if (currentStepId === 4 && await checkDuplicateCaregiverPhone()) return
       if (currentStepId === 4 && await checkDuplicateCaregiverCpf()) return
       setCurrentStepId(steps[currentStepIndex + 1].id)
@@ -387,6 +395,13 @@ const Onboarding = () => {
 
   const handleSubmit = async () => {
     if (!formData.profileType) return
+    const nameError = getPersonNameError(formData.name)
+    if (nameError) {
+      setCurrentStepId(3)
+      toast.error(nameError)
+      return
+    }
+    const normalizedName = normalizePersonName(formData.name)
     if (!hasAcceptedPlatformTerms) {
       toast.error('Para criar sua conta, aceite os termos e politicas da plataforma.')
       return
@@ -426,7 +441,7 @@ const Onboarding = () => {
           .from('profiles')
           .update({
             role: formData.profileType,
-            full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? formData.name,
+            full_name: normalizedName,
             phone: formData.phone,
             cpf: formData.profileType === 'caregiver' ? cpfDigits : null,
           })
@@ -483,7 +498,7 @@ const Onboarding = () => {
       } else {
         const { data, error } = await signUpWithEmail(formData.email, formData.password, {
           role: formData.profileType,
-          full_name: formData.name,
+          full_name: normalizedName,
           phone: formData.phone,
           cpf: formData.profileType === 'caregiver' ? formData.cpf : undefined,
         })
@@ -505,7 +520,7 @@ const Onboarding = () => {
           await supabase.from('profiles').upsert({
             id: data.user.id,
             role: formData.profileType,
-            full_name: formData.name,
+            full_name: normalizedName,
             phone: formData.phone,
             cpf: formData.profileType === 'caregiver' ? cpfDigits : null,
           }, { onConflict: 'id' })
@@ -582,7 +597,7 @@ const Onboarding = () => {
         return formData.profileType !== null
       case 3:
         return !!(
-          formData.name &&
+          isValidPersonName(formData.name) &&
           formData.email &&
           formData.password &&
           formData.confirmPassword &&
@@ -778,6 +793,9 @@ const Onboarding = () => {
                       onChange={(e) => updateFormData('name', e.target.value)}
                       className="mt-2 h-12 rounded-xl border-border/80 focus:border-primary"
                     />
+                    {formData.name && getPersonNameError(formData.name) && (
+                      <p className="mt-1.5 text-xs text-destructive">{getPersonNameError(formData.name)}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="email" className="text-foreground font-medium">

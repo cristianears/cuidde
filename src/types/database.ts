@@ -107,6 +107,20 @@ export type SubscriptionCancellationReason =
   | 'missing_features'
   | 'other'
 
+export type CaregiverAccountStatus = 'active' | 'paused' | 'closed' | 'suspended'
+
+export type CaregiverAccountFeedbackReason =
+  | 'found_work_no_longer_needs_platform'
+  | 'no_longer_available'
+  | 'not_enough_contacts'
+  | 'found_clients_elsewhere'
+  | 'difficult_to_use'
+  | 'privacy_or_safety'
+  | 'temporary_pause'
+  | 'no_matching_families'
+  | 'admin_action'
+  | 'other'
+
 // ─── Tabela: profiles ────────────────────────────────────────────────────────
 
 export interface Profile {
@@ -142,6 +156,18 @@ export interface SubscriptionCancellationFeedback {
   subscription_status: SubscriptionStatus | null
   cancel_at_period_end: boolean | null
   current_period_end: string | null
+  created_at: string
+}
+
+export interface CaregiverAccountFeedback {
+  id: string
+  caregiver_id: string
+  account_status: Exclude<CaregiverAccountStatus, 'active'>
+  reason_code: CaregiverAccountFeedbackReason
+  reason_label: string
+  reason_details: string | null
+  created_by: string | null
+  created_by_role: 'caregiver' | 'admin' | null
   created_at: string
 }
 
@@ -199,6 +225,15 @@ export interface CaregiverProfile {
   rejection_reason: string | null
   is_visible: boolean
   admin_contacted_at: string | null
+  account_status: CaregiverAccountStatus
+  account_status_reason_code: CaregiverAccountFeedbackReason | null
+  account_status_reason_label: string | null
+  account_status_reason_details: string | null
+  account_status_updated_at: string | null
+  account_status_updated_by: string | null
+  paused_at: string | null
+  closed_at: string | null
+  suspended_at: string | null
   // Completude automática (calculada por trigger — sem aprovação de admin)
   profile_complete: boolean
   // Flags de documentos enviados (calculadas por trigger — visíveis publicamente)
@@ -501,6 +536,11 @@ export interface Database {
         Insert: Omit<SubscriptionCancellationFeedback, 'id' | 'created_at'>
         Update: never
       }
+      caregiver_account_feedback: {
+        Row: CaregiverAccountFeedback
+        Insert: Omit<CaregiverAccountFeedback, 'id' | 'created_at'>
+        Update: never
+      }
       caregiver_profiles: {
         Row: CaregiverProfile
         Insert: Pick<CaregiverProfile, 'id'>
@@ -575,6 +615,45 @@ export interface Database {
     }
     Views: Record<string, never>
     Functions: {
+      admin_list_caregiver_accounts: {
+        Args: { p_status?: string }
+        Returns: Array<{
+          id: string
+          photo_url: string | null
+          neighborhood: string | null
+          city: string | null
+          state: string | null
+          status: CaregiverStatus
+          created_at: string
+          profissao_formacao: string | null
+          professional_reg_type: string | null
+          professional_reg_number: string | null
+          professional_reg_uf: string | null
+          rejection_reason: string | null
+          profile_complete: boolean
+          is_visible: boolean
+          admin_contacted_at: string | null
+          account_status: CaregiverAccountStatus
+          account_status_reason_code: CaregiverAccountFeedbackReason | null
+          account_status_reason_label: string | null
+          account_status_reason_details: string | null
+          account_status_updated_at: string | null
+          paused_at: string | null
+          closed_at: string | null
+          suspended_at: string | null
+          full_name: string | null
+          phone: string | null
+        }>
+      }
+      admin_update_caregiver_account_status: {
+        Args: {
+          p_caregiver_id: string
+          p_account_status: Exclude<CaregiverAccountStatus, 'active'>
+          p_reason_label?: string | null
+          p_reason_details?: string | null
+        }
+        Returns: void
+      }
       caregiver_phone_already_registered: {
         Args: { p_phone: string }
         Returns: boolean

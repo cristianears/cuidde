@@ -2,11 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { queryKeys } from '@/lib/query-keys'
-import type { CaregiverStatus } from '@/types/database'
+import type { CaregiverAccountStatus, CaregiverStatus } from '@/types/database'
 
 // ─── Tipos retornados pela Edge Function admin-actions ────────────────────────
 
-export type AdminCaregiverStatusFilter = CaregiverStatus | 'all'
+export type AdminCaregiverStatusFilter = CaregiverStatus | CaregiverAccountStatus | 'all'
 
 export interface AdminCaregiverRow {
   id: string
@@ -23,7 +23,16 @@ export interface AdminCaregiverRow {
   rejection_reason: string | null
   profile_complete: boolean
   is_visible: boolean
+  is_available_for_new: boolean
   admin_contacted_at: string | null
+  account_status: CaregiverAccountStatus
+  account_status_reason_code: string | null
+  account_status_reason_label: string | null
+  account_status_reason_details: string | null
+  account_status_updated_at: string | null
+  paused_at: string | null
+  closed_at: string | null
+  suspended_at: string | null
   full_name: string | null
   phone: string | null
 }
@@ -41,7 +50,6 @@ export interface AdminCaregiverDetail extends AdminCaregiverRow {
   categoria_cnh: string | null
   has_insurance: boolean
   emergency_available: boolean
-  is_available_for_new: boolean
   journey_types: string[]
   area_type: string | null
   area_radius: string | null
@@ -144,7 +152,11 @@ async function callAdminAction<T>(action: string, params: Record<string, unknown
 export function useAdminCaregivers(status: AdminCaregiverStatusFilter) {
   return useQuery({
     queryKey: queryKeys.adminCaregivers(status),
-    queryFn: () => callAdminAction<AdminCaregiverRow[]>('list_caregivers', { status }),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_list_caregiver_accounts', { p_status: status })
+      if (error) throw error
+      return (data ?? []) as AdminCaregiverRow[]
+    },
     staleTime: 30_000,
   })
 }
@@ -298,6 +310,36 @@ export function useAdminMarkContacted() {
       toast.success('Cuidador marcado como contactado.')
     },
     onError: (err: Error) => toast.error(`Erro ao marcar contato: ${err.message}`),
+  })
+}
+
+export function useAdminUpdateCaregiverAccountStatus() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      caregiverId,
+      accountStatus,
+      reasonLabel,
+      reasonDetails,
+    }: {
+      caregiverId: string
+      accountStatus: Exclude<CaregiverAccountStatus, 'active'>
+      reasonLabel: string
+      reasonDetails?: string
+    }) => supabase.rpc('admin_update_caregiver_account_status', {
+      p_caregiver_id: caregiverId,
+      p_account_status: accountStatus,
+      p_reason_label: reasonLabel,
+      p_reason_details: reasonDetails ?? null,
+    }).then(({ error }) => {
+      if (error) throw error
+    }),
+    onSuccess: (_data, { caregiverId, accountStatus }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiversRoot })
+      qc.invalidateQueries({ queryKey: queryKeys.adminCaregiverDetail(caregiverId) })
+      toast.success(accountStatus === 'suspended' ? 'Cuidador suspenso.' : 'Status da conta atualizado.')
+    },
+    onError: (err: Error) => toast.error(`Erro ao atualizar conta: ${err.message}`),
   })
 }
 

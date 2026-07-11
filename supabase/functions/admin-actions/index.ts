@@ -64,7 +64,7 @@ serve(async (req) => {
     const { status } = body
     let query = supabase
       .from('caregiver_profiles')
-      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible, admin_contacted_at')
+      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible, is_available_for_new, admin_contacted_at, account_status, account_status_reason_code, account_status_reason_label, account_status_reason_details, account_status_updated_at, paused_at, closed_at, suspended_at')
       .order('created_at', { ascending: false })
 
     if (status && status !== 'all') query = query.eq('status', status)
@@ -104,7 +104,7 @@ serve(async (req) => {
 
     let query = supabase
       .from('caregiver_profiles')
-      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible, admin_contacted_at')
+      .select('id, photo_url, neighborhood, city, state, status, created_at, profissao_formacao, professional_reg_type, professional_reg_number, professional_reg_uf, rejection_reason, profile_complete, is_visible, is_available_for_new, admin_contacted_at, account_status, account_status_reason_code, account_status_reason_label, account_status_reason_details, account_status_updated_at, paused_at, closed_at, suspended_at')
       .order('created_at', { ascending: false })
 
     if (documentCaregiverIds.length > 0) {
@@ -178,7 +178,7 @@ serve(async (req) => {
     const { caregiver_id } = body
     const { error } = await supabase
       .from('caregiver_profiles')
-      .update({ status: 'verified', is_visible: true, rejection_reason: null })
+      .update({ status: 'verified', rejection_reason: null })
       .eq('id', caregiver_id)
     if (error) return json({ error: error.message }, 500, cors)
     return json({ ok: true }, 200, cors)
@@ -189,7 +189,7 @@ serve(async (req) => {
     const { caregiver_id, reason } = body
     const { error } = await supabase
       .from('caregiver_profiles')
-      .update({ status: 'rejected', rejection_reason: reason, is_visible: false })
+      .update({ status: 'rejected', rejection_reason: reason })
       .eq('id', caregiver_id)
     if (error) return json({ error: error.message }, 500, cors)
     return json({ ok: true }, 200, cors)
@@ -340,11 +340,11 @@ serve(async (req) => {
       .single()
     if (docErr) return json({ error: docErr.message }, 500, cors)
 
-    // Se é o RG/CNH, marcar cuidador como verificado e visível
+    // O RG/CNH aprovado controla o selo, não a visibilidade na busca.
     if (doc?.type === 'rg_cnh') {
       const { error: cpErr } = await supabase
         .from('caregiver_profiles')
-        .update({ status: 'verified', has_rg_cnh: true, is_visible: true, rejection_reason: null })
+        .update({ status: 'verified', has_rg_cnh: true, rejection_reason: null })
         .eq('id', caregiver_id)
       if (cpErr) return json({ error: cpErr.message }, 500, cors)
     }
@@ -371,7 +371,7 @@ serve(async (req) => {
     // Mover cuidador para "em análise" — sai dos Pendentes, aguarda reenvio
     const { error: cpErr } = await supabase
       .from('caregiver_profiles')
-      .update({ status: 'analyzing', has_rg_cnh: false, is_visible: true })
+      .update({ status: 'analyzing', has_rg_cnh: false })
       .eq('id', caregiver_id)
     if (cpErr) return json({ error: cpErr.message }, 500, cors)
 
@@ -393,6 +393,52 @@ serve(async (req) => {
   }
 
   // ─── get_document_signed_url ─────────────────────────────────────────────
+  // Admin-only account status changes.
+  if (action === 'update_caregiver_account_status') {
+    const { caregiver_id, account_status, reason_label, reason_details } = body
+    if (!caregiver_id) return json({ error: 'caregiver_id required' }, 400, cors)
+    if (!['paused', 'closed', 'suspended'].includes(account_status)) {
+      return json({ error: 'account_status invalid' }, 400, cors)
+    }
+
+    const now = new Date().toISOString()
+    const isSuspended = account_status === 'suspended'
+    const label = reason_label || (isSuspended ? 'Suspensao manual pelo admin' : 'Alteracao manual pelo admin')
+
+    const { error: feedbackError } = await supabase
+      .from('caregiver_account_feedback')
+      .insert({
+        caregiver_id,
+        account_status,
+        reason_code: 'admin_action',
+        reason_label: label,
+        reason_details: reason_details || null,
+        created_by: caller.id,
+        created_by_role: 'admin',
+      })
+    if (feedbackError) return json({ error: feedbackError.message }, 500, cors)
+
+    const { error } = await supabase
+      .from('caregiver_profiles')
+      .update({
+        account_status,
+        account_status_reason_code: 'admin_action',
+        account_status_reason_label: label,
+        account_status_reason_details: reason_details || null,
+        account_status_updated_at: now,
+        account_status_updated_by: caller.id,
+        paused_at: account_status === 'paused' ? now : null,
+        closed_at: account_status === 'closed' ? now : null,
+        suspended_at: account_status === 'suspended' ? now : null,
+        is_visible: false,
+        is_available_for_new: false,
+      })
+      .eq('id', caregiver_id)
+    if (error) return json({ error: error.message }, 500, cors)
+
+    return json({ ok: true }, 200, cors)
+  }
+
   if (action === 'get_document_signed_url') {
     const { file_url } = body
     if (!file_url) return json({ error: 'file_url required' }, 400, cors)

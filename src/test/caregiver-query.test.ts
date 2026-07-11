@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
+import { CAREGIVER_SELECT, mapCaregiverRow, type RawCaregiverRow } from '@/lib/caregiver-query'
 
 // ─── Factory helper ──────────────────────────────────────────────────────────
 
@@ -29,6 +29,7 @@ function makeRow(overrides: Partial<RawCaregiverRow> = {}): RawCaregiverRow {
     has_references: true,
     zona: 'zona_sul',
     cep: '01310-100',
+    account_status: 'active',
     profiles: { full_name: 'Maria Silva' },
     ...overrides,
   }
@@ -37,6 +38,11 @@ function makeRow(overrides: Partial<RawCaregiverRow> = {}): RawCaregiverRow {
 // ─── mapCaregiverRow ─────────────────────────────────────────────────────────
 
 describe('mapCaregiverRow', () => {
+  it('usa a FK principal para buscar o nome do perfil sem ambiguidade no PostgREST', () => {
+    expect(CAREGIVER_SELECT).toContain('profiles!caregiver_profiles_id_fkey')
+    expect(CAREGIVER_SELECT).not.toContain('profiles!inner')
+  })
+
   it('mapeia todos os campos corretamente', () => {
     const row = makeRow()
     const result = mapCaregiverRow(row)

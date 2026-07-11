@@ -69,7 +69,7 @@ describe('Auth functions', () => {
 
       await signUpWithEmail('family@email.com', 'pass123', {
         role: 'family',
-        full_name: 'Maria',
+        full_name: 'Maria Silva',
         phone: '(21) 98888-7777',
       })
 

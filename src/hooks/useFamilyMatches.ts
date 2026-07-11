@@ -74,6 +74,8 @@ export function useFamilyMatches(limit = 3) {
           .from('caregiver_profiles')
           .select(CAREGIVER_SELECT)
           .eq('profile_complete', true)
+          .eq('account_status', 'active')
+          .eq('is_visible', true)
 
         if (attempt.useProximity && proximityMap) {
           q = q.in('id', Array.from(proximityMap.keys()))

@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom"
 import {
   ArrowLeft, MapPin, Briefcase, Star, Clock, CalendarClock, Shield, Car,
   Award, FileCheck, FileText, User, BadgeCheck, Zap, Globe, Heart, Send,
-  GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock, ExternalLink,
+  GraduationCap, MapPinned, ClipboardList, DollarSign, MessageSquare, Eye, Loader2, Lock,
 } from "lucide-react"
 import AppSidebar from "@/components/shared/AppSidebar"
 import StarRating from "@/components/shared/StarRating"
@@ -26,6 +26,7 @@ import { useFamilyProfile } from "@/hooks/useFamilyProfile"
 import { usePublicCaregiverProfile } from "@/hooks/usePublicCaregiverProfile"
 import { useFavoriteIds, useAddFavorite, useRemoveFavorite } from "@/hooks/useFavorites"
 import RequestAppointmentDialog from "@/components/shared/RequestAppointmentDialog"
+import DocumentViewer from "@/components/shared/DocumentViewer"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -796,31 +797,13 @@ const CaregiverPublicProfile = () => {
               </DialogDescription>
             )}
           </DialogHeader>
-          <div className="flex-1 overflow-hidden px-4 pb-4">
-            {viewingDoc?.isPdf ? (
-              <div className="flex h-full flex-col gap-2">
-                <iframe
-                  src={`${viewingDoc.url}#toolbar=0&navpanes=0&scrollbar=1`}
-                  className="min-h-0 flex-1 w-full rounded-lg border"
-                  title={viewingDoc.name}
-                />
-                <Button asChild variant="outline" size="sm" className="w-full sm:w-auto self-start gap-2">
-                  <a href={viewingDoc.url} target="_blank" rel="noreferrer">
-                    <ExternalLink className="w-4 h-4" />
-                    Abrir PDF em nova aba
-                  </a>
-                </Button>
-              </div>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center overflow-auto">
-                <img
-                  src={viewingDoc?.url}
-                  alt={viewingDoc?.name}
-                  className="max-w-full max-h-full object-contain select-none pointer-events-none"
-                  draggable={false}
-                  onContextMenu={(e) => e.preventDefault()}
-                />
-              </div>
+          <div className="min-h-0 flex-1 px-4 pb-4">
+            {viewingDoc && (
+              <DocumentViewer
+                url={viewingDoc.url}
+                name={viewingDoc.name}
+                isPdf={viewingDoc.isPdf}
+              />
             )}
           </div>
         </DialogContent>

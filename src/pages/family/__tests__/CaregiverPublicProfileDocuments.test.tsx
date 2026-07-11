@@ -159,7 +159,7 @@ describe('CaregiverPublicProfile document viewer', () => {
     expect(screen.getByText('Se o PDF não aparecer abaixo, abra em uma nova aba.')).toBeInTheDocument()
     expect(screen.getByTitle('Curriculo Rafael 2026.PDF')).toHaveAttribute(
       'src',
-      'blob:pdf-preview#toolbar=0&navpanes=0&scrollbar=1',
+      'blob:pdf-preview#toolbar=1&navpanes=0&scrollbar=1&view=FitH',
     )
     await waitFor(() => {
       expect(screen.getByRole('link', { name: /abrir pdf em nova aba/i })).toHaveAttribute(

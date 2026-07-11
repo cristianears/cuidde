@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getPersonNameError, normalizePersonName } from "@/lib/person-name";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
 import { useFamilyProfile, useUpdateFamilyProfileFull, useUploadFamilyPhoto, useRemoveFamilyPhoto } from "@/hooks/useFamilyProfile";
@@ -242,6 +243,12 @@ const FamilyProfile = () => {
   };
 
   const handleSave = async () => {
+    const nameError = getPersonNameError(responsibleName);
+    if (nameError) {
+      toast.error(nameError);
+      return;
+    }
+
     const hasElderlyInfo = [
       elderlyName,
       elderlyAge,
@@ -264,7 +271,7 @@ const FamilyProfile = () => {
     }
 
     saveProfile({
-      full_name: responsibleName,
+      full_name: normalizePersonName(responsibleName),
       phone: responsiblePhone,
       relationship,
       cep,

@@ -76,6 +76,10 @@ interface AppSidebarProps {
   userPhoto?: string;
 }
 
+function isEmailLike(value: string | null | undefined) {
+  return typeof value === 'string' && /\S+@\S+\.\S+/.test(value);
+}
+
 const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const [photoFailed, setPhotoFailed] = useState(false);
@@ -83,8 +87,10 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
   const location = useLocation();
   const navigate = useNavigate();
   const items = sidebarItems[role];
-  const compactUserName = getFirstName(userName, 'Usuário');
-  const fallbackInitial = getInitials(userName);
+  const displayUserName = isEmailLike(userName) ? undefined : userName;
+  const compactUserName = getFirstName(displayUserName, 'Usuário');
+  const fallbackInitial = getInitials(displayUserName);
+  const imageAlt = displayUserName ?? 'Usuário';
 
   useEffect(() => {
     setPhotoFailed(false);
@@ -171,7 +177,7 @@ const AppSidebar = ({ role, userName = 'Usuário', userPhoto }: AppSidebarProps)
               {userPhoto && !photoFailed ? (
                 <img
                   src={userPhoto}
-                  alt={userName}
+                  alt={imageAlt}
                   className="w-full h-full object-cover"
                   loading="lazy"
                   onError={() => setPhotoFailed(true)}

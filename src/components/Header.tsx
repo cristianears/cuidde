@@ -17,7 +17,13 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  const fullName = profile?.full_name ?? user?.user_metadata?.full_name ?? user?.email;
+  const metadataName =
+    typeof user?.user_metadata?.full_name === 'string'
+      ? user.user_metadata.full_name
+      : typeof user?.user_metadata?.name === 'string'
+        ? user.user_metadata.name
+        : undefined;
+  const fullName = profile?.full_name ?? metadataName;
   const displayName = getFirstName(fullName, 'Meu painel');
   const userInitials = getInitials(fullName);
   const roleLabel =

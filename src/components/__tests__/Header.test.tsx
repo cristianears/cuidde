@@ -86,4 +86,19 @@ describe('Header', () => {
     expect(screen.queryByText('Criar conta grÃ¡tis')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Carregando conta')).toBeInTheDocument()
   })
+
+  it('does not expose the account email as the visible user name while profile data is missing', () => {
+    mockAuthState.user = {
+      email: 'jose@example.com',
+      user_metadata: {},
+    }
+    mockAuthState.profile = null
+
+    renderHeader()
+
+    fireEvent.click(screen.getByLabelText('Abrir menu'))
+
+    expect(screen.getAllByText('Meu painel')).toHaveLength(2)
+    expect(screen.queryByText('jose@example.com')).not.toBeInTheDocument()
+  })
 })

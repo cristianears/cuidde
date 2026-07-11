@@ -88,6 +88,12 @@ describe('AppSidebar', () => {
     expect(screen.getByText('Usuário')).toBeInTheDocument()
   })
 
+  it('nao exibe email como nome do usuario quando o perfil ainda esta carregando', () => {
+    renderSidebar({ userName: 'maria@example.com' })
+    expect(screen.getByText('Usuário')).toBeInTheDocument()
+    expect(screen.queryByText('maria@example.com')).not.toBeInTheDocument()
+  })
+
   it('renderiza itens de menu do cuidador', () => {
     renderSidebar({ role: 'caregiver' })
     expect(screen.getByText('Dashboard')).toBeInTheDocument()

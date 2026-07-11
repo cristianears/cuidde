@@ -11,6 +11,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import DocumentViewer from "@/components/shared/DocumentViewer";
 import {
   Dialog,
   DialogContent,
@@ -212,25 +213,17 @@ const DocumentChecklist = ({ caregiverId, documents }: DocumentChecklistProps) =
 
       {/* Document Preview Modal */}
       <Dialog open={!!previewLabel} onOpenChange={handleClosePreview}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh]">
+        <DialogContent className="flex h-[90dvh] w-[96vw] max-w-4xl flex-col gap-3 p-4 sm:h-[85vh] sm:p-6">
           <DialogHeader>
             <DialogTitle>{previewLabel}</DialogTitle>
           </DialogHeader>
           {previewUrl ? (
-            <div className="flex items-center justify-center min-h-[300px] max-h-[70vh] overflow-auto rounded-xl bg-muted/30">
-              {previewMime?.startsWith('image/') ? (
-                <img
-                  src={previewUrl}
-                  alt={previewLabel ?? "Documento"}
-                  className="max-w-full max-h-[65vh] object-contain rounded-lg"
-                />
-              ) : (
-                <iframe
-                  src={previewUrl}
-                  title={previewLabel ?? "Documento"}
-                  className="w-full h-[65vh] rounded-lg border-0"
-                />
-              )}
+            <div className="min-h-0 flex-1">
+              <DocumentViewer
+                url={previewUrl}
+                name={previewLabel ?? "Documento"}
+                isPdf={!previewMime?.startsWith('image/')}
+              />
             </div>
           ) : documentUrlMutation.isPending ? (
             <div className="flex items-center justify-center h-64">

@@ -47,7 +47,9 @@ begin
     from caregiver_profiles cp
     join profiles p on p.id = cp.id
    where cp.id = p_caregiver_id
-     and cp.profile_complete = true;
+     and cp.profile_complete = true
+     and cp.account_status = 'active'
+     and cp.is_visible = true;
 
   if not found then
     return null;

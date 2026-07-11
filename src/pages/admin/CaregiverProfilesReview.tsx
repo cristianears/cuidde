@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, FileText, MessageCircle, Search, User } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileText, MessageCircle, Power, Search, ShieldAlert, User } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
 import DocumentChecklist from "@/components/admin/DocumentChecklist";
@@ -12,11 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/display-name";
-import { useAdminCaregiverDetail, useAdminCaregiverDocuments, useAdminCaregivers, useAdminMarkContacted } from "@/hooks/useAdmin";
+import { useAdminCaregiverDetail, useAdminCaregiverDocuments, useAdminCaregivers, useAdminMarkContacted, useAdminUpdateCaregiverAccountStatus } from "@/hooks/useAdmin";
 import type { AdminCaregiverDetail, AdminCaregiverRow, AdminDocumentRow } from "@/hooks/useAdmin";
-import type { CaregiverStatus } from "@/types/database";
+import type { CaregiverAccountStatus, CaregiverStatus } from "@/types/database";
 
-type StatusFilter = "all" | "pending" | "analyzing" | "verified" | "complete" | "contacted" | "not_contacted";
+type StatusFilter = "all" | "pending" | "analyzing" | "verified" | "complete" | "contacted" | "not_contacted" | "paused" | "closed" | "suspended";
 
 const STATUS_LABELS: Record<StatusFilter, string> = {
   all: "Todos",
@@ -26,6 +26,9 @@ const STATUS_LABELS: Record<StatusFilter, string> = {
   complete: "Perfis completos",
   contacted: "Contactados",
   not_contacted: "Nao contactados",
+  paused: "Pausadas",
+  closed: "Contas encerradas",
+  suspended: "Suspensas",
 };
 
 const STATUS_BADGE: Record<CaregiverStatus, { label: string; className: string }> = {
@@ -33,6 +36,13 @@ const STATUS_BADGE: Record<CaregiverStatus, { label: string; className: string }
   analyzing: { label: "Aguardando reenvio", className: "border-blue-200 bg-blue-50 text-blue-700" },
   verified: { label: "Verificado", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   rejected: { label: "Status antigo", className: "border-slate-200 bg-slate-50 text-slate-700" },
+};
+
+const ACCOUNT_STATUS_BADGE: Record<CaregiverAccountStatus, { label: string; className: string }> = {
+  active: { label: "Ativa", className: "border-emerald-200 bg-emerald-50 text-emerald-700" },
+  paused: { label: "Pausada", className: "border-sky-200 bg-sky-50 text-sky-700" },
+  closed: { label: "Encerrada", className: "border-slate-200 bg-slate-50 text-slate-700" },
+  suspended: { label: "Suspensa", className: "border-red-200 bg-red-50 text-red-700" },
 };
 
 function formatLocation(caregiver: Pick<AdminCaregiverRow, "neighborhood" | "city" | "state">) {
@@ -54,6 +64,13 @@ function formatContactedAt(value: string | null) {
   return `Contactado em ${new Date(value).toLocaleDateString("pt-BR")}`;
 }
 
+function isVisibleInSearch(caregiver: AdminCaregiverRow) {
+  return caregiver.profile_complete
+    && caregiver.is_visible
+    && caregiver.is_available_for_new
+    && caregiver.account_status === "active";
+}
+
 function getReviewItems(detail: AdminCaregiverDetail | undefined, documents: AdminDocumentRow[]) {
   const hasDocument = documents.some((doc) => (doc.type === "rg_cnh" || doc.type === "rg") && !!doc.file_url && doc.status !== "rejected");
   return [
@@ -69,7 +86,10 @@ function getReviewItems(detail: AdminCaregiverDetail | undefined, documents: Adm
 }
 
 function CaregiverListItem({ caregiver, selected, onSelect }: { caregiver: AdminCaregiverRow; selected: boolean; onSelect: () => void }) {
-  const status = STATUS_BADGE[caregiver.status];
+  const status = STATUS_BADGE[caregiver.status] ?? STATUS_BADGE.pending;
+  const accountStatusKey = caregiver.account_status ?? "active";
+  const accountStatus = ACCOUNT_STATUS_BADGE[accountStatusKey] ?? ACCOUNT_STATUS_BADGE.active;
+  const searchVisible = isVisibleInSearch(caregiver);
   return (
     <button
       type="button"
@@ -89,8 +109,14 @@ function CaregiverListItem({ caregiver, selected, onSelect }: { caregiver: Admin
           <p className="mt-1 truncate text-xs text-muted-foreground">{formatLocation(caregiver)}</p>
           <div className="mt-2 flex items-center gap-2">
             <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", status.className)}>{status.label}</span>
+            {accountStatusKey !== "active" && (
+              <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", accountStatus.className)}>{accountStatus.label}</span>
+            )}
             {caregiver.admin_contacted_at && (
               <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700">Contactado</span>
+            )}
+            {!searchVisible && (
+              <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Oculto</span>
             )}
             <span className="text-[11px] text-muted-foreground">{new Date(caregiver.created_at).toLocaleDateString("pt-BR")}</span>
           </div>
@@ -105,8 +131,36 @@ function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; do
   const completed = items.filter((item) => item.done).length;
   const score = Math.round((completed / items.length) * 100);
   const whatsappPhone = formatPhoneForWhatsapp(detail.whatsapp ?? detail.phone);
-  const status = STATUS_BADGE[detail.status];
+  const status = STATUS_BADGE[detail.status] ?? STATUS_BADGE.pending;
+  const accountStatusKey = detail.account_status ?? "active";
+  const accountStatus = ACCOUNT_STATUS_BADGE[accountStatusKey] ?? ACCOUNT_STATUS_BADGE.active;
+  const searchVisible = isVisibleInSearch(detail);
   const markContacted = useAdminMarkContacted();
+  const adminAccountStatus = useAdminUpdateCaregiverAccountStatus();
+
+  const handleSuspend = () => {
+    if (!window.confirm("Suspender esta conta? O perfil deixara de aparecer para familias.")) return;
+    adminAccountStatus.mutate({
+      caregiverId: detail.id,
+      accountStatus: "suspended",
+      reasonLabel: "Suspensao manual pelo admin",
+    });
+  };
+
+  const handleCloseAccount = () => {
+    const reasonDetails = window.prompt(
+      "Registre a solicitacao de encerramento recebida pelo suporte/e-mail.",
+      "Solicitacao recebida pelo suporte",
+    );
+    if (reasonDetails === null) return;
+
+    adminAccountStatus.mutate({
+      caregiverId: detail.id,
+      accountStatus: "closed",
+      reasonLabel: "Solicitacao recebida pelo suporte",
+      reasonDetails: reasonDetails.trim() || "Solicitacao recebida pelo suporte",
+    });
+  };
 
   return (
     <div className="flex flex-col gap-4 lg:col-span-2">
@@ -123,18 +177,41 @@ function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; do
                 <p className="text-sm text-muted-foreground">{formatLocation(detail)}</p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className={status.className}>{status.label}</Badge>
+                  <Badge variant="outline" className={accountStatus.className}>{accountStatus.label}</Badge>
                   <Badge variant={detail.profile_complete ? "default" : "secondary"}>{detail.profile_complete ? "Perfil completo" : "Perfil incompleto"}</Badge>
-                  <Badge variant={detail.is_visible ? "default" : "outline"}>{detail.is_visible ? "Visivel" : "Oculto"}</Badge>
+                  <Badge variant={searchVisible ? "default" : "outline"}>{searchVisible ? "Visível na busca" : "Oculto da busca"}</Badge>
                   <Badge variant={detail.admin_contacted_at ? "default" : "outline"}>{formatContactedAt(detail.admin_contacted_at)}</Badge>
                 </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {whatsappPhone && (
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="outline" size="sm" className="h-8 px-2 text-xs" asChild>
                   <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noreferrer" onClick={() => markContacted.mutate(detail.id)}>
-                    <MessageCircle className="mr-2 h-4 w-4" /> WhatsApp
+                    <MessageCircle /> WhatsApp
                   </a>
+                </Button>
+              )}
+              {accountStatusKey !== "closed" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={handleCloseAccount}
+                  disabled={adminAccountStatus.isPending}
+                >
+                  <Power /> Encerrar conta
+                </Button>
+              )}
+              {accountStatusKey !== "suspended" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
+                  onClick={handleSuspend}
+                  disabled={adminAccountStatus.isPending}
+                >
+                  <ShieldAlert /> Suspender conta
                 </Button>
               )}
             </div>
@@ -155,6 +232,8 @@ function ProfileDetail({ detail, documents }: { detail: AdminCaregiverDetail; do
               <InfoBox label="Disponibilidade" value={detail.availability_notes ?? detail.journey_types?.join(", ")} />
               <InfoBox label="Documentos" value={`${documents.length} documento(s) no cadastro`} />
               <InfoBox label="Valores" value={`Hora: ${formatCurrency(detail.price_per_hour)} | Diaria: ${formatCurrency(detail.price_per_day)}`} />
+              <InfoBox label="Motivo da conta" value={detail.account_status_reason_label ?? "Sem motivo registrado"} />
+              <InfoBox label="Encerrada em" value={detail.closed_at ? new Date(detail.closed_at).toLocaleDateString("pt-BR") : null} />
             </div>
             <div>
               <h3 className="mb-2 text-sm font-semibold text-foreground">Apresentacao</h3>
@@ -223,6 +302,7 @@ const CaregiverProfilesReview = () => {
       const matchesStatus =
         statusFilter === "all" ||
         caregiver.status === statusFilter ||
+        caregiver.account_status === statusFilter ||
         (statusFilter === "complete" && caregiver.profile_complete) ||
         (statusFilter === "contacted" && !!caregiver.admin_contacted_at) ||
         (statusFilter === "not_contacted" && !caregiver.admin_contacted_at);
@@ -239,8 +319,11 @@ const CaregiverProfilesReview = () => {
     if (caregiver.profile_complete) acc.complete += 1;
     if (caregiver.admin_contacted_at) acc.contacted += 1;
     else acc.not_contacted += 1;
+    if (caregiver.account_status === "paused" || caregiver.account_status === "closed" || caregiver.account_status === "suspended") {
+      acc[caregiver.account_status] += 1;
+    }
     return acc;
-  }, { all: 0, pending: 0, analyzing: 0, verified: 0, complete: 0, contacted: 0, not_contacted: 0 }), [caregivers]);
+  }, { all: 0, pending: 0, analyzing: 0, verified: 0, complete: 0, contacted: 0, not_contacted: 0, paused: 0, closed: 0, suspended: 0 }), [caregivers]);
 
   useEffect(() => {
     if (selectedId && filteredCaregivers.some((caregiver) => caregiver.id === selectedId)) return;

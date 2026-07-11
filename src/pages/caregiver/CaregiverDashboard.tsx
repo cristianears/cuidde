@@ -30,6 +30,7 @@ import { useCareRoutineTodayStatus } from "@/hooks/useCareRoutine";
 import { useReviews } from "@/hooks/useReviews";
 import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
 import type { CaregiverPublic } from "@/types/database";
+import { getCaregiverSearchEligibility } from "@/lib/caregiver-search-eligibility";
 
 // ─── Completude do perfil ─────────────────────────────────────────────────────
 // Critérios principais para busca. Documentos e referências são diferenciais de confiança.
@@ -112,7 +113,7 @@ const TIP_BY_CHECK: Record<string, { body: string; actionTarget: string }> = {
     actionTarget: "/caregiver/pricing",
   },
   "Inserir referências profissionais": {
-    body: "Referências profissionais são o fator de confiança mais valorizado pelas famílias.",
+    body: "Referências são diferencial de confiança e ajudam famílias a escolherem com mais segurança.",
     actionTarget: "/caregiver/profile",
   },
 };
@@ -173,10 +174,31 @@ const CaregiverDashboard = () => {
   const incompleteChecks = profileCompleteness.checks.filter((c) => !c.done);
   const isProfileComplete = profileCompleteness.pct === 100;
 
+  const searchEligibility = profileData
+    ? getCaregiverSearchEligibility({
+        fullName: profileData.profiles.full_name,
+        phone: profileData.profiles.phone,
+        whatsapp: profileData.whatsapp,
+        city: profileData.city,
+        neighborhood: profileData.neighborhood,
+        bio: profileData.bio,
+        specialties: profileData.specialties,
+        modalities: profileData.modalities,
+      })
+    : { eligible: false, requirements: [], missing: [] };
+  const isVisibleInSearch = searchEligibility.eligible
+    && profileData?.account_status === "active"
+    && profileData?.is_visible === true
+    && profileData?.is_available_for_new === true;
+
   // ── Ações recomendadas (mostrar apenas itens incompletos, máx. 4) ────────
-  const recommendedActions = incompleteChecks
-    .slice(0, 4)
-    .map((c) => ({ label: c.label, href: c.href }));
+  const searchVisibilityActions = searchEligibility.missing
+    .slice(0, 6)
+    .map((requirement) => ({ label: requirement.label, href: requirement.href }));
+
+  if (searchEligibility.eligible && profileData?.is_available_for_new === false) {
+    searchVisibilityActions.push({ label: "Ativar disponibilidade para novos atendimentos", href: "/caregiver/availability" });
+  }
 
   const weeklyTip = getPersonalizedTip(incompleteChecks.map((c) => c.label));
 
@@ -493,17 +515,19 @@ const CaregiverDashboard = () => {
         </div>
 
         {/* 7. Ações recomendadas */}
-        {recommendedActions.length > 0 && (
+        {!isVisibleInSearch && (
           <Card className="mb-6 md:mb-8 shadow-sm border-0">
             <CardHeader className="pb-3 md:pb-4">
-              <CardTitle className="text-base md:text-lg font-semibold">Seu perfil precisa de ajustes antes de ficar visível para famílias</CardTitle>
+              <CardTitle className="text-base md:text-lg font-semibold">Seu perfil está oculto nas buscas</CardTitle>
               <p className="text-xs md:text-sm text-muted-foreground">
-                Corrija os itens abaixo para completar seu perfil e aumentar suas chances de ser encontrado.
+                {searchVisibilityActions.length > 0
+                  ? "Corrija os itens abaixo para que as famílias encontrem seu perfil. Documentos e formação não são obrigatórios."
+                  : "Sua conta não está ativa para busca. Entre em contato com o suporte se precisar de ajuda."}
               </p>
             </CardHeader>
-            <CardContent>
+            {searchVisibilityActions.length > 0 && <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
-                {recommendedActions.map((action, index) => (
+                {searchVisibilityActions.map((action, index) => (
                   <Link
                     key={index}
                     to={action.href}
@@ -519,7 +543,7 @@ const CaregiverDashboard = () => {
                   </Link>
                 ))}
               </div>
-            </CardContent>
+            </CardContent>}
           </Card>
         )}
 

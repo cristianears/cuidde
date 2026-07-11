@@ -31,7 +31,8 @@ export const CAREGIVER_SELECT = `
   zona,
   cep,
   is_available_for_new,
-  profiles!inner ( full_name )
+  account_status,
+  profiles!caregiver_profiles_id_fkey ( full_name )
 ` as const
 
 // ─── Tipo bruto retornado pelo Supabase ─────────────────────────────────────
@@ -62,6 +63,7 @@ export type RawCaregiverRow = {
   zona: string | null
   cep: string | null
   is_available_for_new: boolean
+  account_status: string
   profiles: { full_name: string | null } | null
 }
 

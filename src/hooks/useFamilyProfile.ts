@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import { resolveAndSaveCoords } from '@/lib/geocode'
 import { uploadAvatar } from '@/lib/upload-avatar'
+import { getPersonNameError, normalizePersonName } from '@/lib/person-name'
 import type { FamilyProfile, ElderlyMedication } from '@/types/database'
 
 export type FamilyProfileFull = FamilyProfile & {
@@ -178,6 +179,10 @@ export function useUpdateFamilyProfileFull() {
 
   return useMutation({
     mutationFn: async (payload: UpdateFamilyProfilePayload) => {
+      const nameError = getPersonNameError(payload.full_name)
+      if (nameError) throw new Error(nameError)
+      const fullName = normalizePersonName(payload.full_name)
+
       // Ambas as tabelas são independentes — paralelizar para reduzir latência
       const [
         { data: profileData, error: profileError },
@@ -185,7 +190,7 @@ export function useUpdateFamilyProfileFull() {
       ] = await Promise.all([
         supabase
           .from('profiles')
-          .update({ full_name: payload.full_name, phone: payload.phone })
+          .update({ full_name: fullName, phone: payload.phone })
           .eq('id', user!.id)
           .select('id'),
         supabase

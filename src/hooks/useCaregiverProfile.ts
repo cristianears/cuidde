@@ -4,10 +4,16 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
-import type { CaregiverProfile, ProfessionalReference } from '@/types/database'
+import type {
+  CaregiverAccountFeedbackReason,
+  CaregiverAccountStatus,
+  CaregiverProfile,
+  ProfessionalReference,
+} from '@/types/database'
 import { resolveAndSaveCoords } from '@/lib/geocode'
 import { uploadAvatar } from '@/lib/upload-avatar'
 import { normalizeCpf } from '@/lib/formatters'
+import { getPersonNameError, normalizePersonName } from '@/lib/person-name'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -70,6 +76,13 @@ export interface UpdatePricingPayload {
   pricing_note: string
 }
 
+export interface UpdateCaregiverAccountStatusPayload {
+  account_status: Extract<CaregiverAccountStatus, 'paused' | 'closed'>
+  reason_code: CaregiverAccountFeedbackReason
+  reason_label: string
+  reason_details: string | null
+}
+
 // ─── Query Keys (centralizadas em @/lib/query-keys) ─────────────────────────
 
 const PROFILE_KEY = queryKeys.caregiverProfile
@@ -86,7 +99,7 @@ export function useCaregiverProfile() {
       const [profileResult, cpfResult] = await Promise.all([
         supabase
           .from('caregiver_profiles')
-          .select('*, profiles!inner(full_name, phone)')
+          .select('*, profiles!caregiver_profiles_id_fkey(full_name, phone)')
           .eq('id', user!.id)
           .single(),
         supabase.rpc('get_own_caregiver_cpf'),
@@ -166,11 +179,15 @@ export function useUpdateCaregiverBasic() {
 
   return useMutation({
     mutationFn: async (payload: UpdateBasicPayload) => {
+      const nameError = getPersonNameError(payload.full_name)
+      if (nameError) throw new Error(nameError)
+      const fullName = normalizePersonName(payload.full_name)
+
       // Ambas as tabelas são independentes — paralelizar para reduzir latência
       const [{ data: profileData, error: profileError }, { error: caregiverError }] = await Promise.all([
         supabase
           .from('profiles')
-          .update({ full_name: payload.full_name, phone: payload.phone, cpf: normalizeCpf(payload.cpf) })
+          .update({ full_name: fullName, phone: payload.phone, cpf: normalizeCpf(payload.cpf) })
           .eq('id', user!.id)
           .select('id'),
         supabase
@@ -316,6 +333,56 @@ export function useUpdateCaregiverReferences() {
       toast.success('Referências salvas com sucesso.')
     },
     onError: (error: Error) => toast.error(error.message || 'Erro ao salvar. Tente novamente.'),
+  })
+}
+
+export function useUpdateCaregiverAccountStatus() {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (payload: UpdateCaregiverAccountStatusPayload) => {
+      const now = new Date().toISOString()
+
+      const { error: feedbackError } = await supabase.from('caregiver_account_feedback').insert({
+        caregiver_id: user!.id,
+        account_status: payload.account_status,
+        reason_code: payload.reason_code,
+        reason_label: payload.reason_label,
+        reason_details: payload.reason_details,
+        created_by: user!.id,
+        created_by_role: 'caregiver',
+      })
+
+      if (feedbackError) throw feedbackError
+
+      const { data, error } = await supabase
+        .from('caregiver_profiles')
+        .update({
+          account_status: payload.account_status,
+          account_status_reason_code: payload.reason_code,
+          account_status_reason_label: payload.reason_label,
+          account_status_reason_details: payload.reason_details,
+          account_status_updated_at: now,
+          account_status_updated_by: user!.id,
+          paused_at: payload.account_status === 'paused' ? now : null,
+          closed_at: payload.account_status === 'closed' ? now : null,
+          suspended_at: null,
+          is_visible: false,
+          is_available_for_new: false,
+        })
+        .eq('id', user!.id)
+        .select('id')
+
+      if (error) throw error
+      if (!data || data.length === 0) throw new Error('0 linhas atualizadas em caregiver_profiles.')
+    },
+    onSuccess: (_data, payload) => {
+      queryClient.invalidateQueries({ queryKey: PROFILE_KEY(user!.id) })
+      queryClient.invalidateQueries({ queryKey: ['caregivers'] })
+      toast.success(payload.account_status === 'closed' ? 'Conta encerrada com sucesso.' : 'Conta pausada com sucesso.')
+    },
+    onError: (error: Error) => toast.error(error.message || 'Nao foi possivel atualizar sua conta. Tente novamente.'),
   })
 }
 

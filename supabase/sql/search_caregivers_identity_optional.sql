@@ -40,6 +40,8 @@ begin
       ) as distance_km
     from public.caregiver_profiles cp
     where cp.profile_complete = true
+      and cp.account_status = 'active'
+      and cp.is_visible = true
       and cp.is_available_for_new = true
       and cp.lat is not null
       and cp.lng is not null

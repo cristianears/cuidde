@@ -16,6 +16,9 @@ import {
   CircleAlert,
   CircleDashed,
   ArrowRight,
+  Loader2,
+  PauseCircle,
+  Power,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
 import PageHeader from "@/components/shared/PageHeader";
@@ -27,16 +30,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { specialtiesList, modalitiesList, idiomasList } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAddressByCep } from "@/lib/viacep";
 import { formatCpf, formatPhone, isValidCpf } from "@/lib/formatters";
+import { getPersonNameError, normalizePersonName } from "@/lib/person-name";
 import { getInitials } from "@/lib/display-name";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
-import type { ProfessionalReference } from "@/types/database";
+import type { CaregiverAccountFeedbackReason, ProfessionalReference } from "@/types/database";
 import {
   useCaregiverProfile,
   useProfessionalReferences,
@@ -44,6 +57,7 @@ import {
   useUpdateCaregiverBio,
   useUpdateCaregiverSpecialties,
   useUpdateCaregiverReferences,
+  useUpdateCaregiverAccountStatus,
   useUploadCaregiverPhoto,
 } from "@/hooks/useCaregiverProfile";
 import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
@@ -63,6 +77,18 @@ const PROFILE_STEP_BY_QUERY: Record<string, number> = {
   specialties: 3,
   references: 4,
 };
+
+const caregiverAccountClosureReasons: Array<{ value: CaregiverAccountFeedbackReason; label: string }> = [
+  { value: "found_work_no_longer_needs_platform", label: "Consegui trabalho e nao preciso mais da plataforma" },
+  { value: "no_longer_available", label: "Nao estou mais disponivel para trabalhar como cuidador" },
+  { value: "not_enough_contacts", label: "Nao recebi contatos ou oportunidades suficientes" },
+  { value: "found_clients_elsewhere", label: "Encontrei clientes por outro meio" },
+  { value: "difficult_to_use", label: "Achei a plataforma dificil de usar" },
+  { value: "privacy_or_safety", label: "Tenho preocupacao com privacidade ou seguranca" },
+  { value: "temporary_pause", label: "Quero apenas dar uma pausa" },
+  { value: "no_matching_families", label: "Nao encontrei familias compativeis com meu perfil" },
+  { value: "other", label: "Outro motivo" },
+];
 
 const profileGuideStatusStyles: Record<CaregiverProfileGuideStatus, {
   card: string
@@ -101,6 +127,7 @@ const CaregiverProfile = () => {
   const updateBio = useUpdateCaregiverBio()
   const updateSpecialties = useUpdateCaregiverSpecialties()
   const updateReferences = useUpdateCaregiverReferences()
+  const updateAccountStatus = useUpdateCaregiverAccountStatus()
   const uploadPhoto = useUploadCaregiverPhoto()
 
   const photoInputRef = useRef<HTMLInputElement>(null)
@@ -160,6 +187,10 @@ const CaregiverProfile = () => {
   const [editingRefId, setEditingRefId] = useState<string | null>(null);
   const [editRef, setEditRef] = useState<NewRef>({ name: "", phone: "", workplace: "", position: "", work_duration: "", notes: "" });
   const [editRefErrors, setEditRefErrors] = useState({ name: false, phone: false });
+  const [isAccountDialogOpen, setIsAccountDialogOpen] = useState(false);
+  const [accountAction, setAccountAction] = useState<"paused" | "closed">("closed");
+  const [accountReason, setAccountReason] = useState<CaregiverAccountFeedbackReason | "">("");
+  const [accountReasonDetails, setAccountReasonDetails] = useState("");
 
   useEffect(() => {
     const requestedStep = PROFILE_STEP_BY_QUERY[searchParams.get('step') ?? ""]
@@ -253,8 +284,9 @@ const CaregiverProfile = () => {
   }
 
   const validateBasicStep = () => {
-    if (!formData.name.trim()) {
-      toast.error("Nome completo é obrigatório.")
+    const nameError = getPersonNameError(formData.name)
+    if (nameError) {
+      toast.error(nameError)
       return false
     }
     if (!formData.phone.trim()) {
@@ -320,7 +352,7 @@ const CaregiverProfile = () => {
       const contactPhone = formData.phone.trim()
 
       await updateBasic.mutateAsync({
-        full_name: formData.name,
+        full_name: normalizePersonName(formData.name),
         phone: contactPhone,
         cpf: formData.cpf,
         whatsapp: contactPhone,
@@ -388,6 +420,52 @@ const CaregiverProfile = () => {
     updateBio.isPending ||
     updateSpecialties.isPending ||
     updateReferences.isPending
+
+  const selectedAccountReason = caregiverAccountClosureReasons.find((reason) => reason.value === accountReason)
+  const canConfirmAccountStatus =
+    !!selectedAccountReason &&
+    (selectedAccountReason.value !== "other" || accountReasonDetails.trim().length >= 3) &&
+    !updateAccountStatus.isPending
+
+  const openAccountDialog = (status: "paused" | "closed") => {
+    setAccountAction(status)
+    setAccountReason(status === "paused" ? "temporary_pause" : "")
+    setAccountReasonDetails("")
+    setIsAccountDialogOpen(true)
+  }
+
+  const handleAccountDialogOpenChange = (open: boolean) => {
+    if (updateAccountStatus.isPending) return
+    setIsAccountDialogOpen(open)
+    if (!open) {
+      setAccountReason("")
+      setAccountReasonDetails("")
+    }
+  }
+
+  const handleConfirmAccountStatus = async () => {
+    if (!selectedAccountReason) {
+      toast.error("Selecione um motivo para continuar.")
+      return
+    }
+
+    if (selectedAccountReason.value === "other" && accountReasonDetails.trim().length < 3) {
+      toast.error("Conte em poucas palavras o motivo.")
+      return
+    }
+
+    try {
+      await updateAccountStatus.mutateAsync({
+        account_status: accountAction,
+        reason_code: selectedAccountReason.value,
+        reason_label: selectedAccountReason.label,
+        reason_details: accountReasonDetails.trim() || null,
+      })
+      handleAccountDialogOpenChange(false)
+    } catch {
+      // O toast de erro fica na mutation, perto da acao do usuario.
+    }
+  }
 
   const profileGuide = buildCaregiverProfileGuide({
     name: formData.name,
@@ -786,6 +864,46 @@ const CaregiverProfile = () => {
                       </div>
                     )}
                   </div>
+                </div>
+
+                <div className="border-t border-border pt-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="space-y-1">
+                      <h4 className="text-sm font-medium text-foreground">Ações da conta</h4>
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        Pausar ou encerrar remove seu perfil das buscas e registra o motivo para acompanhamento interno.
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 px-2 text-xs"
+                        onClick={() => openAccountDialog("paused")}
+                        disabled={updateAccountStatus.isPending}
+                      >
+                        <PauseCircle className="h-3.5 w-3.5" />
+                        Pausar conta
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => openAccountDialog("closed")}
+                        disabled={updateAccountStatus.isPending}
+                      >
+                        <Power className="h-3.5 w-3.5" />
+                        Encerrar conta
+                      </Button>
+                    </div>
+                  </div>
+                  {profileData?.account_status && profileData.account_status !== "active" && (
+                    <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                      Status atual da conta: <strong className="text-foreground">{profileData.account_status_reason_label ?? profileData.account_status}</strong>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1339,6 +1457,87 @@ const CaregiverProfile = () => {
           </div>
         </div>
       </main>
+
+      <Dialog open={isAccountDialogOpen} onOpenChange={handleAccountDialogOpenChange}>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{accountAction === "closed" ? "Encerrar conta" : "Pausar conta"}</DialogTitle>
+            <DialogDescription>
+              {accountAction === "closed"
+                ? "Seu perfil deixara de aparecer para familias e a conta ficara inativa."
+                : "Seu perfil deixara de aparecer para familias, mas voce podera falar com o suporte para reativar depois."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4">
+            <RadioGroup
+              value={accountReason}
+              onValueChange={(value) => setAccountReason(value as CaregiverAccountFeedbackReason)}
+              className="gap-2"
+            >
+              {caregiverAccountClosureReasons.map((reason) => {
+                const optionId = `caregiver-account-reason-${reason.value}`;
+                const checked = accountReason === reason.value;
+
+                return (
+                  <Label
+                    key={reason.value}
+                    htmlFor={optionId}
+                    className={cn(
+                      "flex cursor-pointer items-start gap-3 rounded-lg border bg-background p-3 text-sm leading-5 transition-colors",
+                      checked
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border text-foreground/80 hover:bg-muted/50"
+                    )}
+                  >
+                    <RadioGroupItem id={optionId} value={reason.value} className="mt-0.5 shrink-0" />
+                    <span>{reason.label}</span>
+                  </Label>
+                );
+              })}
+            </RadioGroup>
+
+            {selectedAccountReason?.value === "other" && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="account-reason-details">Conte em poucas palavras</Label>
+                <Textarea
+                  id="account-reason-details"
+                  value={accountReasonDetails}
+                  onChange={(event) => setAccountReasonDetails(event.target.value.slice(0, 240))}
+                  placeholder="Ex.: vou trabalhar em outra area por enquanto"
+                  className="min-h-24 text-base md:text-sm"
+                  maxLength={240}
+                />
+                <p className="text-xs text-muted-foreground">{accountReasonDetails.length}/240</p>
+              </div>
+            )}
+
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+              Esta acao remove seu perfil da busca. Alguns registros podem ser mantidos para historico, seguranca e cumprimento de obrigacoes legais.
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleAccountDialogOpenChange(false)}
+              disabled={updateAccountStatus.isPending}
+            >
+              Voltar
+            </Button>
+            <Button
+              type="button"
+              variant={accountAction === "closed" ? "destructive" : "default"}
+              onClick={() => void handleConfirmAccountStatus()}
+              disabled={!canConfirmAccountStatus}
+            >
+              {updateAccountStatus.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {accountAction === "closed" ? "Confirmar encerramento" : "Confirmar pausa"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -16,4 +16,9 @@ describe('DocumentChecklist', () => {
     expect(source).toContain('Ilegível')
     expect(source).not.toContain('Reprovado')
   })
+
+  it('uses the shared document viewer with zoom and external fallback', () => {
+    expect(source).toContain('DocumentViewer')
+    expect(source).toContain('isPdf={!previewMime?.startsWith')
+  })
 })

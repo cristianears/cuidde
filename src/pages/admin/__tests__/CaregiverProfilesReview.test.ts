@@ -17,10 +17,11 @@ describe('Admin caregiver profile review', () => {
   })
 
   it('loads all caregiver statuses through the admin hook without inline query keys', () => {
-    expect(adminHookSource).toContain("export type AdminCaregiverStatusFilter = CaregiverStatus | 'all'")
+    expect(adminHookSource).toContain("export type AdminCaregiverStatusFilter = CaregiverStatus | CaregiverAccountStatus | 'all'")
     expect(adminHookSource).toContain("useAdminCaregivers(status: AdminCaregiverStatusFilter)")
     expect(adminHookSource).toContain("queryKeys.adminCaregivers(status)")
-    expect(adminHookSource).toContain("callAdminAction<AdminCaregiverRow[]>('list_caregivers', { status })")
+    expect(adminHookSource).toContain("supabase.rpc('admin_list_caregiver_accounts'")
+    expect(adminHookSource).toContain('p_status: status')
   })
 
   it('lets the admin edge function list all caregiver profiles and return review fields', () => {
@@ -45,6 +46,13 @@ describe('Admin caregiver profile review', () => {
     expect(reviewSource).toContain('whitespace-nowrap')
   })
 
+  it('labels caregivers that are hidden from family search', () => {
+    expect(adminHookSource).toContain('is_available_for_new: boolean')
+    expect(reviewSource).toContain('function isVisibleInSearch')
+    expect(reviewSource).toContain('Oculto')
+    expect(reviewSource).toContain('Oculto da busca')
+  })
+
   it('uses operational admin filters instead of the unused rejected profile tab', () => {
     expect(reviewSource).toContain('Aguardando reenvio')
     expect(reviewSource).toContain('Perfis completos')
@@ -60,5 +68,33 @@ describe('Admin caregiver profile review', () => {
     expect(adminActionsSource).toContain("action === 'mark_contacted'")
     expect(adminActionsSource).toContain("admin_contacted_at: new Date().toISOString()")
     expect(reviewSource).toContain('markContacted.mutate')
+  })
+
+  it('lets admins filter closed, paused, and suspended caregiver accounts', () => {
+    expect(adminHookSource).toContain('CaregiverAccountStatus')
+    expect(adminHookSource).toContain('account_status: CaregiverAccountStatus')
+    expect(adminHookSource).toContain("supabase.rpc('admin_list_caregiver_accounts'")
+    expect(reviewSource).toContain('Contas encerradas')
+    expect(reviewSource).toContain('Pausadas')
+    expect(reviewSource).toContain('Suspensas')
+    expect(reviewSource).toContain('caregiver.account_status === statusFilter')
+    expect(reviewSource).toContain('closed_at')
+    expect(reviewSource).toContain('account_status_reason_label')
+  })
+
+  it('keeps suspension as an admin-only action', () => {
+    expect(adminHookSource).toContain('useAdminUpdateCaregiverAccountStatus')
+    expect(adminHookSource).toContain("supabase.rpc('admin_update_caregiver_account_status'")
+    expect(adminHookSource).toContain('p_account_status: accountStatus')
+    expect(reviewSource).toContain('Suspender conta')
+    expect(reviewSource).toContain('adminAccountStatus.mutate')
+  })
+
+  it('lets admins close caregiver accounts from support requests with compact neutral actions', () => {
+    expect(reviewSource).toContain('Encerrar conta')
+    expect(reviewSource).toContain('Solicitacao recebida pelo suporte')
+    expect(reviewSource).toContain('accountStatus: "closed"')
+    expect(reviewSource).toContain('className="h-8 px-2 text-xs"')
+    expect(reviewSource).not.toContain('variant="destructive"')
   })
 })
