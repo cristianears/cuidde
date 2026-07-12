@@ -249,7 +249,10 @@ const CaregiverDocuments = () => {
         userPhoto={profileData?.photo_url ?? undefined}
       />
 
-      <main className={cn("flex-1 p-4 md:p-6 lg:p-8", isInitialSetup && "pb-48 md:pb-6 lg:pb-8")}>
+      <main className={cn(
+        "flex-1 p-4 md:p-6 lg:p-8",
+        isInitialSetup && "pb-[calc(20rem+env(safe-area-inset-bottom))] scroll-pb-[calc(20rem+env(safe-area-inset-bottom))] md:pb-6 md:scroll-pb-6 lg:pb-8"
+      )}>
         <PageHeader
           title={isInitialSetup ? "Documentos e comprovantes" : "Meus Documentos"}
           description="Envie documentos para aumentar a confiança do seu perfil na plataforma."

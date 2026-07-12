@@ -630,7 +630,10 @@ const CaregiverProfile = () => {
         userPhoto={profileData?.photo_url ?? undefined}
       />
 
-      <main className={cn("min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8", isInitialSetup && "pb-48 md:pb-6 lg:pb-8")}>
+      <main className={cn(
+        "min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8",
+        isInitialSetup && "pb-[calc(20rem+env(safe-area-inset-bottom))] scroll-pb-[calc(20rem+env(safe-area-inset-bottom))] md:pb-6 md:scroll-pb-6 lg:pb-8"
+      )}>
         <PageHeader
           title={isInitialSetup ? "Complete seu cadastro" : "Meu Perfil"}
           description={isInitialSetup ? "Preencha suas informações profissionais, uma etapa por vez." : "Gerencie suas informações pessoais e profissionais"}
