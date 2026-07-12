@@ -632,7 +632,7 @@ const CaregiverProfile = () => {
 
       <main className={cn(
         "min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8",
-        isInitialSetup && "pb-[calc(20rem+env(safe-area-inset-bottom))] scroll-pb-[calc(20rem+env(safe-area-inset-bottom))] md:pb-6 md:scroll-pb-6 lg:pb-8"
+        isInitialSetup && "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6 lg:pb-8"
       )}>
         <PageHeader
           title={isInitialSetup ? "Complete seu cadastro" : "Meu Perfil"}
@@ -1480,7 +1480,7 @@ const CaregiverProfile = () => {
           {/* Step Navigation */}
           <div className={cn(
             "mt-4 flex flex-wrap items-center justify-between gap-2 md:mt-6",
-            isInitialSetup && "fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)] backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none",
+            isInitialSetup && "border-t border-border bg-background pt-4 md:border-0 md:bg-transparent md:p-0",
           )}>
             <Button
               variant="outline"

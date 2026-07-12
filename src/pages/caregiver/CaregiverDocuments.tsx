@@ -251,7 +251,7 @@ const CaregiverDocuments = () => {
 
       <main className={cn(
         "flex-1 p-4 md:p-6 lg:p-8",
-        isInitialSetup && "pb-[calc(20rem+env(safe-area-inset-bottom))] scroll-pb-[calc(20rem+env(safe-area-inset-bottom))] md:pb-6 md:scroll-pb-6 lg:pb-8"
+        isInitialSetup && "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6 lg:pb-8"
       )}>
         <PageHeader
           title={isInitialSetup ? "Documentos e comprovantes" : "Meus Documentos"}
@@ -569,7 +569,7 @@ const CaregiverDocuments = () => {
             </Card>
 
             {isInitialSetup && (
-              <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-col gap-2 border-t border-border bg-background/95 p-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)] backdrop-blur sm:flex-row md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+              <div className="flex flex-col gap-2 border-t border-border bg-background pt-4 sm:flex-row md:border-0 md:bg-transparent md:p-0">
                 <Button type="button" variant="outline" onClick={() => navigate("/caregiver/availability?setup=1")}>
                   Anterior
                 </Button>

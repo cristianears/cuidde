@@ -100,7 +100,7 @@ const CaregiverAvailability = () => {
 
       <main className={cn(
         "flex-1 p-4 md:p-6 lg:p-8",
-        isInitialSetup && "pb-[calc(20rem+env(safe-area-inset-bottom))] scroll-pb-[calc(20rem+env(safe-area-inset-bottom))] md:pb-6 md:scroll-pb-6 lg:pb-8"
+        isInitialSetup && "pb-[calc(7rem+env(safe-area-inset-bottom))] md:pb-6 lg:pb-8"
       )}>
         <div className="max-w-3xl space-y-4 md:space-y-6">
           <PageHeader
@@ -257,7 +257,7 @@ const CaregiverAvailability = () => {
           {/* Ações */}
           <div className={cn(
             "flex flex-col gap-3 pb-4 sm:flex-row md:pb-0",
-            isInitialSetup && "fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)] backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none",
+            isInitialSetup && "border-t border-border bg-background pt-4 md:border-0 md:bg-transparent md:p-0",
           )}>
             <Button variant="outline" onClick={() => navigate(isInitialSetup ? "/caregiver/profile?setup=1&step=references" : "/caregiver")} className="gap-2">
               <ArrowLeft className="w-4 h-4" />
