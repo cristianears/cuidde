@@ -4,6 +4,7 @@ import BrandMark from '@/components/shared/BrandMark'
 import { useAuth } from '@/contexts/AuthContext'
 import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
 import { supabase } from '@/lib/supabase'
+import { getCaregiverPostLoginTarget } from '@/lib/caregiver-initial-setup'
 
 const roleHomeMap: Record<string, string> = {
   caregiver: '/caregiver',
@@ -61,7 +62,11 @@ export default function AuthCallback() {
             })
             : null
 
-          navigate(familyRedirect ?? roleHomeMap[profile.role] ?? '/', { replace: true })
+          const caregiverRedirect = profile.role === 'caregiver'
+            ? await getCaregiverPostLoginTarget(user!.id)
+            : null
+
+          navigate(familyRedirect ?? caregiverRedirect ?? roleHomeMap[profile.role] ?? '/', { replace: true })
         } else {
           // Novo usuário OU veio do onboarding (pending_signup) → completar cadastro
           localStorage.removeItem('cuidde_pending_signup')

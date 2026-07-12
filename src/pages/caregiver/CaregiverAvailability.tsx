@@ -13,9 +13,15 @@ import {
   MessageSquare,
   ArrowLeft,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile, useUpdateAvailability } from "@/hooks/useCaregiverProfile";
+import CaregiverSetupProgress from "@/components/shared/CaregiverSetupProgress";
+import { completeCaregiverInitialSetup, setCaregiverInitialSetupStep } from "@/lib/caregiver-initial-setup";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
 
 const journeyTypes = [
   { id: "plantoes", label: "Plantões avulsos", desc: "Atendimentos pontuais e esporádicos" },
@@ -28,6 +34,9 @@ const journeyTypes = [
 
 const CaregiverAvailability = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const isInitialSetup = searchParams.get("setup") === "1";
   const { user } = useAuth()
   const { data: profileData } = useCaregiverProfile()
   const updateAvailability = useUpdateAvailability()
@@ -53,12 +62,32 @@ const CaregiverAvailability = () => {
     );
   };
 
-  const handleSave = () => {
-    updateAvailability.mutate({
-      is_available_for_new: isAvailable,
-      journey_types: selectedJourneyTypes,
-      availability_notes: observations,
-    })
+  const handleSave = async () => {
+    try {
+      await updateAvailability.mutateAsync({
+        is_available_for_new: isAvailable,
+        journey_types: selectedJourneyTypes,
+        availability_notes: observations,
+      })
+      if (isInitialSetup && user?.id) {
+        await setCaregiverInitialSetupStep(user.id, 6)
+        queryClient.setQueryData<CaregiverProfileFull>(queryKeys.caregiverProfile(user.id), (current) => current ? { ...current, initial_setup_step: 6 } : current)
+        navigate("/caregiver/documents?setup=1")
+      }
+    } catch {
+      // A mutation exibe a mensagem de erro.
+    }
+  };
+
+  const finishInitialSetup = async () => {
+    if (!user?.id) return;
+    try {
+      await completeCaregiverInitialSetup(user.id);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.caregiverProfile(user.id) });
+      navigate("/caregiver", { replace: true });
+    } catch {
+      toast.error("Nao foi possivel concluir o cadastro agora. Tente novamente.");
+    }
   };
 
   return (
@@ -69,12 +98,14 @@ const CaregiverAvailability = () => {
         userPhoto={profileData?.photo_url ?? undefined}
       />
 
-      <main className="flex-1 p-4 md:p-6 lg:p-8">
+      <main className={cn("flex-1 p-4 md:p-6 lg:p-8", isInitialSetup && "pb-56 md:pb-6 lg:pb-8")}>
         <div className="max-w-3xl space-y-4 md:space-y-6">
           <PageHeader
-            title="Disponibilidade para novos atendimentos"
+            title={isInitialSetup ? "Sua disponibilidade" : "Disponibilidade para novos atendimentos"}
             description="Sinalize se você está disponível para receber novas solicitações. Horários, valores e agenda são combinados diretamente com a família."
           />
+
+          {isInitialSetup && <CaregiverSetupProgress currentStep={5} />}
 
           {/* Seção 1 - Status de Disponibilidade */}
           <Card>
@@ -221,8 +252,11 @@ const CaregiverAvailability = () => {
           </Card>
 
           {/* Ações */}
-          <div className="flex flex-col sm:flex-row gap-3 pb-4 md:pb-0">
-            <Button variant="outline" onClick={() => navigate("/caregiver")} className="gap-2">
+          <div className={cn(
+            "flex flex-col gap-3 pb-4 sm:flex-row md:pb-0",
+            isInitialSetup && "fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)] backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none",
+          )}>
+            <Button variant="outline" onClick={() => navigate(isInitialSetup ? "/caregiver/profile?setup=1&step=references" : "/caregiver")} className="gap-2">
               <ArrowLeft className="w-4 h-4" />
               Voltar
             </Button>
@@ -234,8 +268,13 @@ const CaregiverAvailability = () => {
               {updateAvailability.isPending ? (
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
               ) : null}
-              Salvar disponibilidade
+              {isInitialSetup ? "Salvar e continuar" : "Salvar disponibilidade"}
             </Button>
+            {isInitialSetup && (
+              <Button type="button" variant="ghost" onClick={finishInitialSetup}>
+                Concluir depois
+              </Button>
+            )}
           </div>
         </div>
       </main>

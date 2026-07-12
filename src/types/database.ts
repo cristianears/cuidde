@@ -234,6 +234,8 @@ export interface CaregiverProfile {
   paused_at: string | null
   closed_at: string | null
   suspended_at: string | null
+  initial_setup_completed_at: string | null
+  initial_setup_step: number
   // Completude automática (calculada por trigger — sem aprovação de admin)
   profile_complete: boolean
   // Flags de documentos enviados (calculadas por trigger — visíveis publicamente)

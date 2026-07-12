@@ -60,10 +60,15 @@ import {
   useUpdateCaregiverAccountStatus,
   useUploadCaregiverPhoto,
 } from "@/hooks/useCaregiverProfile";
+import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
 import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
 import { recordUserConsents } from "@/lib/user-consents";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { buildCaregiverProfileGuide, type CaregiverProfileGuideStatus } from "./caregiverProfileGuide";
+import CaregiverSetupProgress from "@/components/shared/CaregiverSetupProgress";
+import { completeCaregiverInitialSetup, setCaregiverInitialSetupStep } from "@/lib/caregiver-initial-setup";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 const profileSteps = [
   { id: 1, title: "Dados básicos" },
@@ -118,7 +123,10 @@ type CnhCategoryFormValue = "" | "A" | "B" | "AB" | "C" | "D" | "E"
 
 const CaregiverProfile = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [searchParams] = useSearchParams()
+  const isInitialSetup = searchParams.get("setup") === "1"
   const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(user?.id, "thirdPartyConsent")
   const { data: profileData, isLoading } = useCaregiverProfile()
   const { data: refsData } = useProfessionalReferences()
@@ -345,9 +353,9 @@ const CaregiverProfile = () => {
     }
   }
 
-  const handleSaveAllVisibleSteps = async () => {
+  const handleSaveAllVisibleSteps = async (): Promise<boolean> => {
     try {
-      if (!validateBasicStep()) return
+      if (!validateBasicStep()) return false
 
       const contactPhone = formData.phone.trim()
 
@@ -369,7 +377,7 @@ const CaregiverProfile = () => {
       })
 
       if (currentStep >= 2) {
-        if (!validateBioStep()) return
+        if (!validateBioStep()) return false
         await updateBio.mutateAsync({
           bio: formData.bio,
           profissao_formacao: formData.profissaoFormacao || null,
@@ -392,7 +400,7 @@ const CaregiverProfile = () => {
         if (references.length > 0) {
           if (!user?.id || !referenceConsentAccepted) {
             toast.error("Aceite o termo de consentimento antes de salvar referencias.");
-            return
+            return false
           }
         }
 
@@ -410,8 +418,10 @@ const CaregiverProfile = () => {
           show_reference_full_names: formData.showReferenceFullNames,
         })
       }
+      return true
     } catch {
       // Cada mutation ja exibe o toast de erro especifico.
+      return false
     }
   }
 
@@ -487,9 +497,45 @@ const CaregiverProfile = () => {
 
   function handleProfileStepChange(stepId: number) {
     setCurrentStep(stepId)
+    if (isInitialSetup) {
+      const stepQuery = stepId === 2 ? "bio" : stepId === 3 ? "specialties" : stepId === 4 ? "references" : "basic"
+      navigate(`/caregiver/profile?setup=1&step=${stepQuery}`, { replace: true })
+    }
     window.requestAnimationFrame(() => {
       profileFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
     })
+  }
+
+  const finishInitialSetup = async () => {
+    if (!user?.id) return
+    try {
+      await completeCaregiverInitialSetup(user.id)
+      await queryClient.invalidateQueries({ queryKey: queryKeys.caregiverProfile(user.id) })
+      navigate("/caregiver", { replace: true })
+    } catch {
+      toast.error("Nao foi possivel concluir o cadastro agora. Tente novamente.")
+    }
+  }
+
+  const handleInitialSetupContinue = async () => {
+    const saved = await handleSaveAllVisibleSteps()
+    if (!saved) return
+
+    if (currentStep < profileSteps.length) {
+      const nextStep = currentStep + 1
+      if (user?.id) {
+        await setCaregiverInitialSetupStep(user.id, nextStep)
+        queryClient.setQueryData<CaregiverProfileFull>(queryKeys.caregiverProfile(user.id), (current) => current ? { ...current, initial_setup_step: nextStep } : current)
+      }
+      handleProfileStepChange(nextStep)
+      return
+    }
+
+    if (user?.id) {
+      await setCaregiverInitialSetupStep(user.id, 5)
+      queryClient.setQueryData<CaregiverProfileFull>(queryKeys.caregiverProfile(user.id), (current) => current ? { ...current, initial_setup_step: 5 } : current)
+    }
+    navigate("/caregiver/availability?setup=1")
   }
 
   const toggleSpecialty = (specialty: string) => {
@@ -584,11 +630,16 @@ const CaregiverProfile = () => {
         userPhoto={profileData?.photo_url ?? undefined}
       />
 
-      <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8">
-        <PageHeader title="Meu Perfil" description="Gerencie suas informações pessoais e profissionais" />
+      <main className={cn("min-w-0 flex-1 overflow-x-hidden p-4 pb-24 md:p-6 lg:p-8", isInitialSetup && "pb-48 md:pb-6 lg:pb-8")}>
+        <PageHeader
+          title={isInitialSetup ? "Complete seu cadastro" : "Meu Perfil"}
+          description={isInitialSetup ? "Preencha suas informações profissionais, uma etapa por vez." : "Gerencie suas informações pessoais e profissionais"}
+        />
+
+        {isInitialSetup && <CaregiverSetupProgress currentStep={currentStep} />}
 
         {/* Guia de preenchimento */}
-        <div className="mb-6 max-w-4xl space-y-3 md:mb-8">
+        {!isInitialSetup && <div className="mb-6 max-w-4xl space-y-3 md:mb-8">
           <div className="rounded-lg border border-border bg-card p-4 shadow-sm md:p-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-1">
@@ -672,7 +723,7 @@ const CaregiverProfile = () => {
               )
             })}
           </div>
-        </div>
+        </div>}
 
         {/* Hidden file input for photo upload */}
         <input
@@ -1424,7 +1475,10 @@ const CaregiverProfile = () => {
           )}
 
           {/* Step Navigation */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 md:mt-6">
+          <div className={cn(
+            "mt-4 flex flex-wrap items-center justify-between gap-2 md:mt-6",
+            isInitialSetup && "fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 p-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)] backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none",
+          )}>
             <Button
               variant="outline"
               onClick={() => handleProfileStepChange(Math.max(1, currentStep - 1))}
@@ -1434,7 +1488,7 @@ const CaregiverProfile = () => {
               Anterior
             </Button>
 
-            <Button
+            {!isInitialSetup && <Button
               onClick={handleSaveAllVisibleSteps}
               disabled={isSaving}
               className="order-3 w-full gap-2 bg-accent text-xs hover:bg-accent/90 sm:order-none sm:w-auto md:text-sm"
@@ -1445,15 +1499,21 @@ const CaregiverProfile = () => {
                 <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
               )}
               Salvar alterações
-            </Button>
+            </Button>}
 
             <Button
-              onClick={() => handleProfileStepChange(Math.min(profileSteps.length, currentStep + 1))}
-              disabled={currentStep === profileSteps.length}
+              onClick={isInitialSetup ? handleInitialSetupContinue : () => handleProfileStepChange(Math.min(profileSteps.length, currentStep + 1))}
+              disabled={isSaving || (!isInitialSetup && currentStep === profileSteps.length)}
               className="min-w-0 flex-1 bg-primary text-xs hover:bg-primary/90 sm:flex-none md:text-sm"
             >
-              Próximo
+              {isSaving ? "Salvando..." : isInitialSetup ? "Salvar e continuar" : "Próximo"}
             </Button>
+
+            {isInitialSetup && (
+              <Button type="button" variant="ghost" onClick={finishInitialSetup} className="order-3 w-full text-xs sm:order-none sm:w-auto md:text-sm">
+                Concluir depois
+              </Button>
+            )}
           </div>
         </div>
       </main>

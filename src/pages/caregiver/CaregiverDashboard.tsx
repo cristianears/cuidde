@@ -21,7 +21,7 @@ import CaregiverCard from "@/components/shared/CaregiverCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile, useAutoGeocodeCaregiver } from "@/hooks/useCaregiverProfile";
@@ -31,6 +31,7 @@ import { useReviews } from "@/hooks/useReviews";
 import type { CaregiverProfileFull } from "@/hooks/useCaregiverProfile";
 import type { CaregiverPublic } from "@/types/database";
 import { getCaregiverSearchEligibility } from "@/lib/caregiver-search-eligibility";
+import { getCaregiverInitialSetupPath } from "@/lib/caregiver-initial-setup";
 
 // ─── Completude do perfil ─────────────────────────────────────────────────────
 // Critérios principais para busca. Documentos e referências são diferenciais de confiança.
@@ -216,6 +217,10 @@ const CaregiverDashboard = () => {
         </main>
       </div>
     );
+  }
+
+  if (profileData && !profileData.initial_setup_completed_at) {
+    return <Navigate to={getCaregiverInitialSetupPath(profileData.initial_setup_step)} replace />
   }
 
   // ── Valores do perfil com fallbacks seguros ──────────────────────────────

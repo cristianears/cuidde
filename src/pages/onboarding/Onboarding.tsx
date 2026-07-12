@@ -33,6 +33,7 @@ import { supabase } from '@/lib/supabase'
 import { geocodeAddress } from '@/lib/geocode'
 import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
+import { CAREGIVER_INITIAL_SETUP_PATH } from '@/lib/caregiver-initial-setup'
 import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { queuePendingUserConsents, recordUserConsents } from '@/lib/user-consents'
 import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
@@ -488,7 +489,7 @@ const Onboarding = () => {
         queryClient.removeQueries({ queryKey: profileQueryKey })
 
         if (formData.profileType === 'caregiver') {
-          navigate('/caregiver', { replace: true })
+          navigate(CAREGIVER_INITIAL_SETUP_PATH, { replace: true })
         } else {
           navigate(getFamilyOnboardingCompleteTarget({
             redirect: redirectParam,

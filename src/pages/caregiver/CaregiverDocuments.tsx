@@ -34,6 +34,11 @@ import type { CaregiverDocument, DocumentType, ProfessionalRegType } from "@/typ
 import { LEGAL_DOCUMENTS } from "@/lib/legal-documents";
 import { recordUserConsents } from "@/lib/user-consents";
 import { DOC_DEFINITIONS, buildDocumentSlots } from "./caregiverDocumentSlots";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import CaregiverSetupProgress from "@/components/shared/CaregiverSetupProgress";
+import { completeCaregiverInitialSetup } from "@/lib/caregiver-initial-setup";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 
 const UF_OPTIONS = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
@@ -51,6 +56,10 @@ type ViewingDocument = {
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 const CaregiverDocuments = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const isInitialSetup = searchParams.get("setup") === "1";
   const { data: profileData, isLoading: profileLoading } = useCaregiverProfile();
   const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(profileData?.id, "thirdPartyConsent");
   const { data: realDocs = [], isLoading: docsLoading } = useDocuments();
@@ -219,6 +228,18 @@ const CaregiverDocuments = () => {
 
   const isLoading = profileLoading || docsLoading;
 
+  const finishInitialSetup = async () => {
+    if (!profileData?.id) return;
+    try {
+      await completeCaregiverInitialSetup(profileData.id);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.caregiverProfile(profileData.id) });
+      toast.success("Cadastro inicial concluido. Voce pode editar seus dados quando quiser.");
+      navigate("/caregiver", { replace: true });
+    } catch {
+      toast.error("Nao foi possivel concluir o cadastro agora. Tente novamente.");
+    }
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="flex min-h-screen bg-background">
@@ -228,11 +249,13 @@ const CaregiverDocuments = () => {
         userPhoto={profileData?.photo_url ?? undefined}
       />
 
-      <main className="flex-1 p-4 md:p-6 lg:p-8">
+      <main className={cn("flex-1 p-4 md:p-6 lg:p-8", isInitialSetup && "pb-48 md:pb-6 lg:pb-8")}>
         <PageHeader
-          title="Meus Documentos"
+          title={isInitialSetup ? "Documentos e comprovantes" : "Meus Documentos"}
           description="Envie documentos para aumentar a confiança do seu perfil na plataforma."
         />
+
+        {isInitialSetup && <CaregiverSetupProgress currentStep={6} />}
 
         {isLoading ? (
           <div className="flex items-center justify-center h-48">
@@ -541,6 +564,17 @@ const CaregiverDocuments = () => {
                 <Progress value={progressPercentage} className="h-2" />
               </CardContent>
             </Card>
+
+            {isInitialSetup && (
+              <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 flex flex-col gap-2 border-t border-border bg-background/95 p-3 shadow-[0_-6px_18px_rgba(0,0,0,0.08)] backdrop-blur sm:flex-row md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+                <Button type="button" variant="outline" onClick={() => navigate("/caregiver/availability?setup=1")}>
+                  Anterior
+                </Button>
+                <Button type="button" onClick={finishInitialSetup} className="flex-1 sm:flex-none">
+                  Concluir cadastro
+                </Button>
+              </div>
+            )}
 
           </div>
         )}

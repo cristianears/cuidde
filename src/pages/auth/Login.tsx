@@ -10,6 +10,7 @@ import { signInWithEmail, signInWithGoogle, resetPasswordForEmail } from '@/lib/
 import { useAuth } from '@/contexts/AuthContext'
 import { getIncompleteOnboardingTarget, getLoginRegisterTarget } from '@/lib/landing-cep-flow'
 import { toast } from 'sonner'
+import { getCaregiverPostLoginTarget } from '@/lib/caregiver-initial-setup'
 
 type View = 'email' | 'password'
 
@@ -73,7 +74,11 @@ export default function Login() {
         return
       }
 
-      if (role === 'caregiver') navigate('/caregiver', { replace: true })
+      if (role === 'caregiver') {
+        void getCaregiverPostLoginTarget(user.id)
+          .then((target) => navigate(target, { replace: true }))
+          .catch(() => navigate('/caregiver', { replace: true }))
+      }
       else if (role === 'family') navigate('/family', { replace: true })
       else if (role === 'admin') navigate('/admin', { replace: true })
       // Se user existe mas role ainda é null, espera o próximo render

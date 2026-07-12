@@ -78,7 +78,7 @@ describe('RoleOnboardingGuide behavior', () => {
     expect(screen.getByText('Tudo certo por agora')).toBeInTheDocument()
   })
 
-  it('prompts legacy caregivers to add CPF when it is missing', async () => {
+  it('shows a missing CPF only when the guide is opened from the menu', async () => {
     mockCaregiverProfile.data = {
       ...(mockCaregiverProfile.data as Record<string, unknown>),
       profiles: {
@@ -87,6 +87,9 @@ describe('RoleOnboardingGuide behavior', () => {
     }
 
     renderGuide()
+
+    expect(screen.queryByText('Informe seu CPF')).not.toBeInTheDocument()
+    fireEvent(window, new CustomEvent(ONBOARDING_GUIDE_OPEN_EVENT))
 
     expect(await screen.findByText('Informe seu CPF')).toBeInTheDocument()
     expect(screen.getByText('CPF precisa de ajuste')).toBeInTheDocument()

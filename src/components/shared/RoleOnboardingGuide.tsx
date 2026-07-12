@@ -45,9 +45,7 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
   const navigate = useNavigate();
   const location = useLocation();
   const [activeStep, setActiveStep] = React.useState<OnboardingStep | null>(null);
-  const [dismissedForSession, setDismissedForSession] = React.useState(false);
   const [pendingStepId, setPendingStepId] = React.useState<string | null>(null);
-  const [storageVersion, setStorageVersion] = React.useState(0);
   const [showCompletedGuide, setShowCompletedGuide] = React.useState(false);
   const videoUrl = onboardingVideoLinks[role].trim();
 
@@ -78,20 +76,11 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
       setPendingStepId(null);
     }
 
-    if (dismissedForSession) {
-      setActiveStep(null);
-      setShowCompletedGuide(false);
-      return;
-    }
-
-    setActiveStep(getNextStep(false));
-    setShowCompletedGuide(false);
-  }, [dismissedForSession, getNextStep, location.pathname, pendingStepId, steps, storageVersion]);
+  }, [location.pathname, pendingStepId, steps]);
 
   const openGuide = React.useCallback(() => {
     const nextStep = getNextStep(true);
 
-    setDismissedForSession(false);
     setPendingStepId(null);
     setActiveStep(nextStep);
     setShowCompletedGuide(!nextStep && steps.length > 0);
@@ -103,7 +92,6 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
   }, [openGuide]);
 
   const closeGuideForNow = () => {
-    setDismissedForSession(true);
     setActiveStep(null);
     setShowCompletedGuide(false);
   };
@@ -112,17 +100,17 @@ function OnboardingGuideController({ role, steps }: OnboardingGuideControllerPro
     if (!activeStep) return;
     window.localStorage.setItem(getGuideStorageKey(role, activeStep.id), "true");
     setPendingStepId(null);
-    setStorageVersion((current) => current + 1);
+    const nextStep = getNextStep(false);
+    setActiveStep(nextStep);
+    setShowCompletedGuide(!nextStep);
   };
 
   const goToStep = () => {
     if (!activeStep) return;
     if (activeStep.markSeenOnAction) {
       window.localStorage.setItem(getGuideStorageKey(role, activeStep.id), "true");
-      setStorageVersion((current) => current + 1);
     }
     setPendingStepId(activeStep.id);
-    setDismissedForSession(false);
     setActiveStep(null);
     navigate(activeStep.href);
   };
