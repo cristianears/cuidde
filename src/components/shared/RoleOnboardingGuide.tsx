@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useCaregiverProfile } from "@/hooks/useCaregiverProfile";
 import { useDocuments } from "@/hooks/useCaregiverDocuments";
+import { useFamilyJobPost } from "@/hooks/useFamilyJobPost";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useFavoriteIds } from "@/hooks/useFavorites";
 import { onboardingVideoLinks, type OnboardingVideoRole } from "@/config/onboardingVideos";
@@ -315,6 +316,7 @@ function CaregiverRouteOnboardingGuide() {
 function FamilyRouteOnboardingGuide() {
   const location = useLocation();
   const { data: familyProfile } = useFamilyProfile();
+  const { data: familyJobPost } = useFamilyJobPost();
   const { data: favoriteIds = [] } = useFavoriteIds();
 
   const steps = React.useMemo<OnboardingStep[]>(() => {
@@ -327,9 +329,14 @@ function FamilyRouteOnboardingGuide() {
     );
     const hasAddress = !!(familyProfile?.cep && familyProfile?.city && familyProfile?.state);
     const hasElderlyProfile = !!(familyProfile?.elderly_name && familyProfile?.elderly_age);
-    const hasCareNeeds = !!(
-      (familyProfile?.care_needs?.trim().length ?? 0) >= 30 ||
-      (familyProfile?.elderly_conditions?.length ?? 0) > 0
+    const hasCareNeedPost = !!(
+      familyJobPost?.is_active &&
+      (
+        familyJobPost.care_type ||
+        (familyJobPost.activities?.length ?? 0) > 0 ||
+        (familyJobPost.requirements?.length ?? 0) > 0 ||
+        (familyJobPost.notes?.trim().length ?? 0) >= 30
+      )
     );
     const hasSearchStarted = favoriteIds.length > 0 || location.pathname.startsWith("/family/search");
 
@@ -368,15 +375,15 @@ function FamilyRouteOnboardingGuide() {
         done: hasElderlyProfile,
       },
       {
-        id: "care-needs",
-        title: "Explique a necessidade de cuidado",
-        statusLabel: "Necessidades de cuidado",
+        id: "care-need-post",
+        title: "Informe sua vaga ou necessidade",
+        statusLabel: "Vaga/necessidade",
         description:
-          "Uma descrição clara evita conversas desencontradas e ajuda a família a receber contatos mais adequados.",
+          "Uma necessidade clara ajuda a recomendar cuidadores mais alinhados ao que a família procura.",
         detail:
-          "Descreva rotina, limitações, medicações, preferências e o que é essencial no cuidado.",
+          "Preencha tipo de atendimento, horários, atividades e requisitos desejados.",
         href: "/family/profile",
-        done: hasCareNeeds,
+        done: hasCareNeedPost,
       },
       {
         id: "search-caregivers",
@@ -391,7 +398,7 @@ function FamilyRouteOnboardingGuide() {
         markSeenOnAction: true,
       },
     ];
-  }, [familyProfile, favoriteIds.length, location.pathname]);
+  }, [familyJobPost, familyProfile, favoriteIds.length, location.pathname]);
 
   return <OnboardingGuideController role="family" steps={steps} />;
 }

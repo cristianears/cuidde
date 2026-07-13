@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { queryKeys } from '@/lib/query-keys'
-import type { CaregiverAccountStatus, CaregiverStatus } from '@/types/database'
+import type { CaregiverAccountStatus, CaregiverStatus, FamilyJobCareType } from '@/types/database'
 
 // ─── Tipos retornados pela Edge Function admin-actions ────────────────────────
 
@@ -136,6 +136,31 @@ export interface AdminInvoiceRow {
   family_name: string | null
 }
 
+export interface AdminFamilyJobPostRow {
+  family_id: string
+  family_name: string | null
+  family_phone: string | null
+  is_active: boolean
+  use_profile_address: boolean
+  cep: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  care_type: FamilyJobCareType | null
+  schedule_days: string[]
+  schedule_periods: string[]
+  specific_schedule: string | null
+  activities: string[]
+  requirements: string[]
+  notes: string | null
+  admin_posted_at: string | null
+  admin_posted_by: string | null
+  updated_at: string
+}
+
 // ─── Helper interno ───────────────────────────────────────────────────────────
 
 async function callAdminAction<T>(action: string, params: Record<string, unknown> = {}): Promise<T> {
@@ -216,6 +241,36 @@ export function useAdminInvoices() {
     queryKey: queryKeys.adminInvoices,
     queryFn: () => callAdminAction<AdminInvoiceRow[]>('list_invoices'),
     staleTime: 30_000,
+  })
+}
+
+export function useAdminFamilyJobPosts() {
+  return useQuery({
+    queryKey: queryKeys.adminFamilyJobPosts,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_list_family_job_posts')
+      if (error) throw error
+      return (data ?? []) as AdminFamilyJobPostRow[]
+    },
+    staleTime: 60_000,
+  })
+}
+
+export function useAdminMarkFamilyJobPostPosted() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ familyId, posted }: { familyId: string; posted: boolean }) => {
+      const { error } = await supabase.rpc('admin_mark_family_job_post_posted', {
+        p_family_id: familyId,
+        p_posted: posted,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminFamilyJobPosts })
+      toast.success('Status da vaga atualizado.')
+    },
+    onError: (err: Error) => toast.error(`Erro ao atualizar vaga: ${err.message}`),
   })
 }
 

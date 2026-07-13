@@ -121,6 +121,8 @@ export type CaregiverAccountFeedbackReason =
   | 'admin_action'
   | 'other'
 
+export type FamilyJobCareType = 'plantao' | 'mensalista' | 'diaria' | 'turno' | 'a_combinar'
+
 // ─── Tabela: profiles ────────────────────────────────────────────────────────
 
 export interface Profile {
@@ -349,6 +351,34 @@ export interface FamilyProfile {
   updated_at: string
 }
 
+// ─── Tabela: family_job_posts ────────────────────────────────────────────────
+
+export interface FamilyJobPost {
+  family_id: string
+  is_active: boolean
+  use_profile_address: boolean
+  cep: string | null
+  street: string | null
+  number: string | null
+  complement: string | null
+  neighborhood: string | null
+  city: string | null
+  state: string | null
+  lat: number | null
+  lng: number | null
+  care_type: FamilyJobCareType | null
+  schedule_days: string[]
+  schedule_periods: string[]
+  specific_schedule: string | null
+  activities: string[]
+  requirements: string[]
+  notes: string | null
+  admin_posted_at: string | null
+  admin_posted_by: string | null
+  created_at: string
+  updated_at: string
+}
+
 // ─── Tabela: appointments ─────────────────────────────────────────────────────
 
 export interface Appointment {
@@ -568,6 +598,14 @@ export interface Database {
         Insert: Pick<FamilyProfile, 'id'>
         Update: Partial<Omit<FamilyProfile, 'id' | 'created_at'>>
       }
+      family_job_posts: {
+        Row: FamilyJobPost
+        Insert: Omit<FamilyJobPost, 'created_at' | 'updated_at' | 'admin_posted_at' | 'admin_posted_by'> & {
+          admin_posted_at?: string | null
+          admin_posted_by?: string | null
+        }
+        Update: Partial<Omit<FamilyJobPost, 'family_id' | 'created_at'>>
+      }
       appointments: {
         Row: Appointment
         Insert: Omit<Appointment, 'id' | 'created_at' | 'updated_at'>
@@ -654,6 +692,37 @@ export interface Database {
           p_reason_label?: string | null
           p_reason_details?: string | null
         }
+        Returns: void
+      }
+      admin_list_family_job_posts: {
+        Args: Record<string, never>
+        Returns: Array<{
+          family_id: string
+          family_name: string | null
+          family_phone: string | null
+          is_active: boolean
+          use_profile_address: boolean
+          cep: string | null
+          street: string | null
+          number: string | null
+          complement: string | null
+          neighborhood: string | null
+          city: string | null
+          state: string | null
+          care_type: FamilyJobCareType | null
+          schedule_days: string[]
+          schedule_periods: string[]
+          specific_schedule: string | null
+          activities: string[]
+          requirements: string[]
+          notes: string | null
+          admin_posted_at: string | null
+          admin_posted_by: string | null
+          updated_at: string
+        }>
+      }
+      admin_mark_family_job_post_posted: {
+        Args: { p_family_id: string; p_posted?: boolean }
         Returns: void
       }
       caregiver_phone_already_registered: {

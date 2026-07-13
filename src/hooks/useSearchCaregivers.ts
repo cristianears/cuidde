@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFamilyProfile } from '@/hooks/useFamilyProfile'
+import { useFamilyJobPost } from '@/hooks/useFamilyJobPost'
 import { queryKeys } from '@/lib/query-keys'
 import { DEFAULT_RADIUS_KM, MAX_PRICE_PER_HOUR } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
+import { computeFamilyJobCompatibilityScore } from '@/lib/family-job-post'
 import { abbreviateName } from '@/lib/privacy-masks'
 import { hasFamilyCoordinates, textIncludesNormalized } from '@/lib/search-filter-logic'
 import { getPrivateCaregiverIds, privateVisibilityFilter } from '@/lib/private-caregiver-visibility'
@@ -40,10 +42,11 @@ export type CaregiverPublicWithDistance = CaregiverPublic & {
 export function useSearchCaregivers(filters: SearchFilters = {}) {
   const { user } = useAuth()
   const { data: familyProfile } = useFamilyProfile()
+  const { data: familyJobPost } = useFamilyJobPost()
   const isSubscriber = familyProfile?.subscription_status === 'active'
 
   const query = useQuery({
-    queryKey: [...queryKeys.searchCaregivers(filters as Record<string, unknown>), isSubscriber],
+    queryKey: [...queryKeys.searchCaregivers(filters as Record<string, unknown>), isSubscriber, familyJobPost?.updated_at ?? null],
     queryFn: async (): Promise<CaregiverPublicWithDistance[]> => {
       const useProximity = hasFamilyCoordinates(filters)
       const privateCaregiverIds = await getPrivateCaregiverIds()
@@ -147,7 +150,10 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
       // Distância já está embutida no score como bônus contínuo (0–10 pts),
       // sem buckets — qualidade (0–114 pts) domina.
       const radius = filters.radiusKm ?? DEFAULT_RADIUS_KM
-      rows.sort((a, b) => computeRankScore(b, radius) - computeRankScore(a, radius))
+      rows.sort((a, b) =>
+        (computeRankScore(b, radius) + computeFamilyJobCompatibilityScore(b, familyJobPost)) -
+        (computeRankScore(a, radius) + computeFamilyJobCompatibilityScore(a, familyJobPost))
+      )
 
       if (!isSubscriber) {
         rows = rows.map((c) => ({

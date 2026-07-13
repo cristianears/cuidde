@@ -43,6 +43,7 @@ import FamilySupport from './pages/family/FamilySupport'
 import CaregiverPublicProfile from './pages/family/CaregiverPublicProfile'
 import CareHistoryReport from './pages/family/CareHistoryReport'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminFamilyJobPosts from './pages/admin/AdminFamilyJobPosts'
 import CaregiverProfilesReview from './pages/admin/CaregiverProfilesReview'
 import ApprovalQueue from './pages/admin/ApprovalQueue'
 import Finance from './pages/admin/Finance'
@@ -122,6 +123,7 @@ const App = () => (
 
             {/* Rotas de admin */}
             <Route path="/admin" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/vagas" element={<ProtectedRoute role="admin"><AdminFamilyJobPosts /></ProtectedRoute>} />
             <Route path="/admin/caregivers" element={<ProtectedRoute role="admin"><CaregiverProfilesReview /></ProtectedRoute>} />
             <Route path="/admin/approvals" element={<ProtectedRoute role="admin"><ApprovalQueue /></ProtectedRoute>} />
             <Route path="/admin/finance" element={<ProtectedRoute role="admin"><Finance /></ProtectedRoute>} />

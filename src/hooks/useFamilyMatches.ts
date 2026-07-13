@@ -2,10 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFamilyProfile } from '@/hooks/useFamilyProfile'
+import { useFamilyJobPost } from '@/hooks/useFamilyJobPost'
 import { queryKeys } from '@/lib/query-keys'
 import { DEFAULT_RADIUS_KM } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
+import { computeFamilyJobCompatibilityScore } from '@/lib/family-job-post'
 import { abbreviateName } from '@/lib/privacy-masks'
 import { getPrivateCaregiverIds, privateVisibilityFilter } from '@/lib/private-caregiver-visibility'
 import type { CaregiverPublic } from '@/types/database'
@@ -17,10 +19,11 @@ export type CaregiverMatchWithDistance = CaregiverPublic & {
 export function useFamilyMatches(limit = 3) {
   const { user } = useAuth()
   const { data: familyProfile } = useFamilyProfile()
+  const { data: familyJobPost } = useFamilyJobPost()
   const isSubscriber = familyProfile?.subscription_status === 'active'
 
   return useQuery({
-    queryKey: [...queryKeys.familyMatches(user?.id ?? '', limit), isSubscriber],
+    queryKey: [...queryKeys.familyMatches(user?.id ?? '', limit), isSubscriber, familyJobPost?.updated_at ?? null],
     queryFn: async (): Promise<CaregiverMatchWithDistance[]> => {
       if (!user) return []
 
@@ -102,7 +105,10 @@ export function useFamilyMatches(limit = 3) {
             }
           })
 
-          results.sort((a, b) => computeRankScore(b, DEFAULT_RADIUS_KM) - computeRankScore(a, DEFAULT_RADIUS_KM))
+          results.sort((a, b) =>
+            (computeRankScore(b, DEFAULT_RADIUS_KM) + computeFamilyJobCompatibilityScore(b, familyJobPost)) -
+            (computeRankScore(a, DEFAULT_RADIUS_KM) + computeFamilyJobCompatibilityScore(a, familyJobPost))
+          )
 
           const sliced = results.slice(0, limit)
           if (!isSubscriber) {

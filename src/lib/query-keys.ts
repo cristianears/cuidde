@@ -24,6 +24,7 @@ export const queryKeys = {
   favorites: (userId: string) => ['favorites', userId] as const,
   favoriteIds: (userId: string) => ['favoriteIds', userId] as const,
   familyProfile: (userId: string) => ['familyProfile', userId] as const,
+  familyJobPost: (userId: string) => ['familyJobPost', userId] as const,
   familyMatches: (userId: string, limit: number) => ['familyMatches', userId, limit] as const,
   searchCaregivers: (filters: Record<string, unknown>) => ['caregivers', 'search', stableFilterKey(filters)] as const,
   appointmentsAll: ['appointments'] as const,
@@ -48,6 +49,7 @@ export const queryKeys = {
   adminCaregiverDocuments: (id: string) => ['admin', 'documents', id] as const,
   adminCaregiverCounts: ['admin', 'counts'] as const,
   adminMetrics: ['admin', 'metrics'] as const,
+  adminFamilyJobPosts: ['admin', 'familyJobPosts'] as const,
   adminSubscriptions: ['admin', 'subscriptions'] as const,
   adminInvoices: ['admin', 'invoices'] as const,
 } as const

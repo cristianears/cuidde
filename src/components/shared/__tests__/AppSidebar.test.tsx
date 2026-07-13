@@ -122,6 +122,7 @@ describe('AppSidebar', () => {
   it('renderiza itens de menu do admin', () => {
     renderSidebar({ role: 'admin' }, '/admin')
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Vagas')).toBeInTheDocument()
     expect(screen.getByText('Revisões')).toBeInTheDocument()
     expect(screen.getByText('Financeiro')).toBeInTheDocument()
     expect(screen.queryByText('Guia')).not.toBeInTheDocument()

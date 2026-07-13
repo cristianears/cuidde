@@ -15,6 +15,7 @@ import {
   Clock,
 } from "lucide-react";
 import AppSidebar from "@/components/shared/AppSidebar";
+import FamilyJobPostSection from "@/components/shared/FamilyJobPostSection";
 import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,6 @@ const FamilyProfile = () => {
       if (fp.continuous_medications) setContinuousMedications(fp.continuous_medications);
       if (fp.responsible_doctor) setResponsibleDoctor(fp.responsible_doctor);
       if (fp.health_insurance) setHealthInsurance(fp.health_insurance);
-      if (fp.care_needs) setCareNeeds(fp.care_needs);
       if (fp.elderly_medications?.length) setElderlyMedications(fp.elderly_medications);
       setResponsiblePhoto(fp.photo_url ?? googlePhoto);
     }
@@ -155,7 +155,6 @@ const FamilyProfile = () => {
   const [continuousMedications, setContinuousMedications] = useState("");
   const [responsibleDoctor, setResponsibleDoctor] = useState("");
   const [healthInsurance, setHealthInsurance] = useState("");
-  const [careNeeds, setCareNeeds] = useState("");
 
   // Medications
   const [elderlyMedications, setElderlyMedications] = useState<ElderlyMedication[]>([]);
@@ -252,7 +251,6 @@ const FamilyProfile = () => {
     const hasElderlyInfo = [
       elderlyName,
       elderlyAge,
-      careNeeds,
       preExistingConditions,
       allergies,
       continuousMedications,
@@ -289,7 +287,7 @@ const FamilyProfile = () => {
       continuous_medications: continuousMedications,
       responsible_doctor: responsibleDoctor,
       health_insurance: healthInsurance,
-      care_needs: careNeeds,
+      care_needs: familyProfileData?.care_needs ?? "",
       elderly_medications: elderlyMedications,
     });
   };
@@ -519,17 +517,6 @@ const FamilyProfile = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="careNeeds" className="text-xs md:text-sm">Necessidades de cuidado</Label>
-                <Textarea
-                  id="careNeeds"
-                  value={careNeeds}
-                  onChange={(e) => setCareNeeds(e.target.value)}
-                  placeholder="Descreva rotina, limitações, medicações, preferências e o que é essencial no cuidado…"
-                  className="mt-1.5 min-h-[100px] md:min-h-[120px] text-sm"
-                />
-              </div>
-
               {/* Saúde Geral */}
               <div className="pt-4 border-t border-border">
                 <h4 className="text-sm md:text-base font-medium text-foreground mb-3 md:mb-4 flex items-center gap-2">
@@ -710,6 +697,17 @@ const FamilyProfile = () => {
               </div>
             </CardContent>
           </Card>
+
+          <FamilyJobPostSection
+            profileAddress={{
+              cep,
+              street,
+              number,
+              neighborhood,
+              city,
+              state,
+            }}
+          />
 
           {/* Rodapé de ações */}
           <div className="rounded-xl border border-border bg-card p-3 md:p-4">

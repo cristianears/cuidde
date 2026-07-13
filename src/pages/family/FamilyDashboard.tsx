@@ -160,12 +160,6 @@ const FamilyDashboard = () => {
                       </div>
                     </div>
                   )}
-                  {familyProfile.care_needs && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Necessidades</p>
-                      <p className="text-sm text-foreground mt-1">{familyProfile.care_needs}</p>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">

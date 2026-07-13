@@ -105,7 +105,7 @@ const AppointmentDetails = () => {
     setIsLoadingProfile(true);
     supabase
       .from("family_profiles")
-      .select("elderly_name, elderly_age, elderly_conditions, blood_type, pre_existing_conditions, allergies, continuous_medications, elderly_medications, responsible_doctor, health_insurance, care_needs")
+      .select("elderly_name, elderly_age, elderly_conditions, blood_type, pre_existing_conditions, allergies, continuous_medications, elderly_medications, responsible_doctor, health_insurance")
       .eq("id", appointment.family_id)
       .single()
       .then(({ data }) => {
@@ -645,7 +645,7 @@ const AppointmentDetails = () => {
                     </CardContent>
                   </Card>
 
-                  {/* Medical Follow-up + Care Needs */}
+                  {/* Medical Follow-up */}
                   <Card>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-base flex items-center gap-2">
@@ -666,13 +666,7 @@ const AppointmentDetails = () => {
                           <p className="text-sm font-medium">{familyProfile.health_insurance}</p>
                         </div>
                       )}
-                      {familyProfile.care_needs && (
-                        <div>
-                          <p className="text-xs text-muted-foreground">Necessidades de cuidado</p>
-                          <p className="text-sm leading-relaxed">{familyProfile.care_needs}</p>
-                        </div>
-                      )}
-                      {!familyProfile.responsible_doctor && !familyProfile.health_insurance && !familyProfile.care_needs && (
+                      {!familyProfile.responsible_doctor && !familyProfile.health_insurance && (
                         <p className="text-sm text-muted-foreground">Nenhuma informação de acompanhamento registrada.</p>
                       )}
                     </CardContent>

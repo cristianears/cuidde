@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CalendarIcon, ShieldCheck } from "lucide-react"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { useCreateAppointment } from "@/hooks/useAppointments"
+import { useFamilyJobPost } from "@/hooks/useFamilyJobPost"
+import { appointmentTypeFromFamilyJob, buildFamilyJobSummary } from "@/lib/family-job-post"
 import type { Appointment } from "@/types/database"
 
 interface RequestAppointmentDialogProps {
@@ -56,6 +58,8 @@ export default function RequestAppointmentDialog({
   caregiverName,
 }: RequestAppointmentDialogProps) {
   const { mutate: createAppointment, isPending } = useCreateAppointment()
+  const { data: familyJobPost } = useFamilyJobPost()
+  const suggestionAppliedRef = useRef(false)
 
   const [type, setType] = useState<Appointment["type"] | "">("")
   const [startDate, setStartDate] = useState<Date>()
@@ -68,6 +72,25 @@ export default function RequestAppointmentDialog({
 
   const isValid = type !== "" && startDate !== undefined
   const selectedTypeLabel = TYPE_OPTIONS.find((opt) => opt.value === type)?.label
+  const suggestedDescription = familyJobPost?.is_active ? buildFamilyJobSummary(familyJobPost) : ""
+
+  useEffect(() => {
+    if (!open) {
+      suggestionAppliedRef.current = false
+      return
+    }
+    if (suggestionAppliedRef.current || !familyJobPost?.is_active) return
+
+    suggestionAppliedRef.current = true
+
+    const suggestedType = appointmentTypeFromFamilyJob(familyJobPost.care_type)
+    if (!type && suggestedType) {
+      setType(suggestedType)
+    }
+    if (!description.trim() && suggestedDescription) {
+      setDescription(suggestedDescription.slice(0, 600))
+    }
+  }, [description, familyJobPost, open, suggestedDescription, type])
 
   const handleSubmit = () => {
     if (!isValid) return
@@ -222,6 +245,11 @@ export default function RequestAppointmentDialog({
               rows={3}
               maxLength={600}
             />
+            {suggestedDescription && (
+              <p className="text-xs text-muted-foreground">
+                Preenchemos com base na necessidade de cuidado salva no perfil. Você pode editar antes de enviar.
+              </p>
+            )}
           </div>
 
           {/* Observações sobre o idoso */}
