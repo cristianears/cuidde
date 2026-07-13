@@ -59,12 +59,19 @@ Para artigos de cuidadores, bons temas são:
 
 ## Arquivos que precisam ser atualizados
 
-Hoje os posts aparecem em dois lugares:
+Os textos dos posts ficam em uma fonte única:
 
-- `src/data/blogPosts.ts`: fonte usada pela interface React do blog.
-- `scripts/seo-pages.mjs`: fonte usada para gerar HTML estático, metadados e sitemap no build.
+- `src/data/blogContent.js`: títulos, descrições, seções, datas, audiência, links internos e imagens públicas de SEO.
 
-Ao criar artigo novo, atualizar os dois até que o projeto seja refatorado para ter fonte única.
+A interface React complementa esses dados com imagens importadas e CTA em:
+
+- `src/data/blogPosts.ts`.
+
+O gerador estático importa a mesma fonte de conteúdo em:
+
+- `scripts/seo-pages.mjs`.
+
+Ao criar artigo novo, atualize primeiro `src/data/blogContent.js`. Depois confira se `src/data/blogPosts.ts` tem imagem e CTA adequados para o novo slug.
 
 Também verificar:
 
@@ -158,7 +165,8 @@ Depois de publicar novos artigos:
 ## Checklist antes de publicar
 
 - Artigo existe em `src/data/blogPosts.ts`.
-- Artigo existe em `scripts/seo-pages.mjs`.
+- Artigo existe em `src/data/blogContent.js`.
+- Quando houver imagem de artigo, ela existe em `src/assets/blog/` para o app e em `public/blog/` para metadados públicos.
 - Título tem intenção de busca clara.
 - Description está objetiva.
 - CTA aponta para a rota correta.

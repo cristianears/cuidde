@@ -17,7 +17,10 @@ const BlogPost = () => {
 
   if (!post) return <Navigate to="/blog" replace />
 
-  const relatedPosts = latestBlogPosts.filter((item) => item.slug !== post.slug).slice(0, 2)
+  const relatedPosts = (
+    post.relatedSlugs?.map((relatedSlug) => getBlogPost(relatedSlug)).filter(Boolean) ??
+    latestBlogPosts.filter((item) => item.slug !== post.slug)
+  ).slice(0, 3)
   const nextStepDescription =
     post.audience === 'cuidadores'
       ? 'Use o guia para organizar melhor seu perfil e avance quando quiser se apresentar para famílias.'
