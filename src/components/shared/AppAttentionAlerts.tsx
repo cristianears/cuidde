@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Bell, Briefcase, ClipboardCheck, MessageCircle } from "lucide-react";
+import { Bell, Briefcase, ClipboardCheck, MessageCircle, UserRound, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppointments } from "@/hooks/useAppointments";
 import { useCareRoutineTodayStatus } from "@/hooks/useCareRoutine";
+import { useFamilyJobPost } from "@/hooks/useFamilyJobPost";
+import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useUnreadCounts } from "@/hooks/useUnreadCounts";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +24,7 @@ type AttentionAlert = {
   description: string;
   actionLabel: string;
   href: string;
-  icon: typeof Bell;
+  icon: LucideIcon;
   count: number;
 };
 
@@ -65,6 +67,8 @@ function AuthenticatedAttentionAlerts({ role }: { role: "caregiver" | "family" }
   const navigate = useNavigate();
   const { data: unread } = useUnreadCounts(role);
   const { data: appointments = [] } = useAppointments(role);
+  const { data: familyProfile } = useFamilyProfile();
+  const { data: familyJobPost, isLoading: isLoadingFamilyJobPost } = useFamilyJobPost();
 
   const activeCaregiverAppointmentIds = useMemo(
     () => role === "caregiver"
@@ -81,6 +85,32 @@ function AuthenticatedAttentionAlerts({ role }: { role: "caregiver" | "family" }
       (appointment) => appointment.status === "ativo" && routineTodayStatus[appointment.id] !== true,
     );
   }, [appointments, isLoadingRoutineStatus, role, routineTodayStatus]);
+
+  const shouldPromptFamilyProfile = useMemo(() => {
+    if (role !== "family") return false;
+    if (familyProfile === undefined || isLoadingFamilyJobPost) return false;
+    if (location.pathname === "/family/profile") return false;
+    if (location.pathname === "/family/search" && location.search.includes("cep=")) return false;
+
+    const hasResponsible = Boolean(
+      familyProfile?.profiles?.full_name?.trim() &&
+      familyProfile?.profiles?.phone?.trim() &&
+      familyProfile?.relationship
+    );
+    const hasAddress = Boolean(familyProfile?.cep && familyProfile?.city && familyProfile?.state);
+    const hasElderlyProfile = Boolean(familyProfile?.elderly_name && familyProfile?.elderly_age);
+    const hasCareNeedPost = Boolean(
+      familyJobPost?.is_active &&
+      (
+        familyJobPost.care_type ||
+        (familyJobPost.activities?.length ?? 0) > 0 ||
+        (familyJobPost.requirements?.length ?? 0) > 0 ||
+        (familyJobPost.notes?.trim().length ?? 0) >= 30
+      )
+    );
+
+    return !hasResponsible || !hasAddress || !hasElderlyProfile || !hasCareNeedPost;
+  }, [familyJobPost, familyProfile, isLoadingFamilyJobPost, location.pathname, location.search, role]);
 
   const alerts = useMemo<AttentionAlert[]>(() => {
     const nextAlerts: AttentionAlert[] = [];
@@ -128,8 +158,20 @@ function AuthenticatedAttentionAlerts({ role }: { role: "caregiver" | "family" }
       });
     }
 
+    if (shouldPromptFamilyProfile) {
+      nextAlerts.push({
+        id: "family-profile:incomplete",
+        title: "Complete seu perfil",
+        description: "Preencha as informações principais para deixar a busca e as recomendações mais alinhadas.",
+        actionLabel: "Completar perfil",
+        href: "/family/profile",
+        icon: UserRound,
+        count: 0,
+      });
+    }
+
     return nextAlerts;
-  }, [firstMissingRoutineAppointment, role, unread]);
+  }, [firstMissingRoutineAppointment, role, shouldPromptFamilyProfile, unread]);
 
   const appBadgeCount = alerts.reduce((total, alert) => total + alert.count, 0);
   usePwaAppBadge(appBadgeCount);
