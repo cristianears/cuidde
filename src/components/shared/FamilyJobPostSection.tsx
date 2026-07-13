@@ -35,6 +35,8 @@ type ProfileAddress = {
 
 type FamilyJobPostSectionProps = {
   profileAddress: ProfileAddress;
+  setupMode?: boolean;
+  onSaved?: () => void;
 };
 
 function toggleValue(value: string, current: string[], setCurrent: (next: string[]) => void) {
@@ -53,7 +55,7 @@ function normalizeAddress(address: Partial<ProfileAddress>) {
   };
 }
 
-export default function FamilyJobPostSection({ profileAddress }: FamilyJobPostSectionProps) {
+export default function FamilyJobPostSection({ profileAddress, setupMode = false, onSaved }: FamilyJobPostSectionProps) {
   const { data: jobPost, isLoading } = useFamilyJobPost();
   const { mutate: saveJobPost, isPending } = useUpdateFamilyJobPost();
 
@@ -155,6 +157,8 @@ export default function FamilyJobPostSection({ profileAddress }: FamilyJobPostSe
       activities,
       requirements,
       notes,
+    }, {
+      onSuccess: onSaved,
     });
   };
 
@@ -374,7 +378,7 @@ export default function FamilyJobPostSection({ profileAddress }: FamilyJobPostSe
 
         <Button type="button" onClick={handleSave} disabled={isPending} className="w-full gap-2 sm:w-auto">
           <Save className="h-4 w-4" />
-          {isPending ? "Salvando..." : "Salvar necessidade"}
+          {isPending ? "Salvando..." : setupMode ? "Salvar e finalizar" : "Salvar necessidade"}
         </Button>
       </CardContent>
     </Card>

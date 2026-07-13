@@ -17,6 +17,7 @@ import {
 import AppSidebar from "@/components/shared/AppSidebar";
 import FamilyJobPostSection from "@/components/shared/FamilyJobPostSection";
 import PageHeader from "@/components/shared/PageHeader";
+import Stepper from "@/components/shared/Stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -30,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { getPersonNameError, normalizePersonName } from "@/lib/person-name";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHasAcceptedUserConsent } from "@/hooks/useUserConsents";
+import { useFamilyJobPost } from "@/hooks/useFamilyJobPost";
 import { useFamilyProfile, useUpdateFamilyProfileFull, useUploadFamilyPhoto, useRemoveFamilyPhoto } from "@/hooks/useFamilyProfile";
 import { fetchAddressByCep } from "@/lib/viacep";
 import type { ElderlyMedication } from "@/types/database";
@@ -49,16 +51,26 @@ const healthConditionOptions = [
   "Outros"
 ];
 
+const familySetupSteps = [
+  { id: 1, title: "Responsável" },
+  { id: 2, title: "Endereço" },
+  { id: 3, title: "Idoso" },
+  { id: 4, title: "Necessidade" },
+];
+
 
 const FamilyProfile = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: hasAcceptedThirdPartyConsent = false } = useHasAcceptedUserConsent(user?.id, "thirdPartyConsent");
   const { data: familyProfileData } = useFamilyProfile();
+  const { data: familyJobPost, isLoading: isLoadingFamilyJobPost } = useFamilyJobPost();
   const { mutate: saveProfile, isPending: isSaving } = useUpdateFamilyProfileFull();
   const { mutate: uploadPhoto, isPending: isUploadingPhoto } = useUploadFamilyPhoto();
   const { mutate: removePhoto } = useRemoveFamilyPhoto();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasSelectedSetupStepRef = useRef(false);
+  const [currentStep, setCurrentStep] = useState(1);
 
   const realName = familyProfileData?.profiles?.full_name ?? user?.user_metadata?.full_name ?? "";
   const realEmail = user?.email ?? "";
@@ -165,6 +177,49 @@ const FamilyProfile = () => {
 
   const elderlyConsentAccepted = hasAcceptedThirdPartyConsent || hasAcceptedElderlyConsent;
 
+  const hasElderlyInfo = [
+    elderlyName,
+    elderlyAge,
+    preExistingConditions,
+    allergies,
+    continuousMedications,
+    responsibleDoctor,
+    healthInsurance,
+  ].some((value) => value.trim().length > 0)
+    || selectedConditions.length > 0
+    || elderlyMedications.length > 0
+    || Boolean(bloodType);
+  const requiresElderlyConsent = hasElderlyInfo && !elderlyConsentAccepted;
+  const hasResponsibleInfo = Boolean(responsibleName.trim() && responsiblePhone.trim() && relationship);
+  const hasAddressInfo = Boolean(cep.replace(/\D/g, "").length === 8 && city.trim() && state.trim());
+  const hasElderlyProfileInfo = Boolean(elderlyName.trim() && elderlyAge.trim());
+  const hasFamilyCareNeed = Boolean(
+    familyJobPost?.is_active &&
+    (
+      familyJobPost.care_type ||
+      (familyJobPost.activities?.length ?? 0) > 0 ||
+      (familyJobPost.requirements?.length ?? 0) > 0 ||
+      (familyJobPost.notes?.trim().length ?? 0) >= 30
+    )
+  );
+  const firstIncompleteStep =
+    !hasResponsibleInfo ? 1 :
+    !hasAddressInfo ? 2 :
+    !hasElderlyProfileInfo ? 3 :
+    !hasFamilyCareNeed ? 4 :
+    1;
+  const isGuidedSetup = Boolean(
+    familyProfileData !== undefined &&
+    !isLoadingFamilyJobPost &&
+    (!hasResponsibleInfo || !hasAddressInfo || !hasElderlyProfileInfo || !hasFamilyCareNeed)
+  );
+  const showElderlyConsent = !isGuidedSetup || currentStep === 3 || requiresElderlyConsent;
+
+  useEffect(() => {
+    if (!isGuidedSetup || hasSelectedSetupStepRef.current) return;
+    setCurrentStep(firstIncompleteStep);
+  }, [firstIncompleteStep, isGuidedSetup]);
+
   const handleAcceptElderlyConsent = async (checked: boolean) => {
     if (!checked || elderlyConsentAccepted) return;
     if (!user?.id) return;
@@ -241,25 +296,12 @@ const FamilyProfile = () => {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (onSuccess?: () => void) => {
     const nameError = getPersonNameError(responsibleName);
     if (nameError) {
       toast.error(nameError);
       return;
     }
-
-    const hasElderlyInfo = [
-      elderlyName,
-      elderlyAge,
-      preExistingConditions,
-      allergies,
-      continuousMedications,
-      responsibleDoctor,
-      healthInsurance,
-    ].some((value) => value.trim().length > 0)
-      || selectedConditions.length > 0
-      || elderlyMedications.length > 0
-      || Boolean(bloodType)
 
     if (hasElderlyInfo) {
       if (!user?.id || !elderlyConsentAccepted) {
@@ -289,7 +331,25 @@ const FamilyProfile = () => {
       health_insurance: healthInsurance,
       care_needs: familyProfileData?.care_needs ?? "",
       elderly_medications: elderlyMedications,
+      service_formats: familyProfileData?.service_formats ?? [],
+      hourly_range_min: familyProfileData?.hourly_range_min ?? null,
+      hourly_range_max: familyProfileData?.hourly_range_max ?? null,
+      daily_range_min: familyProfileData?.daily_range_min ?? null,
+      daily_range_max: familyProfileData?.daily_range_max ?? null,
+      distance_preference: familyProfileData?.distance_preference ?? "",
+    }, {
+      onSuccess,
     });
+  };
+
+  const handleSetupStepChange = (step: number) => {
+    hasSelectedSetupStepRef.current = true;
+    setCurrentStep(step);
+  };
+
+  const handleSetupContinue = () => {
+    if (currentStep >= familySetupSteps.length) return;
+    handleSave(() => handleSetupStepChange(Math.min(familySetupSteps.length, currentStep + 1)));
   };
 
   const handleCancel = () => {
@@ -319,9 +379,25 @@ const FamilyProfile = () => {
           onChange={handlePhotoUpload}
         />
 
+        {isGuidedSetup && (
+          <div className="mb-6 max-w-4xl rounded-lg border border-border bg-card p-4 shadow-sm md:p-5">
+            <div className="mb-4">
+              <p className="text-sm font-semibold text-foreground">Complete seu perfil</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground md:text-sm">
+                Preencha uma etapa por vez para deixar o perfil pronto para conversar com cuidadores.
+              </p>
+            </div>
+            <Stepper
+              steps={familySetupSteps}
+              currentStep={currentStep}
+              onStepClick={handleSetupStepChange}
+            />
+          </div>
+        )}
+
         <div className="space-y-5 md:space-y-6 max-w-4xl">
           {/* Seção A — Dados do Responsável */}
-          <Card className="animate-fade-in">
+          {(!isGuidedSetup || currentStep === 1) && <Card className="animate-fade-in">
             <CardHeader className="pb-4 md:pb-6">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <User className="w-4 h-4 md:w-5 md:h-5 text-primary" />
@@ -418,10 +494,10 @@ const FamilyProfile = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           {/* Seção B — Endereço */}
-          <Card className="animate-fade-in">
+          {(!isGuidedSetup || currentStep === 2) && <Card className="animate-fade-in">
             <CardHeader className="pb-4 md:pb-6">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <MapPin className="w-4 h-4 md:w-5 md:h-5 text-primary" />
@@ -468,10 +544,10 @@ const FamilyProfile = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           {/* Seção C — Perfil do Idoso */}
-          <Card className="animate-fade-in">
+          {(!isGuidedSetup || currentStep === 3) && <Card className="animate-fade-in">
             <CardHeader className="pb-4 md:pb-6">
               <CardTitle className="text-base md:text-lg flex items-center gap-2">
                 <Heart className="w-4 h-4 md:w-5 md:h-5 text-primary" />
@@ -696,9 +772,9 @@ const FamilyProfile = () => {
                 </div>
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
-          <FamilyJobPostSection
+          {(!isGuidedSetup || currentStep === 4) && <FamilyJobPostSection
             profileAddress={{
               cep,
               street,
@@ -707,10 +783,14 @@ const FamilyProfile = () => {
               city,
               state,
             }}
-          />
+            setupMode={isGuidedSetup}
+            onSaved={() => {
+              hasSelectedSetupStepRef.current = false;
+            }}
+          />}
 
           {/* Rodapé de ações */}
-          <div className="rounded-xl border border-border bg-card p-3 md:p-4">
+          {showElderlyConsent && <div className="rounded-xl border border-border bg-card p-3 md:p-4">
             <label className="flex items-start gap-3 text-xs md:text-sm leading-relaxed">
               <Checkbox
                 checked={elderlyConsentAccepted}
@@ -731,18 +811,43 @@ const FamilyProfile = () => {
                 .
               </span>
             </label>
-          </div>
+          </div>}
 
-          <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-6">
-            <Button onClick={handleSave} disabled={isSaving} className="gap-2">
-              <Save className="w-4 h-4" />
-              {isSaving ? "Salvando..." : "Salvar alterações"}
-            </Button>
-            <Button variant="outline" onClick={handleCancel} className="gap-2">
-              <X className="w-4 h-4" />
-              Cancelar
-            </Button>
-          </div>
+          {isGuidedSetup ? (
+            <div className="flex flex-col gap-2 border-t border-border pt-4 pb-6 sm:flex-row sm:items-center sm:justify-between">
+              <Button
+                variant="outline"
+                onClick={() => handleSetupStepChange(Math.max(1, currentStep - 1))}
+                disabled={currentStep === 1}
+                className="min-w-0 flex-1 sm:flex-none"
+              >
+                Anterior
+              </Button>
+              {currentStep < familySetupSteps.length && (
+                <Button
+                  onClick={handleSetupContinue}
+                  disabled={isSaving}
+                  className="min-w-0 flex-1 sm:flex-none"
+                >
+                  {isSaving ? "Salvando..." : "Salvar e continuar"}
+                </Button>
+              )}
+              <Button type="button" variant="ghost" onClick={() => navigate("/family/search")} className="w-full sm:w-auto">
+                Concluir depois
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-6">
+              <Button onClick={() => handleSave()} disabled={isSaving} className="gap-2">
+                <Save className="w-4 h-4" />
+                {isSaving ? "Salvando..." : "Salvar alterações"}
+              </Button>
+              <Button variant="outline" onClick={handleCancel} className="gap-2">
+                <X className="w-4 h-4" />
+                Cancelar
+              </Button>
+            </div>
+          )}
         </div>
       </main>
     </div>
