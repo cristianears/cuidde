@@ -41,7 +41,13 @@ begin
     from public.caregiver_profiles cp
     where cp.profile_complete = true
       and cp.account_status = 'active'
-      and cp.is_visible = true
+      and (
+        cp.is_visible = true
+        or exists (
+          select 1 from public.private_caregiver_visibility pcv
+          where pcv.caregiver_id = cp.id and pcv.family_id = auth.uid()
+        )
+      )
       and cp.is_available_for_new = true
       and cp.lat is not null
       and cp.lng is not null

@@ -672,6 +672,10 @@ export interface Database {
         Args: { p_lat: number; p_lng: number; p_radius_km?: number }
         Returns: { id: string; distance_km: number }[]
       }
+      family_private_caregiver_ids: {
+        Args: Record<string, never>
+        Returns: { caregiver_id: string }[]
+      }
       haversine_distance: {
         Args: { lat1: number; lng1: number; lat2: number; lng2: number }
         Returns: number

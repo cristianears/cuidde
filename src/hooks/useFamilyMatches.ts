@@ -7,6 +7,7 @@ import { DEFAULT_RADIUS_KM } from '@/lib/constants'
 import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
 import { abbreviateName } from '@/lib/privacy-masks'
+import { getPrivateCaregiverIds, privateVisibilityFilter } from '@/lib/private-caregiver-visibility'
 import type { CaregiverPublic } from '@/types/database'
 
 export type CaregiverMatchWithDistance = CaregiverPublic & {
@@ -33,6 +34,7 @@ export function useFamilyMatches(limit = 3) {
 
       const conditions: string[] = familyData?.elderly_conditions ?? []
       const hasLocation = familyData?.lat != null && familyData?.lng != null
+      const privateCaregiverIds = await getPrivateCaregiverIds()
 
       // Se tem coordenadas, buscar por proximidade primeiro
       let proximityMap: Map<string, number> | null = null
@@ -75,7 +77,10 @@ export function useFamilyMatches(limit = 3) {
           .select(CAREGIVER_SELECT)
           .eq('profile_complete', true)
           .eq('account_status', 'active')
-          .eq('is_visible', true)
+          .eq('is_available_for_new', true)
+
+        const visibilityFilter = privateVisibilityFilter(privateCaregiverIds)
+        q = visibilityFilter ? q.or(visibilityFilter) : q.eq('is_visible', true)
 
         if (attempt.useProximity && proximityMap) {
           q = q.in('id', Array.from(proximityMap.keys()))

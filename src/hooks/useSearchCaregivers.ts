@@ -8,6 +8,7 @@ import { CAREGIVER_SELECT, mapCaregiverRow } from '@/lib/caregiver-query'
 import { computeRankScore } from '@/lib/caregiver-rank'
 import { abbreviateName } from '@/lib/privacy-masks'
 import { hasFamilyCoordinates, textIncludesNormalized } from '@/lib/search-filter-logic'
+import { getPrivateCaregiverIds, privateVisibilityFilter } from '@/lib/private-caregiver-visibility'
 import type { CaregiverPublic } from '@/types/database'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
     queryKey: [...queryKeys.searchCaregivers(filters as Record<string, unknown>), isSubscriber],
     queryFn: async (): Promise<CaregiverPublicWithDistance[]> => {
       const useProximity = hasFamilyCoordinates(filters)
+      const privateCaregiverIds = await getPrivateCaregiverIds()
 
       // Se tem lat/lng da família, buscar IDs por proximidade primeiro
       let proximityMap: Map<string, number> | null = null
@@ -75,8 +77,10 @@ export function useSearchCaregivers(filters: SearchFilters = {}) {
         .select(CAREGIVER_SELECT)
         .eq('profile_complete', true)
         .eq('account_status', 'active')
-        .eq('is_visible', true)
         .eq('is_available_for_new', true)
+
+      const visibilityFilter = privateVisibilityFilter(privateCaregiverIds)
+      q = visibilityFilter ? q.or(visibilityFilter) : q.eq('is_visible', true)
 
       // Se usando proximidade, filtrar pelos IDs retornados pela RPC
       if (proximityMap) {

@@ -17,7 +17,11 @@ declare
   v_reference_count int;
 begin
   -- Só expõe preview de cuidadores com perfil completo (mesmo gating da busca pública)
-  select profile_complete and account_status = 'active' and is_visible = true
+  select profile_complete and account_status = 'active' and is_available_for_new
+    and (is_visible = true or exists (
+      select 1 from public.private_caregiver_visibility pcv
+      where pcv.caregiver_id = caregiver_profiles.id and pcv.family_id = auth.uid()
+    ))
     into v_is_public
     from caregiver_profiles
    where id = p_caregiver_id;

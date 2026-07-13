@@ -49,7 +49,14 @@ begin
    where cp.id = p_caregiver_id
      and cp.profile_complete = true
      and cp.account_status = 'active'
-     and cp.is_visible = true;
+     and cp.is_available_for_new = true
+     and (
+       cp.is_visible = true
+       or exists (
+         select 1 from private_caregiver_visibility pcv
+         where pcv.caregiver_id = cp.id and pcv.family_id = v_caller
+       )
+     );
 
   if not found then
     return null;
