@@ -96,29 +96,31 @@ function CaregiverListItem({ caregiver, selected, onSelect }: { caregiver: Admin
       onClick={onSelect}
       className={cn("w-full rounded-lg border p-3 text-left transition-colors", selected ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-muted/50")}
     >
-      <div className="flex items-start gap-3">
-        <Avatar className="h-11 w-11 rounded-xl">
+      <div className="flex min-w-0 items-start gap-3">
+        <Avatar className="h-11 w-11 shrink-0 rounded-xl">
           <AvatarImage src={caregiver.photo_url ?? undefined} alt={caregiver.full_name ?? "Cuidador"} />
           <AvatarFallback className="rounded-xl">{getInitials(caregiver.full_name ?? "Cuidador") || <User className="h-4 w-4" />}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-sm font-medium text-foreground">{caregiver.full_name ?? "Sem nome"}</p>
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <p className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{caregiver.full_name ?? "Sem nome"}</p>
             {caregiver.profile_complete ? <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" /> : <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />}
           </div>
           <p className="mt-1 truncate text-xs text-muted-foreground">{formatLocation(caregiver)}</p>
-          <div className="mt-2 flex items-center gap-2">
-            <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", status.className)}>{status.label}</span>
-            {accountStatusKey !== "active" && (
-              <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", accountStatus.className)}>{accountStatus.label}</span>
-            )}
-            {caregiver.admin_contacted_at && (
-              <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700">Contactado</span>
-            )}
-            {!searchVisible && (
-              <span className="rounded-full border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Oculto</span>
-            )}
-            <span className="text-[11px] text-muted-foreground">{new Date(caregiver.created_at).toLocaleDateString("pt-BR")}</span>
+          <div className="mt-2 flex min-w-0 items-start gap-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+              <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium", status.className)}>{status.label}</span>
+              {accountStatusKey !== "active" && (
+                <span className={cn("shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium", accountStatus.className)}>{accountStatus.label}</span>
+              )}
+              {caregiver.admin_contacted_at && (
+                <span className="shrink-0 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700">Contactado</span>
+              )}
+              {!searchVisible && (
+                <span className="shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium text-muted-foreground">Oculto</span>
+              )}
+            </div>
+            <span className="shrink-0 pt-0.5 text-[11px] text-muted-foreground">{new Date(caregiver.created_at).toLocaleDateString("pt-BR")}</span>
           </div>
         </div>
       </div>
