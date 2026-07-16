@@ -88,6 +88,20 @@ export function renderLandingBody() {
         ${renderPostLinks()}
       </section>
       <section>
+        <h2>Cidades atendidas pela icuide</h2>
+        <ul>
+          ${localPages
+            .map(
+              (page) => `
+                <li>
+                  <a href="${escapeHtml(page.path)}/">${escapeHtml(page.h1)}</a>
+                </li>
+              `,
+            )
+            .join('')}
+        </ul>
+      </section>
+      <section>
         <h2>Perguntas frequentes sobre cuidadores de idosos</h2>
         <h3>Quem faz a contratação do profissional?</h3>
         <p>A contratação, o vínculo e o pagamento do atendimento são definidos diretamente entre família e profissional.</p>

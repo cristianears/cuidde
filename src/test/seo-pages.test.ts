@@ -109,6 +109,18 @@ describe('SEO static page generator', () => {
     expect(redirects).toContain('/privacy /privacy/index.html 200')
   })
 
+  it('links local care pages from the static landing SEO body', async () => {
+    const { renderLandingBody } = await import('../../scripts/seo-pages.mjs')
+
+    const html = renderLandingBody()
+
+    expect(html).toContain('Cidades atendidas pela icuide')
+    expect(html).toContain('href="/cuidador-de-idosos-sao-jose-dos-campos/"')
+    expect(html).toContain('href="/cuidador-de-idosos-jacarei/"')
+    expect(html).toContain('href="/cuidador-de-idosos-vale-do-paraiba/"')
+    expect(html).toContain('href="/cuidador-noturno-sao-jose-dos-campos/"')
+  })
+
   it('keeps CEP and pricing flows out of the static SEO generator', async () => {
     const { renderLandingBody, renderCaregiverLandingBody } = await import('../../scripts/seo-pages.mjs')
 

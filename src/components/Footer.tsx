@@ -1,10 +1,30 @@
 import { Instagram, Mail, Phone, MapPin } from "lucide-react";
 import BrandMark from "@/components/shared/BrandMark";
+
+const localCareLinks = [
+  {
+    href: "/cuidador-de-idosos-sao-jose-dos-campos/",
+    label: "Cuidador em São José dos Campos",
+  },
+  {
+    href: "/cuidador-de-idosos-jacarei/",
+    label: "Cuidador em Jacareí",
+  },
+  {
+    href: "/cuidador-de-idosos-vale-do-paraiba/",
+    label: "Cuidador no Vale do Paraíba",
+  },
+  {
+    href: "/cuidador-noturno-sao-jose-dos-campos/",
+    label: "Cuidador noturno em São José",
+  },
+];
+
 const Footer = () => {
   return (
     <footer className="bg-footer text-footer-foreground py-14">
       <div className="container mx-auto px-6 md:px-10">
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8 md:mb-10">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-6 md:gap-8 mb-8 md:mb-10">
           {/* Brand */}
           <div className="col-span-2 md:col-span-2 lg:col-span-1">
             <a
@@ -116,6 +136,22 @@ const Footer = () => {
                   Perguntas frequentes
                 </a>
               </li>
+            </ul>
+          </div>
+          {/* Local Pages */}
+          <div>
+            <h4 className="font-semibold mb-4 text-sm">Cidades atendidas</h4>
+            <ul className="space-y-3">
+              {localCareLinks.map((link) => (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    className="text-xs text-footer-foreground/70 hover:text-footer-foreground transition-colors"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
           {/* Contact */}
