@@ -51,6 +51,13 @@ describe('SEO static page generator', () => {
     expect(html).toContain('Buscar cuidadores pelo CEP')
   })
 
+  it('resolves local care pages with or without trailing slash', async () => {
+    const { getLocalCarePageByPath } = await import('../data/localCarePages.js')
+
+    expect(getLocalCarePageByPath('/cuidador-de-idosos-sao-jose-dos-campos')?.city).toBe('São José dos Campos')
+    expect(getLocalCarePageByPath('/cuidador-de-idosos-sao-jose-dos-campos/')?.city).toBe('São José dos Campos')
+  })
+
   it('renders route-specific metadata and crawlable blog article content', async () => {
     const { renderPageHtml, blogPosts } = await import('../../scripts/seo-pages.mjs')
     const shell = '<!doctype html><html><head><title>Old</title><meta name="description" content="Old"></head><body><div id="root"></div></body></html>'

@@ -242,5 +242,6 @@ export const localCarePages = [
 ]
 
 export function getLocalCarePageByPath(path) {
-  return localCarePages.find((page) => page.path === path)
+  const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path
+  return localCarePages.find((page) => page.path === normalizedPath)
 }
