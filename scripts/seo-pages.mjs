@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { blogPostContent } from '../src/data/blogContent.js'
+import { localCarePages } from '../src/data/localCarePages.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = join(__dirname, '..')
@@ -11,6 +12,7 @@ export const siteUrl = 'https://www.icuide.com.br'
 const defaultImage = `${siteUrl}/logo.png`
 
 export const blogPosts = blogPostContent
+export const localPages = localCarePages
 
 export const publicRoutes = [
   {
@@ -163,6 +165,59 @@ export function renderBlogIndexBody() {
   `
 }
 
+export function renderLocalCarePageBody(page) {
+  return `
+    <main>
+      <section>
+        <p>${escapeHtml(page.areaLabel)}</p>
+        <h1>${escapeHtml(page.h1)}</h1>
+        <p>${escapeHtml(page.intro)}</p>
+        <p>${escapeHtml(page.proof)}</p>
+        <p>${escapeHtml(page.searchIntent)}</p>
+        <p><a href="/onboarding?type=family">Buscar cuidadores pelo CEP</a></p>
+      </section>
+      <section>
+        <h2>O que você consegue avaliar na icuide</h2>
+        ${list([
+          'Experiência profissional e tipos de cuidado realizados.',
+          'Referências profissionais disponíveis no perfil.',
+          'Antecedentes quando informados pelo cuidador.',
+          'Documentos, certificações, disponibilidade, região atendida e valores de referência.',
+        ])}
+      </section>
+      <section>
+        <h2>Formatos de atendimento procurados</h2>
+        ${list(page.formats)}
+      </section>
+      <section>
+        <h2>Regiões e bairros</h2>
+        ${list(page.neighborhoods)}
+      </section>
+      <section>
+        <h2>Como escolher com mais segurança</h2>
+        ${list([
+          'Descreva a rotina do idoso, horários críticos e tipo de apoio esperado.',
+          'Busque cuidadores pelo CEP e confira se atendem sua região com regularidade.',
+          'Compare experiência, referências, antecedentes, documentos, disponibilidade e valores.',
+          'Converse com o profissional antes de combinar o primeiro atendimento.',
+          ...page.localNotes,
+        ])}
+      </section>
+      <section>
+        <h2>Perguntas frequentes</h2>
+        ${page.faqs
+          .map(
+            (faq) => `
+              <h3>${escapeHtml(faq.question)}</h3>
+              <p>${escapeHtml(faq.answer)}</p>
+            `,
+          )
+          .join('')}
+      </section>
+    </main>
+  `
+}
+
 export function renderBlogPostBody(post) {
   const relatedPosts = (post.relatedSlugs ?? [])
     .map((slug) => blogPosts.find((relatedPost) => relatedPost.slug === slug))
@@ -308,6 +363,7 @@ export function renderPageHtml(shellHtml, page) {
 export function renderSitemap() {
   const urls = [
     ...publicRoutes.map((route) => ({ path: route.path, lastmod: '2026-07-02' })),
+    ...localPages.map((page) => ({ path: page.path, lastmod: '2026-07-16' })),
     ...blogPosts.map((post) => ({ path: `/blog/${post.slug}`, lastmod: post.publishedAt })),
   ]
 
@@ -323,6 +379,27 @@ ${urls
   .join('\n')}
 </urlset>
 `
+}
+
+export function renderRedirects(currentRedirects) {
+  const staticPaths = [
+    ...publicRoutes.map((route) => route.path),
+    ...localPages.map((page) => page.path),
+    ...blogPosts.map((post) => `/blog/${post.slug}`),
+  ].filter((path) => path !== '/')
+
+  const existingLines = currentRedirects
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const lines = [...existingLines]
+
+  for (const path of staticPaths) {
+    const redirectLine = `${path} ${path}/index.html 200`
+    if (!lines.includes(redirectLine)) lines.push(redirectLine)
+  }
+
+  return `${lines.join('\n')}\n`
 }
 
 function writeRoute(shellHtml, page) {
@@ -348,6 +425,15 @@ export function writeSeoFiles() {
     })
   }
 
+  for (const page of localPages) {
+    writeRoute(shellHtml, {
+      path: page.path,
+      title: page.title,
+      description: page.description,
+      bodyHtml: renderLocalCarePageBody(page),
+    })
+  }
+
   for (const post of blogPosts) {
     writeRoute(shellHtml, {
       path: `/blog/${post.slug}`,
@@ -366,6 +452,10 @@ export function writeSeoFiles() {
   const sitemapLine = `Sitemap: ${siteUrl}/sitemap.xml`
   const robots = currentRobots.includes(sitemapLine) ? currentRobots : `${currentRobots}\n\n${sitemapLine}`
   writeFileSync(robotsPath, `${robots}\n`, 'utf8')
+
+  const redirectsPath = join(distDir, '_redirects')
+  const currentRedirects = existsSync(redirectsPath) ? readFileSync(redirectsPath, 'utf8').trim() : ''
+  writeFileSync(redirectsPath, renderRedirects(currentRedirects), 'utf8')
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

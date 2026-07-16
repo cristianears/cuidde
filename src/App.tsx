@@ -11,6 +11,7 @@ import About from './pages/About'
 import CaregiversLanding from './pages/CaregiversLanding'
 import BlogIndex from './pages/BlogIndex'
 import BlogPost from './pages/BlogPost'
+import LocalCarePage from './pages/LocalCarePage'
 import NotFound from './pages/NotFound'
 import Login from './pages/auth/Login'
 import VerifyEmail from './pages/auth/VerifyEmail'
@@ -81,6 +82,10 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/sobre" element={<About />} />
             <Route path="/para-cuidadores" element={<CaregiversLanding />} />
+            <Route path="/cuidador-de-idosos-sao-jose-dos-campos" element={<LocalCarePage />} />
+            <Route path="/cuidador-de-idosos-jacarei" element={<LocalCarePage />} />
+            <Route path="/cuidador-de-idosos-vale-do-paraiba" element={<LocalCarePage />} />
+            <Route path="/cuidador-noturno-sao-jose-dos-campos" element={<LocalCarePage />} />
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/login" element={<Login />} />

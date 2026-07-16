@@ -2,13 +2,17 @@ import { describe, expect, it } from 'vitest'
 
 describe('SEO static page generator', () => {
   it('publishes a sitemap with only public marketing and blog URLs', async () => {
-    const { renderSitemap, publicRoutes, blogPosts } = await import('../../scripts/seo-pages.mjs')
+    const { renderSitemap, publicRoutes, localPages, blogPosts } = await import('../../scripts/seo-pages.mjs')
 
     const sitemap = renderSitemap()
 
     expect(sitemap).toContain('<loc>https://www.icuide.com.br/</loc>')
     expect(sitemap).toContain('<loc>https://www.icuide.com.br/sobre</loc>')
     expect(sitemap).toContain('<loc>https://www.icuide.com.br/para-cuidadores</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-sao-jose-dos-campos</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-jacarei</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-vale-do-paraiba</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-noturno-sao-jose-dos-campos</loc>')
     expect(sitemap).toContain('<loc>https://www.icuide.com.br/blog</loc>')
 
     for (const post of blogPosts) {
@@ -17,11 +21,34 @@ describe('SEO static page generator', () => {
     }
 
     expect(publicRoutes.every((route) => route.indexable)).toBe(true)
+    expect(localPages.length).toBeGreaterThan(0)
     expect(sitemap).not.toContain('/family')
     expect(sitemap).not.toContain('/caregiver')
     expect(sitemap).not.toContain('/admin')
     expect(sitemap).not.toContain('/login')
     expect(sitemap).not.toContain('/onboarding')
+  })
+
+  it('renders local care pages with hiring-intent content and trust signals', async () => {
+    const { renderPageHtml, renderLocalCarePageBody, localPages } = await import('../../scripts/seo-pages.mjs')
+    const shell = '<!doctype html><html><head><title>Old</title></head><body><div id="root"></div></body></html>'
+    const page = localPages.find((item) => item.path === '/cuidador-de-idosos-sao-jose-dos-campos')
+
+    const html = renderPageHtml(shell, {
+      path: page.path,
+      title: page.title,
+      description: page.description,
+      bodyHtml: renderLocalCarePageBody(page),
+    })
+
+    expect(html).toContain('<title>Cuidador de idosos em São José dos Campos | iCuide</title>')
+    expect(html).toContain('contratar cuidador de idosos')
+    expect(html).toContain('cuidador de idosos por hora')
+    expect(html).toContain('plantão de cuidador de idosos')
+    expect(html).toContain('Experiência profissional')
+    expect(html).toContain('Referências profissionais')
+    expect(html).toContain('Antecedentes')
+    expect(html).toContain('Buscar cuidadores pelo CEP')
   })
 
   it('renders route-specific metadata and crawlable blog article content', async () => {
@@ -62,6 +89,17 @@ describe('SEO static page generator', () => {
     expect(html).not.toContain('<div id="root"><main>')
     expect(html).toContain('<noscript data-seo-fallback>')
     expect(html).toContain('<h1>Texto estatico SEO</h1>')
+  })
+
+  it('generates Cloudflare redirects for static SEO routes without trailing slashes', async () => {
+    const { renderRedirects } = await import('../../scripts/seo-pages.mjs')
+
+    const redirects = renderRedirects('/privacy /privacy/index.html 200')
+
+    expect(redirects).toContain('/cuidador-de-idosos-sao-jose-dos-campos /cuidador-de-idosos-sao-jose-dos-campos/index.html 200')
+    expect(redirects).toContain('/cuidador-de-idosos-jacarei /cuidador-de-idosos-jacarei/index.html 200')
+    expect(redirects).toContain('/blog/quanto-custa-cuidador-de-idosos /blog/quanto-custa-cuidador-de-idosos/index.html 200')
+    expect(redirects).toContain('/privacy /privacy/index.html 200')
   })
 
   it('keeps CEP and pricing flows out of the static SEO generator', async () => {
