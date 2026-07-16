@@ -81,6 +81,30 @@ describe('SEO static page generator', () => {
     expect(html).toContain('"@type":"Article"')
   })
 
+  it('renders parseable structured data for organization, website, service and software app', async () => {
+    const { renderPageHtml } = await import('../../scripts/seo-pages.mjs')
+    const shell = '<!doctype html><html><head><title>Old</title></head><body><div id="root"></div></body></html>'
+
+    const html = renderPageHtml(shell, {
+      path: '/',
+      title: 'icuide',
+      description: 'Plataforma para encontrar cuidadores de idosos',
+      bodyHtml: '<main><h1>icuide</h1></main>',
+    })
+    const schema = html.match(/<script type="application\/ld\+json" data-seo="page">([\s\S]*?)<\/script>/)?.[1]
+    const parsed = JSON.parse(schema ?? '{}')
+    const types = parsed['@graph'].map((item) => item['@type'])
+
+    expect(types).toContain('Organization')
+    expect(types).toContain('WebSite')
+    expect(types).toContain('Service')
+    expect(types).toContain('SoftwareApplication')
+    expect(types).toContain('WebPage')
+    expect(JSON.stringify(parsed)).toContain('experiência')
+    expect(JSON.stringify(parsed)).toContain('referências')
+    expect(JSON.stringify(parsed)).toContain('antecedentes')
+  })
+
   it('keeps static SEO body out of the visible React root to avoid a text-only loading flash', async () => {
     const { renderPageHtml } = await import('../../scripts/seo-pages.mjs')
     const shell = '<!doctype html><html><head><title>Old</title></head><body><div id="root"></div></body></html>'

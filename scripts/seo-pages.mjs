@@ -312,6 +312,54 @@ function renderSchema(page) {
       },
     },
     {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      name: 'icuide',
+      url: `${siteUrl}/`,
+      inLanguage: 'pt-BR',
+      publisher: {
+        '@id': `${siteUrl}/#organization`,
+      },
+    },
+    {
+      '@type': 'Service',
+      '@id': `${siteUrl}/#service`,
+      name: 'Plataforma para encontrar cuidadores de idosos',
+      serviceType: 'Conexão entre famílias e cuidadores de idosos',
+      provider: {
+        '@id': `${siteUrl}/#organization`,
+      },
+      areaServed: {
+        '@type': 'Country',
+        name: 'Brasil',
+      },
+      audience: {
+        '@type': 'Audience',
+        audienceType: 'Famílias que procuram cuidadores de idosos',
+      },
+      description:
+        'A icuide conecta famílias a cuidadores de idosos, permitindo comparar perfis por experiência, referências, antecedentes quando disponíveis, disponibilidade, região e valores de referência.',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${siteUrl}/#softwareapplication`,
+      name: 'icuide',
+      applicationCategory: 'HealthApplication',
+      operatingSystem: 'Web',
+      url: `${siteUrl}/`,
+      inLanguage: 'pt-BR',
+      publisher: {
+        '@id': `${siteUrl}/#organization`,
+      },
+      offers: {
+        '@type': 'Offer',
+        availability: 'https://schema.org/OnlineOnly',
+        url: `${siteUrl}/`,
+      },
+      description:
+        'Aplicação web para famílias buscarem cuidadores de idosos e para profissionais criarem perfis com experiência, documentos, referências, antecedentes quando disponíveis e disponibilidade.',
+    },
+    {
       '@type': page.type === 'article' ? 'Article' : 'WebPage',
       '@id': `${canonical}#webpage`,
       url: canonical,
@@ -327,6 +375,9 @@ function renderSchema(page) {
       },
       publisher: {
         '@id': `${siteUrl}/#organization`,
+      },
+      isPartOf: {
+        '@id': `${siteUrl}/#website`,
       },
     },
   ].filter(Boolean)
