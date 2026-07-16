@@ -142,9 +142,7 @@ describe('geocodeAddress', () => {
   })
 
   it('geocodifica address diretamente via Nominatim free-text', async () => {
-    mockGoogleDenied()
-
-    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+    mockFetch.mockResolvedValue(mockOkResponse([{
       lat: '-23.56',
       lon: '-46.65',
       display_name: 'Av Paulista, São Paulo',
@@ -186,6 +184,36 @@ describe('geocodeAddress', () => {
         expect(url).not.toContain('01310100')
       }
     }
+  })
+
+  it('ignora resultado do Nominatim quando ele aponta para outro CEP brasileiro', async () => {
+    mockViaCep.mockResolvedValue({
+      street: 'Rua Esperanca',
+      neighborhood: 'Chacara Canaa',
+      city: 'Tremembe',
+      state: 'SP',
+    })
+
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.4424386',
+      lon: '-46.5756715',
+      display_name: 'Rua Esperanca, Tremembe, Sao Paulo, 02327-190, Brasil',
+    }]))
+
+    mockEmptyNominatim()
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-22.9641763',
+      lon: '-45.5489548',
+      display_name: 'Tremembe, Sao Paulo, Brasil',
+    }]))
+
+    const result = await geocodeAddress({ cep: '12122-650' })
+
+    expect(result).toEqual({
+      lat: -22.9641763,
+      lng: -45.5489548,
+      formatted_address: 'Tremembe, Sao Paulo, Brasil',
+    })
   })
 })
 

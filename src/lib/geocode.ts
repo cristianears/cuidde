@@ -13,6 +13,8 @@ export interface GeocodeResult {
   formatted_address: string
 }
 
+type ViaCepAddress = NonNullable<Awaited<ReturnType<typeof fetchAddressByCep>>>
+
 /**
  * Geocodifica um CEP ou endereço.
  * Para CEP: resolve endereço via ViaCEP e usa structured query no Nominatim.
@@ -20,19 +22,22 @@ export interface GeocodeResult {
  */
 export async function geocodeAddress(params: { cep?: string; address?: string }): Promise<GeocodeResult | null> {
   if (params.cep) {
-    // Google Maps entende CEP brasileiro diretamente
-    const googleResult = await geocodeWithGoogle(`${params.cep}, Brasil`)
-    if (googleResult) return googleResult
-
     // Nominatim NÃO entende CEP brasileiro — resolver via ViaCEP primeiro
     const addr = await fetchAddressByCep(params.cep)
     if (addr) {
+      const googleAddress = [addr.street, addr.neighborhood, addr.city, addr.state, params.cep, 'Brasil']
+        .filter(Boolean)
+        .join(', ')
+      const googleResult = await geocodeWithGoogle(googleAddress)
+      if (isCepGeocodeResultCompatible(googleResult, params.cep, addr)) return googleResult
+
       // 1) Tentar structured query rua + cidade (mais preciso no Nominatim)
       if (addr.street) {
         const streetResult = await geocodeNominatimStructured({
           street: addr.street,
           city: addr.city,
           state: addr.state,
+          cep: params.cep,
         })
         if (streetResult) return streetResult
       }
@@ -41,7 +46,10 @@ export async function geocodeAddress(params: { cep?: string; address?: string })
       const fullAddress = [addr.street, addr.neighborhood, addr.city, addr.state, 'Brasil']
         .filter(Boolean)
         .join(', ')
-      const result = await geocodeWithNominatim(fullAddress)
+      const result = await geocodeWithNominatim(fullAddress, {
+        cep: params.cep,
+        address: addr,
+      })
       if (result) return result
 
       // 3) Fallback: structured query só com cidade + estado
@@ -140,6 +148,7 @@ async function geocodeNominatimStructured(params: {
   street?: string
   city: string
   state: string
+  cep?: string
 }): Promise<GeocodeResult | null> {
   try {
     const parts: string[] = []
@@ -159,7 +168,15 @@ async function geocodeNominatimStructured(params: {
 
     if (!Array.isArray(data) || data.length === 0) return null
 
-    const result = data[0]
+    const result = params.cep
+      ? data.find((item) => isCepNominatimResultCompatible(item, params.cep!, {
+        city: params.city,
+        state: params.state,
+      }))
+      : data[0]
+
+    if (!result) return null
+
     return {
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon),
@@ -170,7 +187,10 @@ async function geocodeNominatimStructured(params: {
   }
 }
 
-async function geocodeWithNominatim(query: string): Promise<GeocodeResult | null> {
+async function geocodeWithNominatim(
+  query: string,
+  opts?: { cep?: string; address?: Pick<ViaCepAddress, 'city' | 'state'> },
+): Promise<GeocodeResult | null> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=1`
     const response = await fetch(url, {
@@ -182,6 +202,10 @@ async function geocodeWithNominatim(query: string): Promise<GeocodeResult | null
     if (!Array.isArray(data) || data.length === 0) return null
 
     const result = data[0]
+    if (opts?.cep && opts.address && !isCepNominatimResultCompatible(result, opts.cep, opts.address)) {
+      return null
+    }
+
     return {
       lat: parseFloat(result.lat),
       lng: parseFloat(result.lon),
@@ -190,4 +214,48 @@ async function geocodeWithNominatim(query: string): Promise<GeocodeResult | null
   } catch {
     return null
   }
+}
+
+function onlyDigits(value: string): string {
+  return value.replace(/\D/g, '')
+}
+
+function normalizeForCompare(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+function extractBrazilianPostalCodes(value: string): string[] {
+  return Array.from(value.matchAll(/\b\d{5}-?\d{3}\b/g), (match) => onlyDigits(match[0]))
+}
+
+function isCepTextCompatible(text: string, cep: string, address: Pick<ViaCepAddress, 'city' | 'state'>): boolean {
+  const cleanCep = onlyDigits(cep)
+  const postalCodes = extractBrazilianPostalCodes(text)
+
+  if (postalCodes.length > 0) {
+    return postalCodes.includes(cleanCep)
+  }
+
+  const normalized = normalizeForCompare(text)
+  return normalized.includes(normalizeForCompare(address.city))
+}
+
+function isCepGeocodeResultCompatible(
+  result: GeocodeResult | null,
+  cep: string,
+  address: Pick<ViaCepAddress, 'city' | 'state'>,
+): result is GeocodeResult {
+  if (!result) return false
+  return isCepTextCompatible(result.formatted_address, cep, address)
+}
+
+function isCepNominatimResultCompatible(
+  result: { display_name?: string | null },
+  cep: string,
+  address: Pick<ViaCepAddress, 'city' | 'state'>,
+): boolean {
+  return isCepTextCompatible(result.display_name ?? '', cep, address)
 }
