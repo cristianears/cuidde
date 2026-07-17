@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, RefreshCw, CheckCircle2 } from 'lucide-react'
 import BrandMark from '@/components/shared/BrandMark'
@@ -7,12 +7,21 @@ import { useAuth } from '@/contexts/AuthContext'
 import { resendConfirmationEmail } from '@/lib/auth'
 import { toast } from 'sonner'
 
+const pendingSignupEmailKey = 'cuidde_pending_signup_email'
+
 export default function VerifyEmail() {
   const { user } = useAuth()
+  const [pendingEmail] = useState(() => localStorage.getItem(pendingSignupEmailKey) ?? '')
   const [isResending, setIsResending] = useState(false)
   const [resent, setResent] = useState(false)
 
-  const email = user?.email ?? ''
+  const email = user?.email ?? pendingEmail
+
+  useEffect(() => {
+    if (user?.email_confirmed_at) {
+      localStorage.removeItem(pendingSignupEmailKey)
+    }
+  }, [user?.email_confirmed_at])
 
   async function handleResend() {
     if (!email) return

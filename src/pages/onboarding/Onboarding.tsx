@@ -571,6 +571,7 @@ const Onboarding = () => {
           }
         }
 
+        localStorage.setItem('cuidde_pending_signup_email', formData.email)
         navigate('/verify-email', { replace: true })
       }
     } catch (error) {
