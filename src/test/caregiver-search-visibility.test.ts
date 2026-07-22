@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest"
 
 const root = resolve(__dirname, "../..")
 const sql = readFileSync(resolve(root, "supabase/sql/align_caregiver_search_visibility.sql"), "utf8")
+const resetToPendingSql = readFileSync(resolve(root, "supabase/sql/reset_caregiver_to_pending.sql"), "utf8")
+const visibilityRepairSql = readFileSync(resolve(root, "supabase/sql/fix_caregiver_visibility_after_rg_reset.sql"), "utf8")
 const adminActions = readFileSync(resolve(root, "supabase/functions/admin-actions/index.ts"), "utf8")
 
 describe("caregiver search visibility", () => {
@@ -26,5 +28,18 @@ describe("caregiver search visibility", () => {
   it("does not tie admin document review to marketplace visibility", () => {
     expect(adminActions).not.toContain("status: 'rejected', rejection_reason: reason, is_visible: false")
     expect(adminActions).not.toContain("status: 'verified', has_rg_cnh: true, is_visible: true")
+  })
+
+  it("does not hide marketplace visibility when identity review returns to pending", () => {
+    expect(resetToPendingSql).toContain("has_rg_cnh = false")
+    expect(resetToPendingSql).not.toMatch(/is_visible\s*=\s*false/)
+  })
+
+  it("restores orphaned public visibility after identity verification", () => {
+    expect(visibilityRepairSql).toContain("trg_restore_verified_caregiver_visibility")
+    expect(visibilityRepairSql).toContain("private_caregiver_visibility")
+    expect(visibilityRepairSql).toMatch(/create trigger restore_verified_caregiver_visibility/i)
+    expect(visibilityRepairSql).toContain("new.status = 'verified'")
+    expect(visibilityRepairSql).toMatch(/set is_visible = true/)
   })
 })

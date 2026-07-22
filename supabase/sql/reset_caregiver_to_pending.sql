@@ -6,7 +6,7 @@ CREATE OR REPLACE FUNCTION public.reset_caregiver_to_pending(p_caregiver_id uuid
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 BEGIN
   -- Só reseta se o chamador é o próprio cuidador (evita abuso)
@@ -20,6 +20,9 @@ BEGIN
   WHERE id = p_caregiver_id;
 END;
 $$;
+
+COMMENT ON FUNCTION public.reset_caregiver_to_pending(uuid) IS
+  'Moves a caregiver identity document back to pending review without changing marketplace visibility.';
 
 -- Revogar acesso da role public (padrão do PostgreSQL concede EXECUTE a todos)
 -- e restringir apenas a usuários autenticados, igual às demais RPCs SECURITY DEFINER.

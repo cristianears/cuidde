@@ -340,7 +340,8 @@ serve(async (req) => {
       .single()
     if (docErr) return json({ error: docErr.message }, 500, cors)
 
-    // O RG/CNH aprovado controla o selo, não a visibilidade na busca.
+    // O RG/CNH aprovado controla o status/selo. A visibilidade publica e
+    // reconciliada no banco para evitar perfis verificados presos como ocultos.
     if (doc?.type === 'rg_cnh') {
       const { error: cpErr } = await supabase
         .from('caregiver_profiles')
