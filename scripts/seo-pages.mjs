@@ -58,9 +58,18 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;')
 }
 
+function shouldUseTrailingSlash(path) {
+  return path !== '/' && !/\.[a-z0-9]+$/i.test(path)
+}
+
+function canonicalPath(path) {
+  if (path === '/') return '/'
+  return shouldUseTrailingSlash(path) ? `${path}/` : path
+}
+
 function absoluteUrl(path) {
-  if (path === '/') return `${siteUrl}/`
-  return `${siteUrl}${path}`
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  return `${siteUrl}${canonicalPath(path)}`
 }
 
 function list(items) {

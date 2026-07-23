@@ -39,7 +39,7 @@ describe('local caregiver blog SEO articles', () => {
 
       expect(seoPost).toBeTruthy()
       expect(seoPost?.title.toLowerCase()).toContain('vagas')
-      expect(sitemap).toContain(`https://www.icuide.com.br/blog/${slug}`)
+      expect(sitemap).toContain(`https://www.icuide.com.br/blog/${slug}/`)
     }
   })
 })

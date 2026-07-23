@@ -7,16 +7,16 @@ describe('SEO static page generator', () => {
     const sitemap = renderSitemap()
 
     expect(sitemap).toContain('<loc>https://www.icuide.com.br/</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/sobre</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/para-cuidadores</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-sao-jose-dos-campos</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-jacarei</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-vale-do-paraiba</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-noturno-sao-jose-dos-campos</loc>')
-    expect(sitemap).toContain('<loc>https://www.icuide.com.br/blog</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/sobre/</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/para-cuidadores/</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-sao-jose-dos-campos/</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-jacarei/</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-de-idosos-vale-do-paraiba/</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/cuidador-noturno-sao-jose-dos-campos/</loc>')
+    expect(sitemap).toContain('<loc>https://www.icuide.com.br/blog/</loc>')
 
     for (const post of blogPosts) {
-      expect(sitemap).toContain(`<loc>https://www.icuide.com.br/blog/${post.slug}</loc>`)
+      expect(sitemap).toContain(`<loc>https://www.icuide.com.br/blog/${post.slug}/</loc>`)
       expect(sitemap).toContain(`<lastmod>${post.publishedAt}</lastmod>`)
     }
 
@@ -74,7 +74,7 @@ describe('SEO static page generator', () => {
 
     expect(html).toContain(`<title>${post.title} | icuide</title>`)
     expect(html).toContain(`content="${post.description}"`)
-    expect(html).toContain(`href="https://www.icuide.com.br/blog/${post.slug}"`)
+    expect(html).toContain(`href="https://www.icuide.com.br/blog/${post.slug}/"`)
     expect(html).toContain('<article')
     expect(html).toContain(post.sections[0].heading)
     expect(html).toContain('application/ld+json')

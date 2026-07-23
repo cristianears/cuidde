@@ -51,7 +51,7 @@ describe('family blog SEO articles', () => {
       expect(seoPost?.title.toLowerCase()).toContain('cuidador')
       expect(seoPost?.imagePath).toContain('/blog/family-care-')
       expect(seoPost?.relatedSlugs?.length).toBeGreaterThanOrEqual(3)
-      expect(sitemap).toContain(`https://www.icuide.com.br/blog/${slug}`)
+      expect(sitemap).toContain(`https://www.icuide.com.br/blog/${slug}/`)
     }
 
     expect(
