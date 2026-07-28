@@ -27,7 +27,7 @@
     <!-- Security Headers -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://js.stripe.com;
+      script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://js.stripe.com https://www.googletagmanager.com;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: blob: https:;
@@ -35,6 +35,9 @@
         https://*.supabase.co
         wss://*.supabase.co
         https://api.stripe.com
+        https://analytics.google.com
+        https://www.google-analytics.com
+        https://www.googletagmanager.com
         https://nominatim.openstreetmap.org
         https://maps.googleapis.com
         https://viacep.com.br;
