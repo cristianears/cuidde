@@ -246,6 +246,33 @@ export function renderBlogPostBody(post) {
     .map((slug) => blogPosts.find((relatedPost) => relatedPost.slug === slug))
     .filter(Boolean)
 
+  const renderLinkedParagraph = (paragraph) => {
+    const links = post.inlineLinks ?? []
+    const matches = links
+      .map((link) => {
+        const index = paragraph.toLocaleLowerCase('pt-BR').indexOf(link.text.toLocaleLowerCase('pt-BR'))
+        return index >= 0 ? { ...link, index } : undefined
+      })
+      .filter(Boolean)
+      .sort((first, second) => first.index - second.index)
+
+    let cursor = 0
+    let html = ''
+
+    for (const match of matches) {
+      if (match.index < cursor) continue
+
+      html += escapeHtml(paragraph.slice(cursor, match.index))
+      html += `<a href="${escapeHtml(match.href)}">${escapeHtml(
+        paragraph.slice(match.index, match.index + match.text.length),
+      )}</a>`
+      cursor = match.index + match.text.length
+    }
+
+    html += escapeHtml(paragraph.slice(cursor))
+    return `<p>${html}</p>`
+  }
+
   return `
     <main>
       <article>
@@ -256,8 +283,8 @@ export function renderBlogPostBody(post) {
           .map(
             (section) => `
               <section>
-                <h2>${escapeHtml(section.heading)}</h2>
-                ${section.body.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`).join('')}
+                <h${section.level === 3 ? '3' : '2'}>${escapeHtml(section.heading)}</h${section.level === 3 ? '3' : '2'}>
+                ${section.body.map((paragraph) => renderLinkedParagraph(paragraph)).join('')}
               </section>
             `,
           )

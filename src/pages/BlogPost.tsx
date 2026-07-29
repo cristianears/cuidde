@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import Header from '@/components/Header'
@@ -5,6 +6,40 @@ import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { getBlogPost, latestBlogPosts } from '@/data/blogPosts'
 import { useSeo } from '@/hooks/useSeo'
+
+function renderLinkedText(text: string, links: Array<{ text: string; href: string }> = []) {
+  const matches = links
+    .map((link) => {
+      const index = text.toLocaleLowerCase('pt-BR').indexOf(link.text.toLocaleLowerCase('pt-BR'))
+      return index >= 0 ? { ...link, index } : undefined
+    })
+    .filter(Boolean)
+    .sort((first, second) => first!.index - second!.index)
+
+  const nodes: ReactNode[] = []
+  let cursor = 0
+
+  for (const match of matches) {
+    if (!match || match.index < cursor) continue
+
+    const linkText = text.slice(match.index, match.index + match.text.length)
+    if (match.index > cursor) nodes.push(text.slice(cursor, match.index))
+    nodes.push(
+      <Link
+        key={`${match.href}-${match.index}`}
+        to={match.href}
+        className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+      >
+        {linkText}
+      </Link>,
+    )
+    cursor = match.index + match.text.length
+  }
+
+  if (cursor < text.length) nodes.push(text.slice(cursor))
+
+  return nodes.length > 0 ? nodes : text
+}
 
 const BlogPost = () => {
   const { slug } = useParams()
@@ -62,15 +97,19 @@ const BlogPost = () => {
           </header>
 
           <div className="container mx-auto px-6 md:px-10 py-10 md:py-14">
-            <div className="grid lg:grid-cols-[minmax(0,720px)_300px] gap-8 lg:gap-12 items-start">
-              <div className="space-y-9">
+            <div className="mx-auto max-w-3xl">
+              <div className="space-y-8">
                 {post.sections.map((section) => (
-                  <section key={section.heading} className="bg-card rounded-xl border border-border/40 shadow-card p-5 md:p-7">
-                    <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4">{section.heading}</h2>
+                  <section key={section.heading} className="space-y-4">
+                    {section.level === 3 ? (
+                      <h3 className="text-lg md:text-xl font-semibold text-foreground leading-snug">{section.heading}</h3>
+                    ) : (
+                      <h2 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">{section.heading}</h2>
+                    )}
                     <div className="space-y-4">
                       {section.body.map((paragraph) => (
-                        <p key={paragraph} className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                          {paragraph}
+                        <p key={paragraph} className="text-sm md:text-base text-muted-foreground leading-7 md:leading-8">
+                          {renderLinkedText(paragraph, post.inlineLinks)}
                         </p>
                       ))}
                     </div>
@@ -78,8 +117,10 @@ const BlogPost = () => {
                 ))}
 
                 {post.sourceLinks && post.sourceLinks.length > 0 && (
-                  <section className="bg-card rounded-xl border border-border/40 shadow-card p-5 md:p-7">
-                    <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4">Fontes oficiais consultadas</h2>
+                  <section className="space-y-4 border-t border-border/40 pt-8">
+                    <h2 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
+                      Fontes oficiais consultadas
+                    </h2>
                     <div className="space-y-3">
                       {post.sourceLinks.map((source) => (
                         <a
@@ -87,7 +128,7 @@ const BlogPost = () => {
                           href={source.href}
                           target="_blank"
                           rel="noreferrer"
-                          className="block text-sm md:text-base text-primary underline-offset-4 hover:underline"
+                          className="block text-sm md:text-base text-primary underline underline-offset-4 hover:text-primary/80"
                         >
                           {source.label}
                         </a>
@@ -97,23 +138,23 @@ const BlogPost = () => {
                 )}
               </div>
 
-              <aside className="lg:sticky lg:top-24 space-y-4">
-                <div className="bg-card rounded-xl border border-border/40 shadow-card p-5">
-                  <h2 className="text-base font-semibold text-foreground mb-2">Próximo passo</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+              <div className="mt-12 space-y-8 border-t border-border/40 pt-8">
+                <section>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">Próximo passo</h2>
+                  <p className="text-sm md:text-base text-muted-foreground leading-7 mb-4">
                     {nextStepDescription}
                   </p>
-                  <Button asChild className="h-auto min-h-11 w-full rounded-lg bg-accent px-3 py-2 text-accent-foreground hover:bg-accent/90 whitespace-normal">
+                  <Button asChild className="h-auto min-h-11 rounded-lg bg-accent px-4 py-2 text-accent-foreground hover:bg-accent/90 whitespace-normal">
                     <Link to={post.cta.href} className="flex items-center justify-center gap-2 text-center leading-snug">
                       <span className="min-w-0 break-words">{post.cta.label}</span>
                       <ArrowRight className="w-4 h-4 shrink-0" />
                     </Link>
                   </Button>
-                </div>
+                </section>
 
                 {relatedPosts.length > 0 && (
-                  <div className="bg-card rounded-xl border border-border/40 shadow-card p-5">
-                    <h2 className="text-base font-semibold text-foreground mb-4">Outros guias</h2>
+                  <section>
+                    <h2 className="text-xl font-semibold text-foreground mb-4">Outros guias</h2>
                     <div className="space-y-4">
                       {relatedPosts.map((related) => (
                         <Link
@@ -128,9 +169,9 @@ const BlogPost = () => {
                         </Link>
                       ))}
                     </div>
-                  </div>
+                  </section>
                 )}
-              </aside>
+              </div>
             </div>
           </div>
         </article>

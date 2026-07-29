@@ -29,9 +29,14 @@ export type BlogPost = {
   hero: string
   sections: Array<{
     heading: string
+    level?: 2 | 3
     body: string[]
   }>
   relatedSlugs?: string[]
+  inlineLinks?: Array<{
+    text: string
+    href: string
+  }>
   sourceLinks?: Array<{
     label: string
     href: string
