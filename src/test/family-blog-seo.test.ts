@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { blogPosts } from '@/data/blogPosts'
 
 const familySearchSlugs = [
+  'preco-cuidador-de-idoso-tabela-atualizada-2026',
   'como-contratar-cuidador-de-idoso-com-seguranca',
   'quanto-custa-cuidador-de-idosos',
   'cuidador-de-idosos-por-hora-diaria-ou-plantao',
@@ -29,18 +30,20 @@ describe('family blog SEO articles', () => {
       expect(post?.relatedSlugs?.length).toBeGreaterThanOrEqual(3)
     }
 
-    expect(posts[0]?.title).toContain('Como contratar')
-    expect(posts[1]?.title).toContain('Quanto custa')
-    expect(posts[2]?.title).toContain('por hora')
-    expect(posts[3]?.title).toContain('noturno')
-    expect(posts[4]?.title).toContain('Alzheimer')
-    expect(posts[5]?.title).toContain('São José dos Campos')
-    expect(posts[6]?.title).toContain('Vale do Paraíba')
+    expect(posts[0]?.title).toContain('Preço')
+    expect(posts[1]?.title).toContain('Como contratar')
+    expect(posts[2]?.title).toContain('Quanto custa')
+    expect(posts[3]?.title).toContain('por hora')
+    expect(posts[4]?.title).toContain('noturno')
+    expect(posts[5]?.title).toContain('Alzheimer')
+    expect(posts[6]?.title).toContain('São José dos Campos')
+    expect(posts[7]?.title).toContain('Vale do Paraíba')
 
     const imageSources = posts.map((post) => post?.image.src)
 
     expect(new Set(imageSources).size).toBe(familySearchSlugs.length)
-    expect(posts[0]?.sourceLinks?.some((source) => source.href.includes('planalto.gov.br'))).toBe(true)
+    expect(posts[0]?.sourceLinks?.some((source) => source.href.includes('coren-sp.gov.br'))).toBe(true)
+    expect(posts[1]?.sourceLinks?.some((source) => source.href.includes('planalto.gov.br'))).toBe(true)
   })
 
   it('includes the same family articles in the static SEO generator', async () => {

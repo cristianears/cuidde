@@ -1,5 +1,221 @@
 const baseBlogPostContent = [
   {
+    slug: 'preco-cuidador-de-idoso-tabela-atualizada-2026',
+    title: 'Preço cuidador de idoso: tabela atualizada 2026',
+    description:
+      'Veja faixas de preço para cuidador de idoso em 2026, valores por hora, plantão, mensalista, médias em São José dos Campos e Jacareí e encargos.',
+    audience: 'familias',
+    category: 'Custos e planejamento',
+    readingTime: '13 min',
+    publishedAt: '2026-07-29',
+    imagePath: '/blog/family-care-price-2026.jpg',
+    hero:
+      'O preço do cuidador de idoso muda conforme jornada, região, formação, complexidade do cuidado e forma de contratação. Veja como comparar sem cair em valores soltos.',
+    sections: [
+      {
+        heading: 'Introdução',
+        body: [
+          'Ao pesquisar o preço de cuidador de idoso, famílias quase sempre passam pela mesma experiência desconcertante: recebem valores que variam de R$ 180 a R$ 450 pelo mesmo plantão de 12 horas, com extremos pontuais abaixo ou acima dessa faixa, sem entender por que a diferença é tão grande. Cada profissional apresenta um número diferente, cada agência cobra de uma forma, e nem sempre fica claro o que está incluído naquele valor.',
+          'A verdade é que o custo de contratar um cuidador depende de pelo menos quatro variáveis simultâneas: o regime de trabalho escolhido, o grau de dependência do idoso, a qualificação do profissional e a forma de contratação. Mudar qualquer um desses fatores muda o número final de forma significativa.',
+          'Para simplificar esse processo, plataformas como a icuide permitem que famílias consultem valores praticados por profissionais reais antes mesmo do primeiro contato, sem custo extra sobre o valor acordado com o profissional. Isso torna a comparação mais honesta desde o início. Este guia apresenta faixas de mercado para 2026, médias observadas em cadastros de cuidadores da icuide, encargos legais que muita gente esquece de calcular, comparação entre agência e contratação direta e estratégias concretas para planejar o orçamento sem surpresas.',
+        ],
+      },
+      {
+        heading: 'Tabela de preço de cuidador de idoso por modalidade em 2026',
+        body: [
+          'A melhor forma de comparar preços é separar a modalidade de atendimento. Plantão de 12 horas, valor por hora, mensalista, pernoite e cuidado 24 horas são formatos diferentes. Quando a família mistura tudo na mesma comparação, um orçamento parece caro ou barato sem que a responsabilidade esteja realmente clara.',
+        ],
+      },
+      {
+        heading: 'Plantão de 12 horas: o que o mercado pratica',
+        level: 3,
+        body: [
+          'O plantão de 12 horas é uma das modalidades mais comuns no cuidado domiciliar brasileiro. Em 2026, a faixa nacional mais recorrente fica entre R$ 180 e R$ 450 por plantão, com diferença relevante entre diurno e noturno, capital e interior, cuidado simples e cuidado de maior complexidade.',
+          'Em São Paulo, o valor mais recorrente para casos sem complexidade elevada costuma ficar entre R$ 250 e R$ 400 por plantão diurno. No interior do país, a mesma jornada aparece com mais frequência entre R$ 150 e R$ 300. O cuidador de idosos noturno tende a custar mais em razão do adicional noturno de 20% entre 22h e 5h: um plantão que custaria R$ 250 no período diurno pode chegar a R$ 300 ou mais no noturno.',
+          'Nas médias internas informadas por cuidadores cadastrados na icuide, São José dos Campos aparece em torno de R$ 21 por hora e R$ 170 por plantão de 12 horas. Em Jacareí, a média informada fica em torno de R$ 24 por hora e R$ 142 por plantão. Como nem todos os cadastros diferenciam plantão diurno e noturno, trate esses números como referência prática, provavelmente mais próxima do plantão diurno, e não como tabela fixa. O valor final varia conforme formação, experiência, deslocamento, horário, complexidade do idoso e acordo entre família e cuidador.',
+          'Em texto corrido, uma referência útil para 2026 fica assim: em capitais, plantões diurnos de 12 horas costumam aparecer entre R$ 200 e R$ 380, enquanto plantões noturnos podem ir de R$ 250 a R$ 450. No interior e em cidades de médio porte, plantões diurnos aparecem com frequência entre R$ 150 e R$ 300, e os noturnos entre R$ 180 e R$ 350. Em São José dos Campos e Jacareí, as médias dos cadastros da icuide ajudam a trazer a comparação para a realidade regional, mas cada caso precisa ser avaliado individualmente.',
+        ],
+      },
+      {
+        heading: 'Cuidador mensalista: faixa mensal por regime de trabalho',
+        level: 3,
+        body: [
+          'Para uma jornada integral em contratação direta, a remuneração acordada com o profissional fica, em geral, entre R$ 2.300 e R$ 4.500 por mês, sem contar encargos trabalhistas. Essa é a faixa que aparece nas negociações entre família e cuidador, mas não representa o custo real quando há registro formal, tema detalhado mais adiante.',
+          'Para meio período ou jornadas reduzidas, os valores caem proporcionalmente. Um cuidador contratado para 6 horas diárias, por exemplo, costuma aparecer na faixa estimada de R$ 1.200 a R$ 2.200 por mês, dependendo da cidade, da experiência do profissional e da complexidade do caso.',
+        ],
+      },
+      {
+        heading: 'Preço de cuidador de idoso em regime 24h e pernoite',
+        level: 3,
+        body: [
+          'O pernoite com baixa intervenção, quando o profissional dorme e fica disponível para eventuais chamadas, costuma ficar entre R$ 180 e R$ 250 por noite. O plantão de 24 horas com cuidado ativo e contínuo pode ficar entre R$ 300 e R$ 500 por plantão.',
+          'O ponto que mais surpreende as famílias é o custo do modelo 24h em escala mensal. Como nenhum profissional sustenta esse ritmo sozinho de forma contínua, a maioria das famílias termina contratando dois cuidadores em rodízio. Nesse formato, o custo total mensal pode ficar entre R$ 5.300 e R$ 9.500, dependendo dos perfis, da região e do nível de dependência do idoso. Para calcular o valor por hora em qualquer regime, basta dividir o valor do plantão pelas horas contratadas, mas atenção: horas noturnas carregam adicional, o que torna o custo real por hora maior do que a divisão simples indica.',
+        ],
+      },
+      {
+        heading: 'O que faz o preço do cuidador de idoso variar tanto entre profissionais',
+        body: [
+          'Dois cuidadores podem cobrar valores diferentes pelo mesmo número de horas porque, na prática, não estão oferecendo exatamente a mesma experiência. Formação, deslocamento, disponibilidade, referências e tipo de cuidado mudam bastante o valor final.',
+        ],
+      },
+      {
+        heading: 'Grau de dependência do idoso',
+        level: 3,
+        body: [
+          'O fator que mais impacta o valor cobrado é o nível de cuidado exigido. Um idoso que precisa basicamente de companhia e ajuda para atividades simples do dia a dia representa uma jornada bem diferente de um idoso acamado, com risco de lesão por pressão, dificuldade de mobilidade, necessidade de acompanhamento constante ou orientações de saúde mais específicas.',
+          'Idosos com demências como Alzheimer ou Parkinson também entram em uma categoria de cuidado mais exigente. O manejo comportamental, a prevenção de quedas e a rotina de medicamentos nessas condições demandam profissionais com experiência específica, o que se reflete diretamente no valor praticado. Para esse caso, vale complementar a leitura com o artigo da icuide sobre cuidador para idoso com Alzheimer.',
+        ],
+      },
+      {
+        heading: 'Qualificação, especialização e experiência',
+        level: 3,
+        body: [
+          'Cuidadores com curso formal, experiência documentada em cuidados paliativos, pós-cirúrgico, demências ou doenças crônicas costumam cobrar acima da faixa base de profissionais sem especialização. Em muitos casos, essa diferença pode ficar entre 15% e 40%, dependendo da rotina esperada e da cidade.',
+          'Técnicos de enfermagem e enfermeiros domiciliares operam em faixas mais elevadas, porque são profissionais de enfermagem e devem ter inscrição ativa no COREN do seu estado para o exercício regular da atividade. Na prática da checagem pela família, o registro regional no COREN é a referência mais importante. Referências verificadas e avaliações de famílias anteriores também pesam: profissionais com histórico documentado de bons atendimentos tendem a cobrar mais, e com razão.',
+        ],
+      },
+      {
+        heading: 'Localização e tipo de turno',
+        level: 3,
+        body: [
+          'Capitais e grandes centros têm custo de vida mais alto, e isso se reflete diretamente nos valores praticados por cuidadores. A título ilustrativo, a mesma jornada mensal que custa em torno de R$ 2.800 em uma cidade do interior pode chegar a R$ 4.000 em São Paulo, dependendo do perfil e do regime contratado.',
+          'Turnos noturnos, finais de semana e feriados carregam acréscimos que podem representar entre 20% e 30% sobre o valor do plantão diurno em dia útil. Por isso, antes de comparar preços, confirme se o valor informado é por hora, diária, plantão diurno, plantão noturno, pernoite ou regime mensal.',
+        ],
+      },
+      {
+        heading: 'Encargos trabalhistas no preço do cuidador registrado: o custo que muitas famílias esquecem',
+        body: [
+          'Quando a família registra um cuidador como empregado doméstico, o custo real deixa de ser apenas o salário combinado. Entram encargos, provisões e obrigações mensais que precisam ser colocadas no orçamento desde o começo.',
+        ],
+      },
+      {
+        heading: 'INSS, FGTS e eSocial: o que a lei exige',
+        level: 3,
+        body: [
+          'Ao registrar um cuidador como empregado doméstico, a família passa a recolher mensalmente FGTS, INSS patronal e demais valores via DAE do eSocial Doméstico. O eSocial não é uma taxa separada: é o sistema que centraliza os recolhimentos do empregador doméstico.',
+          'Além dos encargos patronais mensais, a família precisa provisionar 13º salário e férias com o terço constitucional. Esses valores não aparecem sempre na conta do mês corrente, mas chegam ao longo do ano e precisam estar reservados. Por isso, o custo planejado deve considerar salário, encargos, férias, 13º, eventuais adicionais, vale-transporte quando aplicável e possíveis custos de substituição.',
+        ],
+      },
+      {
+        heading: 'Simulação prática: quanto sai uma contratação formal em 2026',
+        level: 3,
+        body: [
+          'Com o salário mínimo nacional de R$ 1.621 em 2026, o custo formal para a família fica acima do salário combinado quando entram encargos e provisões. Para salários mais altos, entre R$ 2.000 e R$ 2.800, o custo total planejado também cresce proporcionalmente, principalmente quando há adicionais, benefícios ou horas extras.',
+          'A conclusão prática é direta: o custo real de uma contratação formal pode ficar significativamente acima do salário combinado. Quem planeja o orçamento usando apenas o valor do salário tende a se deparar com surpresas no decorrer do ano.',
+        ],
+      },
+      {
+        heading: 'Agência de home care ou contratação direta: qual sai mais barato',
+        body: [
+          'A contratação por agência e a contratação direta resolvem problemas diferentes. A agência oferece uma camada de operação, substituição e gestão. A contratação direta costuma reduzir custo, mas exige que a família compare perfis, entreviste, formalize combinados e acompanhe a rotina de perto.',
+        ],
+      },
+      {
+        heading: 'Quanto custa contratar via agência',
+        level: 3,
+        body: [
+          'Agências de home care podem praticar faixas mensais de R$ 4.000 a R$ 10.000 para mensalista, porque o valor inclui gestão operacional, substituição em ausências, supervisão e margem do negócio. Para plantões avulsos, o valor por 12h via agência tende a ser superior ao praticado por profissionais autônomos com perfil equivalente.',
+          'Há situações em que a agência faz sentido: quando a família não tem disponibilidade para selecionar e entrevistar candidatos, precisa de substituição garantida em curto prazo ou exige supervisão clínica formalizada. Fora desses cenários, o custo adicional precisa ser comparado com calma.',
+        ],
+      },
+      {
+        heading: 'Contratação direta com transparência de preços',
+        level: 3,
+        body: [
+          'Na contratação direta, a família negocia e paga o profissional sem intermediário, o que elimina a margem da agência e reduz o custo total de forma relevante. Em São Paulo, por exemplo, uma mensalista de 12h por dia pode ser encontrada entre R$ 3.000 e R$ 4.800 na contratação direta, enquanto agências podem cobrar valores mais altos pelo mesmo regime.',
+          'Na icuide, é possível consultar valores praticados por cuidadores e profissionais de saúde reais, com perfis completos que incluem certificações, referências e avaliações de famílias anteriores. A plataforma conecta família e profissional diretamente, sem repasse de comissão sobre os atendimentos realizados. O processo de comparação acontece antes mesmo do primeiro contato via chat seguro, o que torna o orçamento mais previsível e a decisão mais embasada.',
+        ],
+      },
+      {
+        heading: 'Como planejar o orçamento e reduzir o gasto sem comprometer o cuidado',
+        body: [
+          'Reduzir gasto não significa contratar a opção mais barata. Significa escolher o regime certo para a necessidade real, evitar horas desnecessárias e comparar profissionais com critérios iguais.',
+        ],
+      },
+      {
+        heading: 'Escolher o regime certo para a necessidade real',
+        level: 3,
+        body: [
+          'Muitas famílias acabam pagando por um regime de cuidado mais intenso do que o idoso realmente precisa no momento. Avaliar o grau de dependência com o médico responsável antes de contratar define com clareza o perfil adequado e evita gastos desnecessários. Um idoso com mobilidade preservada e boa cognição não precisa do mesmo tipo de cuidador que um idoso acamado com múltiplas comorbidades.',
+          'Para quem precisa de cobertura pontual, como finais de semana, viagens ou períodos de descanso do cuidador familiar, plantões avulsos podem sair mais baratos do que um mensalista subutilizado durante a maior parte do mês. Esse ajuste simples pode representar economia significativa para a família sem reduzir a qualidade do atendimento.',
+        ],
+      },
+      {
+        heading: 'Antecipar os encargos no orçamento mensal',
+        level: 3,
+        body: [
+          'Famílias que formalizam o vínculo precisam reservar uma margem acima do salário acordado como regra prática de planejamento para cobrir encargos, 13º e férias sem surpresas no fim do ano. Aplicar esses percentuais a uma planilha básica já resolve a maior parte dos imprevistos que aparecem na rescisão ou no pagamento do 13º.',
+        ],
+      },
+      {
+        heading: 'Usar plataformas com preços visíveis e sem taxas ocultas',
+        level: 3,
+        body: [
+          'Pesquisar valores em plataformas onde os preços são definidos pelos próprios profissionais e ficam visíveis antes do contato é uma forma eficiente de comparar e negociar com base em informação real. Na icuide, esse processo é direto: você acessa perfis completos com certificações, histórico de avaliações e valores praticados por cada profissional, e só entra em contato quando já tem clareza sobre o perfil que procura.',
+          'Antes de fechar qualquer contrato, vale comparar perfis diferentes, verificar certificações e referências e conversar com mais de um profissional pelo chat seguro da plataforma. Essa etapa, que parece simples, é o que separa uma contratação tranquila de uma que pode gerar arrependimento em alguns meses. Para organizar essa conversa, veja também o guia sobre como contratar cuidador de idoso com segurança.',
+        ],
+      },
+      {
+        heading: 'Perguntas frequentes sobre preço de cuidador de idoso',
+        body: [
+          'Quanto custa um cuidador de idoso por mês em 2026? Em contratação direta, a remuneração acordada para jornada integral costuma ficar entre R$ 2.300 e R$ 4.500 por mês, sem encargos. Com FGTS, INSS, 13º e férias provisionados, o custo real para a família fica acima do salário combinado.',
+          'Qual é o preço do cuidador de idoso por plantão? A faixa mais recorrente para plantões de 12 horas em 2026 fica entre R$ 180 e R$ 450. Plantões noturnos tendem a ser mais caros, e capitais como São Paulo praticam valores mais altos do que muitas cidades do interior.',
+          'Quanto custa um cuidador 24h por mês? Como o regime de 24 horas contínuas exige pelo menos dois profissionais em rodízio, o custo mensal total pode ficar entre R$ 5.300 e R$ 9.500, dependendo dos perfis contratados e da região.',
+          'Qual a diferença de preço entre agência e contratação direta? Agências de home care tendem a cobrar mais porque incluem gestão, substituição, operação e margem do negócio. A contratação direta reduz esse custo, desde que a família tenha disposição para selecionar, combinar e acompanhar o profissional.',
+          'O que está incluído no preço do cuidador domiciliar? Depende da modalidade. Na contratação direta, o valor negociado cobre a remuneração do profissional; encargos como FGTS, INSS, 13º e férias são responsabilidade da família quando há registro formal. Em agências, parte desses custos costuma estar embutida na mensalidade.',
+        ],
+      },
+      {
+        heading: 'Resumo final',
+        body: [
+          'Em resumo: o preço do cuidador de idoso em 2026 depende do regime escolhido, da qualificação do profissional, da localização e da forma de contratação. O custo real vai além do salário combinado quando há vínculo formal, e essa diferença precisa entrar no planejamento desde o início. Comparar opções com transparência, entender os encargos e ajustar o regime ao momento do idoso são as medidas que evitam as surpresas mais comuns.',
+          'Acesse a icuide para consultar perfis e ter uma referência concreta de valores antes de tomar sua decisão.',
+        ],
+      },
+    ],
+    inlineLinks: [
+      {
+        text: 'icuide',
+        href: '/',
+      },
+      {
+        text: 'cuidador de idosos noturno',
+        href: '/blog/cuidador-de-idosos-noturno/',
+      },
+      {
+        text: 'cuidador para idoso com Alzheimer',
+        href: '/blog/cuidador-para-idoso-com-alzheimer/',
+      },
+      {
+        text: 'quanto custa contratar um cuidador de idosos',
+        href: '/blog/quanto-custa-cuidador-de-idosos/',
+      },
+      {
+        text: 'como contratar cuidador de idoso com segurança',
+        href: '/blog/como-contratar-cuidador-de-idoso-com-seguranca/',
+      },
+    ],
+    sourceLinks: [
+      {
+        label: 'COREN-SP - inscrição definitiva para técnicos de enfermagem',
+        href: 'https://portal.coren-sp.gov.br/inscricao-definitiva-principal-tecnicos-de-enfermagem/',
+      },
+      {
+        label: 'eSocial - portal do empregador doméstico',
+        href: 'https://www.gov.br/esocial/pt-br',
+      },
+      {
+        label: 'Lei Complementar 150/2015 - trabalho doméstico',
+        href: 'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp150.htm',
+      },
+    ],
+    relatedSlugs: [
+      'quanto-custa-cuidador-de-idosos',
+      'cuidador-de-idosos-por-hora-diaria-ou-plantao',
+      'cuidador-de-idosos-noturno',
+    ],
+  },
+  {
     slug: 'como-contratar-cuidador-de-idoso-com-seguranca',
     title: 'Como contratar cuidador de idoso com segurança',
     description:

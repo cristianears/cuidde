@@ -8,13 +8,22 @@ import { getBlogPost, latestBlogPosts } from '@/data/blogPosts'
 import { useSeo } from '@/hooks/useSeo'
 
 function renderLinkedText(text: string, links: Array<{ text: string; href: string }> = []) {
-  const matches = links
-    .map((link) => {
-      const index = text.toLocaleLowerCase('pt-BR').indexOf(link.text.toLocaleLowerCase('pt-BR'))
-      return index >= 0 ? { ...link, index } : undefined
-    })
-    .filter(Boolean)
-    .sort((first, second) => first!.index - second!.index)
+  const lowerText = text.toLocaleLowerCase('pt-BR')
+  const matches = links.flatMap((link) => {
+    const lowerLinkText = link.text.toLocaleLowerCase('pt-BR')
+    const foundMatches: Array<typeof link & { index: number }> = []
+    let startIndex = 0
+
+    while (startIndex < text.length) {
+      const index = lowerText.indexOf(lowerLinkText, startIndex)
+      if (index < 0) break
+
+      foundMatches.push({ ...link, index })
+      startIndex = index + link.text.length
+    }
+
+    return foundMatches
+  }).sort((first, second) => first.index - second.index)
 
   const nodes: ReactNode[] = []
   let cursor = 0

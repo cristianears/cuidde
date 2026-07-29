@@ -248,12 +248,23 @@ export function renderBlogPostBody(post) {
 
   const renderLinkedParagraph = (paragraph) => {
     const links = post.inlineLinks ?? []
+    const lowerParagraph = paragraph.toLocaleLowerCase('pt-BR')
     const matches = links
-      .map((link) => {
-        const index = paragraph.toLocaleLowerCase('pt-BR').indexOf(link.text.toLocaleLowerCase('pt-BR'))
-        return index >= 0 ? { ...link, index } : undefined
+      .flatMap((link) => {
+        const lowerLinkText = link.text.toLocaleLowerCase('pt-BR')
+        const foundMatches = []
+        let startIndex = 0
+
+        while (startIndex < paragraph.length) {
+          const index = lowerParagraph.indexOf(lowerLinkText, startIndex)
+          if (index < 0) break
+
+          foundMatches.push({ ...link, index })
+          startIndex = index + link.text.length
+        }
+
+        return foundMatches
       })
-      .filter(Boolean)
       .sort((first, second) => first.index - second.index)
 
     let cursor = 0

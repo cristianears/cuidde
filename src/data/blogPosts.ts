@@ -6,6 +6,7 @@ import familyCareAlzheimerImage from '@/assets/blog/family-care-alzheimer.jpg'
 import familyCareCostsImage from '@/assets/blog/family-care-costs.jpg'
 import familyCareHiringSafetyImage from '@/assets/blog/family-care-hiring-safety.jpg'
 import familyCareNightImage from '@/assets/blog/family-care-night.jpg'
+import familyCarePrice2026Image from '@/assets/blog/family-care-price-2026.jpg'
 import familyCareSaoJoseImage from '@/assets/blog/family-care-sao-jose-dos-campos.jpg'
 import familyCareScheduleImage from '@/assets/blog/family-care-schedule.jpg'
 import familyCareValeImage from '@/assets/blog/family-care-vale-do-paraiba.jpg'
@@ -48,6 +49,11 @@ export type BlogPost = {
 }
 
 const imagesBySlug: Record<string, BlogPost['image']> = {
+  'preco-cuidador-de-idoso-tabela-atualizada-2026': {
+    src: familyCarePrice2026Image,
+    alt: 'Cuidadora aferindo a pressão de idoso em casa durante atendimento domiciliar',
+    position: 'center',
+  },
   'como-contratar-cuidador-de-idoso-com-seguranca': {
     src: familyCareHiringSafetyImage,
     alt: 'Cuidadora, familiar e idosa revisando combinados antes da contratação',
