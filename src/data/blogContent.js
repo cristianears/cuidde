@@ -1,5 +1,110 @@
 const baseBlogPostContent = [
   {
+    slug: 'como-contratar-cuidador-de-idoso-com-seguranca',
+    title: 'Como contratar cuidador de idoso com segurança: documentos, contrato e cuidados',
+    description:
+      'Guia para contratar cuidador de idoso com segurança: documentos, entrevista, contrato, custos, vínculo doméstico e checklist antes do primeiro dia.',
+    audience: 'familias',
+    category: 'Contratação segura',
+    readingTime: '10 min',
+    publishedAt: '2026-07-29',
+    imagePath: '/blog/family-care-hiring-safety.jpg',
+    hero:
+      'Contratar um cuidador com segurança exige mais do que gostar da primeira conversa: a família precisa entender modalidade, documentos, rotina, custos e combinados antes do primeiro dia.',
+    sections: [
+      {
+        heading: 'Quando a pressa não pode decidir sozinha',
+        body: [
+          'A busca por cuidador costuma começar em um momento sensível: uma queda, uma alta hospitalar, um diagnóstico novo, noites mal dormidas ou a percepção de que a família já não consegue sustentar a rotina sem apoio. A urgência é real, mas contratar no improviso pode gerar combinados frágeis, custos mal calculados e insegurança para o idoso.',
+          'Este guia aprofunda uma etapa diferente dos outros conteúdos da icuide. Aqui o foco não é apenas escolher um bom perfil ou preparar perguntas para a entrevista, mas entender como transformar a decisão em um processo mais seguro: definir a modalidade de contratação, conferir documentos, comparar experiência, registrar tarefas e alinhar responsabilidades antes de abrir a rotina da casa para um profissional.',
+        ],
+      },
+      {
+        heading: 'Defina a modalidade antes de procurar candidatos',
+        body: [
+          'Antes de comparar nomes, a família precisa entender qual formato faz sentido para a rotina do idoso. Um apoio eventual, por poucas horas ou poucos dias, é diferente de uma presença fixa durante a semana. Essa diferença muda custo, disponibilidade, responsabilidades e risco trabalhista.',
+          'Pela Lei Complementar 150/2015, o trabalho doméstico envolve prestação de serviço contínua, subordinada, onerosa e pessoal no âmbito residencial da família por mais de dois dias por semana. Na prática, quando o cuidador atende a mesma residência três ou mais dias por semana, com horário, ordens diretas e continuidade, a família deve avaliar com cuidado a formalização como empregado doméstico e, se necessário, buscar orientação contábil ou jurídica.',
+          'Agência, plataforma e cuidador particular não são a mesma coisa. Uma agência costuma assumir uma camada maior de operação. Já a icuide funciona como plataforma para encontrar, comparar e iniciar contato com profissionais; a contratação, o vínculo, a remuneração, a escala e os deveres combinados continuam sendo definidos diretamente entre família e profissional. Essa clareza evita expectativas erradas desde o início.',
+        ],
+      },
+      {
+        heading: 'Documentos que ajudam a reduzir risco',
+        body: [
+          'Antes do primeiro dia, peça documentos básicos de identificação, como CPF, RG ou CNH, comprovante de residência e informações necessárias para eventual registro. Quando houver contratação formal, também entram dados para eSocial Doméstico, carteira de trabalho digital e emissão mensal da guia DAE.',
+          'Para uma rotina dentro de casa, também faz sentido avaliar certificados de curso de cuidador, primeiros socorros quando houver, referências profissionais e certidão de antecedentes criminais. Nenhum documento, isoladamente, garante uma boa contratação, mas o conjunto ajuda a família a sair da confiança cega e entrar em uma avaliação mais objetiva.',
+          'Se o profissional não tiver algum documento, observe a explicação. Perda temporária, dificuldade de acesso digital ou documento em atualização são situações diferentes de recusa sem justificativa. O importante é não ignorar sinais de alerta por causa da pressa.',
+        ],
+      },
+      {
+        heading: 'Como a icuide ajuda sem substituir a decisão da família',
+        body: [
+          'Na icuide, a família pode buscar cuidadores pelo CEP, comparar perfis, observar informações publicadas pelo profissional e iniciar uma conversa com mais contexto. Isso reduz a dependência de uma única indicação e ajuda a filtrar melhor quem parece compatível com a rotina do idoso.',
+          'A plataforma não deve ser tratada como empregadora do cuidador nem como agência que assume a contratação pela família. O papel da icuide é organizar a busca e facilitar o contato. Depois disso, família e profissional conversam diretamente sobre valores, horários, tarefas, modalidade e próximos passos.',
+          'Use o perfil como primeira triagem, não como decisão final. Veja experiência, regiões atendidas, disponibilidade, valores de referência, certificados, documentos e avaliações quando existirem. Depois, faça uma entrevista objetiva e registre os combinados antes do início.',
+        ],
+      },
+      {
+        heading: 'Perguntas que revelam preparo na entrevista',
+        body: [
+          'A entrevista precisa sair do genérico. Em vez de perguntar apenas se a pessoa tem experiência, descreva a rotina real do idoso: banho, alimentação, mobilidade, companhia, noites agitadas, esquecimento, acompanhamento em consultas, uso de andador ou necessidade de apoio depois de alta hospitalar.',
+          'Pergunte sobre experiências parecidas, disponibilidade real, deslocamento, valores de referência, limites profissionais e forma de comunicação com a família. Também vale perguntar como o cuidador age diante de queda, engasgo, mal-estar, recusa de alimentação, atraso de familiar ou mudança inesperada na rotina.',
+          'Respostas vagas não significam necessariamente má intenção, mas pedem cautela. Um profissional preparado costuma conseguir explicar o que faria, quando avisaria a família, quais informações precisa receber e em quais situações buscaria orientação de saúde. Essa postura vale tanto quanto simpatia.',
+        ],
+      },
+      {
+        heading: 'Custo real: valor do cuidador não é só diária',
+        body: [
+          'O valor anunciado por hora, diária ou plantão nem sempre mostra o custo total. A família precisa comparar formato, duração, deslocamento, complexidade da rotina e continuidade. Um atendimento de poucas horas pode resolver bem uma necessidade específica; uma rotina fixa de vários dias por semana exige outro planejamento.',
+          'Em 2026, o salário mínimo nacional está fixado em R$ 1.621,00 desde 1º de janeiro. Para emprego doméstico formal, a família precisa considerar salário, encargos, FGTS, férias, 13º, descanso, horas extras quando aplicáveis e obrigações pelo eSocial Doméstico. Esses valores devem entrar no orçamento antes da contratação, não apenas quando aparece a primeira guia ou a primeira rescisão.',
+          'Se a dúvida principal for orçamento, vale comparar este guia com o artigo sobre quanto custa contratar um cuidador de idosos e com o conteúdo sobre cuidador por hora, diária ou plantão. Eles ajudam a entender formatos antes de transformar preço em decisão.',
+        ],
+      },
+      {
+        heading: 'Contrato, tarefas e limites profissionais',
+        body: [
+          'O contrato ou acordo escrito deve descrever quem são as partes, onde o cuidado acontecerá, quais dias e horários foram combinados, valor, forma de pagamento, tarefas esperadas, contatos de emergência, regras da casa, sigilo sobre informações familiares e como mudanças de rotina serão tratadas.',
+          'Detalhe tarefas como companhia, higiene, alimentação, apoio à mobilidade, lembretes de medicação conforme orientação da família, acompanhamento em consultas e comunicação de intercorrências. Também registre o que não faz parte do combinado. Isso evita que o cuidador seja tratado como empregado geral da casa ou que assuma responsabilidades para as quais não foi contratado.',
+          'Em questões de saúde, mantenha a orientação correta documentada. O cuidador pode apoiar a rotina e seguir instruções recebidas, mas não deve substituir médico, enfermeiro, fisioterapeuta ou outro profissional de saúde quando houver necessidade técnica.',
+        ],
+      },
+      {
+        heading: 'Primeiro dia: segurança também está na adaptação',
+        body: [
+          'Mesmo depois de escolher o cuidador, o primeiro dia precisa ser preparado. Deixe anotados contatos de emergência, medicamentos prescritos, horários importantes, preferências do idoso, restrições alimentares, riscos da casa, uso de chaves, regras de comunicação e o que deve ser avisado imediatamente.',
+          'Quando possível, faça uma passagem de rotina com alguém da família presente. Mostre banheiro, quarto, cozinha, objetos de uso diário, caminhos de locomoção e pontos de risco como tapetes, degraus, fios ou pouca iluminação. Esse cuidado simples reduz ruídos e ajuda o profissional a começar com mais segurança.',
+          'Depois dos primeiros atendimentos, converse sobre o que funcionou e o que precisa ser ajustado. Contratação segura não termina na assinatura: ela continua na comunicação, na revisão de combinados e na observação de como o idoso se adapta.',
+        ],
+      },
+      {
+        heading: 'Checklist antes de fechar',
+        body: [
+          'Antes de confirmar a contratação, revise se a família definiu a necessidade real, entendeu a modalidade, comparou mais de um perfil quando possível, verificou documentos, fez perguntas objetivas, alinhou valores, registrou tarefas, combinou comunicação e sabe quais são os limites profissionais do cuidador.',
+          'Também confirme se todos da família entenderam o mesmo combinado. Muitas dificuldades nascem quando um filho fala uma coisa, outro espera outra e o cuidador recebe orientações contraditórias. Um resumo simples por escrito, compartilhado com os responsáveis, evita ruído logo no começo.',
+          'Se ainda houver insegurança, volte uma etapa. Leia o guia de perguntas antes de contratar, compare custos e converse com o profissional novamente. Uma decisão cuidadosa pode levar um pouco mais de tempo, mas costuma proteger melhor o idoso, a família e o próprio cuidador.',
+        ],
+      },
+    ],
+    sourceLinks: [
+      {
+        label: 'Lei Complementar 150/2015 - trabalho doméstico',
+        href: 'https://www.planalto.gov.br/ccivil_03/leis/lcp/lcp150.htm',
+      },
+      {
+        label: 'Manual do Empregador Doméstico - eSocial',
+        href: 'https://www.gov.br/esocial/pt-br/empregador-domestico/manual-do-empregador-domestico',
+      },
+      {
+        label: 'Salário mínimo 2026 no eSocial Doméstico',
+        href: 'https://www.gov.br/esocial/pt-br/noticias/novo-salario-minimo-2026-veja-como-registrar-o-reajuste-no-esocial-domestico',
+      },
+    ],
+    relatedSlugs: [
+      'perguntas-antes-de-contratar-cuidador',
+      'quanto-custa-cuidador-de-idosos',
+      'cuidador-de-idosos-por-hora-diaria-ou-plantao',
+    ],
+  },
+  {
     slug: 'vagas-cuidador-idosos-sao-jose-dos-campos',
     title: 'Vagas para cuidador de idosos em São José dos Campos: como se destacar',
     description:
@@ -754,6 +859,25 @@ const baseBlogPostContent = [
 ]
 
 const extraSectionsBySlug = {
+  'como-contratar-cuidador-de-idoso-com-seguranca': [
+    {
+      heading: 'Perguntas frequentes sobre contratação segura',
+      body: [
+        'Quantos dias por semana podem caracterizar vínculo doméstico? A Lei Complementar 150/2015 considera empregado doméstico quem presta serviço contínuo, subordinado, oneroso e pessoal no âmbito residencial por mais de dois dias por semana. Se a rotina passa de dois dias semanais, a família deve avaliar a formalização com cuidado.',
+        'Quais documentos pedir antes de contratar cuidador de idosos? Comece por identificação, comprovante de residência, referências, certificados relevantes e antecedentes quando possível. Para contratação formal, entram também informações necessárias ao eSocial Doméstico e à carteira de trabalho digital.',
+        'A icuide contrata o cuidador para a família? Não. A icuide é uma plataforma para buscar, comparar perfis e iniciar contato. A contratação, o vínculo, o pagamento e os combinados são definidos diretamente entre família e profissional.',
+        'Preciso fazer contrato mesmo para poucos dias? Um acordo por escrito é recomendável porque registra escopo, horário, valor, tarefas, comunicação e limites. Em casos de rotina contínua, a família deve avaliar também as obrigações trabalhistas aplicáveis.',
+        'O cuidador pode administrar medicação? O cuidador pode apoiar lembretes e seguir orientações documentadas da família e dos profissionais responsáveis, respeitando seus limites profissionais. Dúvidas clínicas devem ser levadas a médico, enfermeiro ou profissional de saúde habilitado.',
+      ],
+    },
+    {
+      heading: 'Resumo prático para contratar com mais segurança',
+      body: [
+        'Contratar com segurança é transformar urgência em etapas: entender a necessidade do idoso, definir modalidade, comparar perfis, verificar documentos, entrevistar com perguntas práticas, calcular custos, registrar tarefas e acompanhar a adaptação nos primeiros dias.',
+        'Esse artigo funciona como guia principal de contratação. Para aprofundar partes específicas da decisão, leia também os conteúdos sobre perguntas antes de contratar, quanto custa cuidador de idosos e cuidador por hora, diária ou plantão.',
+      ],
+    },
+  ],
   'vagas-cuidador-idosos-sao-jose-dos-campos': [
     {
       heading: 'Perguntas frequentes sobre vagas na cidade',

@@ -4,6 +4,7 @@ import caregiverJobsSaoJoseImage from '@/assets/blog/caregiver-jobs-sao-jose-dos
 import caregiverJobsValeImage from '@/assets/blog/caregiver-jobs-vale-do-paraiba.jpg'
 import familyCareAlzheimerImage from '@/assets/blog/family-care-alzheimer.jpg'
 import familyCareCostsImage from '@/assets/blog/family-care-costs.jpg'
+import familyCareHiringSafetyImage from '@/assets/blog/family-care-hiring-safety.jpg'
 import familyCareNightImage from '@/assets/blog/family-care-night.jpg'
 import familyCareSaoJoseImage from '@/assets/blog/family-care-sao-jose-dos-campos.jpg'
 import familyCareScheduleImage from '@/assets/blog/family-care-schedule.jpg'
@@ -31,6 +32,10 @@ export type BlogPost = {
     body: string[]
   }>
   relatedSlugs?: string[]
+  sourceLinks?: Array<{
+    label: string
+    href: string
+  }>
   cta: {
     label: string
     href: string
@@ -38,6 +43,11 @@ export type BlogPost = {
 }
 
 const imagesBySlug: Record<string, BlogPost['image']> = {
+  'como-contratar-cuidador-de-idoso-com-seguranca': {
+    src: familyCareHiringSafetyImage,
+    alt: 'Cuidadora, familiar e idosa revisando combinados antes da contratação',
+    position: 'center',
+  },
   'vagas-cuidador-idosos-sao-jose-dos-campos': {
     src: caregiverJobsSaoJoseImage,
     alt: 'Cuidadora de idosos organizando seu perfil profissional em São José dos Campos',

@@ -263,6 +263,24 @@ export function renderBlogPostBody(post) {
           )
           .join('')}
         ${
+          post.sourceLinks?.length
+            ? `<section>
+                <h2>Fontes oficiais consultadas</h2>
+                <ul>
+                  ${post.sourceLinks
+                    .map(
+                      (source) => `
+                        <li>
+                          <a href="${escapeHtml(source.href)}">${escapeHtml(source.label)}</a>
+                        </li>
+                      `,
+                    )
+                    .join('')}
+                </ul>
+              </section>`
+            : ''
+        }
+        ${
           relatedPosts.length
             ? `<section>
                 <h2>Leia também</h2>

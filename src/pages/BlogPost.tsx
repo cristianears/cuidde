@@ -76,6 +76,25 @@ const BlogPost = () => {
                     </div>
                   </section>
                 ))}
+
+                {post.sourceLinks && post.sourceLinks.length > 0 && (
+                  <section className="bg-card rounded-xl border border-border/40 shadow-card p-5 md:p-7">
+                    <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4">Fontes oficiais consultadas</h2>
+                    <div className="space-y-3">
+                      {post.sourceLinks.map((source) => (
+                        <a
+                          key={source.href}
+                          href={source.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block text-sm md:text-base text-primary underline-offset-4 hover:underline"
+                        >
+                          {source.label}
+                        </a>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
 
               <aside className="lg:sticky lg:top-24 space-y-4">
