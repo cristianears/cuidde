@@ -38,6 +38,7 @@ import { LEGAL_DOCUMENTS } from '@/lib/legal-documents'
 import { queuePendingUserConsents, recordUserConsents } from '@/lib/user-consents'
 import { getFamilyOnboardingCompleteTarget } from '@/lib/landing-cep-flow'
 import { getPersonNameError, isValidPersonName, normalizePersonName } from '@/lib/person-name'
+import { trackEvent, withBlogAttribution } from '@/lib/analytics'
 
 type ProfileType = 'family' | 'caregiver' | null
 
@@ -308,6 +309,11 @@ const Onboarding = () => {
       const typeParam = searchParams.get('type') as ProfileType
       const cepParam = searchParams.get('cep')
       const redirectParam = searchParams.get('redirect')
+      trackEvent('sign_up_oauth_start', withBlogAttribution({
+        signup_method: 'google',
+        user_role: formData.profileType ?? typeParam ?? 'unknown',
+        has_redirect: !!redirectParam,
+      }))
       localStorage.setItem('cuidde_pending_signup', 'true')
       // Preservar dados do onboarding para recuperar após callback OAuth
       localStorage.setItem('cuidde_onboarding_data', JSON.stringify({
@@ -429,6 +435,11 @@ const Onboarding = () => {
     })
 
     setIsSubmitting(true)
+    trackEvent('sign_up_start', withBlogAttribution({
+      signup_method: isGoogleFlow ? 'google' : 'email',
+      user_role: formData.profileType,
+      has_redirect: !!redirectParam,
+    }))
     try {
       if (isGoogleFlow && user) {
         const googlePhoto =
@@ -487,6 +498,17 @@ const Onboarding = () => {
           ? queryKeys.caregiverProfile(user.id)
           : queryKeys.familyProfile(user.id)
         queryClient.removeQueries({ queryKey: profileQueryKey })
+
+        trackEvent('sign_up', withBlogAttribution({
+          signup_method: 'google',
+          user_role: formData.profileType,
+          destination: formData.profileType === 'caregiver'
+            ? CAREGIVER_INITIAL_SETUP_PATH
+            : getFamilyOnboardingCompleteTarget({
+                redirect: redirectParam,
+                cep: formData.cep,
+              }),
+        }))
 
         if (formData.profileType === 'caregiver') {
           navigate(CAREGIVER_INITIAL_SETUP_PATH, { replace: true })
@@ -572,6 +594,11 @@ const Onboarding = () => {
         }
 
         localStorage.setItem('cuidde_pending_signup_email', formData.email)
+        trackEvent('sign_up', withBlogAttribution({
+          signup_method: 'email',
+          user_role: formData.profileType,
+          destination: '/verify-email',
+        }))
         navigate('/verify-email', { replace: true })
       }
     } catch (error) {

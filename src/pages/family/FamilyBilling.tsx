@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Info, CreditCard, FileText, Sparkles, AlertCircle, Loader2 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
@@ -27,6 +27,13 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { STRIPE_PRICE_IDS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import {
+  clearCheckoutPlanAttribution,
+  getCheckoutPlanAttribution,
+  setCheckoutPlanAttribution,
+  trackEvent,
+  withBlogAttribution,
+} from "@/lib/analytics";
 import type { SubscriptionCancellationReason, SubscriptionPlan } from "@/types/database";
 
 interface Plan {
@@ -145,6 +152,7 @@ const FamilyBilling = () => {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState<SubscriptionCancellationReason | "">("");
   const [cancelReasonDetails, setCancelReasonDetails] = useState("");
+  const hasTrackedPricingView = useRef(false);
 
   const featuredPlanId: SubscriptionPlan = "quarterly";
 
@@ -157,17 +165,55 @@ const FamilyBilling = () => {
   useEffect(() => {
     if (!user) return
     if (searchParams.get("success") === "true") {
+      const checkoutPlan = getCheckoutPlanAttribution();
+      trackEvent("subscribe_paid_plan", withBlogAttribution({
+        pricing_context: "family_billing",
+        plan_id: checkoutPlan.plan_id ?? plan ?? "unknown",
+        plan_name: checkoutPlan.plan_name,
+        user_role: "family",
+      }));
+      clearCheckoutPlanAttribution();
       toast.success("Assinatura realizada com sucesso! Bem-vinda à plataforma.");
       setSearchParams({}, { replace: true });
       queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.invoices(user.id) });
     } else if (searchParams.get("canceled") === "true") {
+      const checkoutPlan = getCheckoutPlanAttribution();
+      trackEvent("checkout_canceled", withBlogAttribution({
+        pricing_context: "family_billing",
+        plan_id: checkoutPlan.plan_id,
+        plan_name: checkoutPlan.plan_name,
+        user_role: "family",
+      }));
+      clearCheckoutPlanAttribution();
       toast.info("Checkout cancelado. Você pode assinar a qualquer momento.");
       setSearchParams({}, { replace: true });
     }
-  }, [user, searchParams, setSearchParams, queryClient]);
+  }, [user, searchParams, setSearchParams, queryClient, plan]);
+
+  useEffect(() => {
+    if (isLoading || hasTrackedPricingView.current) return;
+    hasTrackedPricingView.current = true;
+
+    trackEvent("view_pricing", withBlogAttribution({
+      pricing_context: "family_billing",
+      current_plan_id: plan ?? "free",
+      subscription_status: subscriptionStatus,
+      user_role: "family",
+      is_authenticated: !!user,
+    }));
+  }, [isLoading, plan, subscriptionStatus, user]);
 
   const handleSelectPlan = (p: Plan) => {
+    trackEvent("select_plan", withBlogAttribution({
+      pricing_context: "family_billing",
+      plan_id: p.id,
+      plan_name: p.name,
+      plan_type: "paid",
+      current_plan_id: plan ?? "free",
+      subscription_status: subscriptionStatus,
+      user_role: "family",
+    }));
     setSelectedPlan(p);
     setIsConfirmOpen(true);
   };
@@ -179,6 +225,18 @@ const FamilyBilling = () => {
       toast.error("Plano não configurado. Contate o suporte.");
       return;
     }
+    trackEvent("begin_checkout", withBlogAttribution({
+      pricing_context: "family_billing",
+      plan_id: selectedPlan.id,
+      plan_name: selectedPlan.name,
+      current_plan_id: plan ?? "free",
+      subscription_status: subscriptionStatus,
+      user_role: "family",
+    }));
+    setCheckoutPlanAttribution({
+      plan_id: selectedPlan.id,
+      plan_name: selectedPlan.name,
+    });
     setIsConfirmOpen(false);
     startCheckout.mutate(priceId);
   };

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { ArrowLeft, ArrowRight, Clock } from 'lucide-react'
 import { Link, Navigate, useParams } from 'react-router-dom'
@@ -6,6 +7,7 @@ import Footer from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { getBlogPost, latestBlogPosts } from '@/data/blogPosts'
 import { useSeo } from '@/hooks/useSeo'
+import { setBlogAttribution, trackEvent } from '@/lib/analytics'
 
 function renderLinkedText(text: string, links: Array<{ text: string; href: string }> = []) {
   const lowerText = text.toLocaleLowerCase('pt-BR')
@@ -58,6 +60,20 @@ const BlogPost = () => {
     title: post ? `${post.title} | icuide` : 'Guia não encontrado | icuide',
     description: post?.description ?? 'Conteúdos práticos da icuide sobre cuidado para idosos.',
   })
+
+  useEffect(() => {
+    if (!post) return
+
+    const attribution = {
+      blog_slug: post.slug,
+      blog_category: post.category,
+      blog_audience: post.audience,
+      blog_path: `/blog/${post.slug}/`,
+    }
+
+    setBlogAttribution(attribution)
+    trackEvent('blog_article_view', attribution)
+  }, [post])
 
   if (!post) return <Navigate to="/blog" replace />
 
@@ -154,7 +170,25 @@ const BlogPost = () => {
                     {nextStepDescription}
                   </p>
                   <Button asChild className="h-auto min-h-11 rounded-lg bg-accent px-4 py-2 text-accent-foreground hover:bg-accent/90 whitespace-normal">
-                    <Link to={post.cta.href} className="flex items-center justify-center gap-2 text-center leading-snug">
+                    <Link
+                      to={post.cta.href}
+                      className="flex items-center justify-center gap-2 text-center leading-snug"
+                      onClick={() => {
+                        const attribution = {
+                          blog_slug: post.slug,
+                          blog_category: post.category,
+                          blog_audience: post.audience,
+                          blog_path: `/blog/${post.slug}/`,
+                        }
+
+                        setBlogAttribution(attribution)
+                        trackEvent('blog_cta_click', {
+                          ...attribution,
+                          cta_label: post.cta.label,
+                          cta_href: post.cta.href,
+                        })
+                      }}
+                    >
                       <span className="min-w-0 break-words">{post.cta.label}</span>
                       <ArrowRight className="w-4 h-4 shrink-0" />
                     </Link>

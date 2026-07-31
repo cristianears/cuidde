@@ -3,8 +3,11 @@ import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getLandingPlanTarget } from "@/lib/landing-cep-flow";
+import { trackEvent, withBlogAttribution } from "@/lib/analytics";
+import { useEffect, useRef } from "react";
 const plans = [
   {
+    id: "free",
     name: "Gratuito",
     description: "Explore a plataforma sem compromisso.",
     price: "0",
@@ -27,6 +30,7 @@ const plans = [
     badgeOffClassName: null,
   },
   {
+    id: "monthly",
     name: "Mensal",
     description: "Chat, documentos e perfis completos por 30 dias.",
     price: "127",
@@ -52,6 +56,7 @@ const plans = [
     badgeOffClassName: null,
   },
   {
+    id: "quarterly",
     name: "Trimestral",
     description: "Mais tempo para decidir com tranquilidade.",
     price: "79,99",
@@ -73,6 +78,7 @@ const plans = [
     badgeOffClassName: "text-sm",
   },
   {
+    id: "annual",
     name: "Anual",
     description: "Ideal para cuidado contínuo.",
     price: "83",
@@ -98,13 +104,38 @@ const plans = [
 const Pricing = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
+  const hasTrackedPricingView = useRef(false);
 
-  function handlePlanClick(isPaidPlan: boolean) {
-    navigate(getLandingPlanTarget({
+  useEffect(() => {
+    if (hasTrackedPricingView.current) return;
+    hasTrackedPricingView.current = true;
+
+    trackEvent("view_pricing", withBlogAttribution({
+      pricing_context: "landing",
+      user_role: role ?? "anonymous",
+      is_authenticated: !!user,
+    }));
+  }, [role, user]);
+
+  function handlePlanClick(plan: typeof plans[number]) {
+    const isPaidPlan = plan.price !== "0";
+    const destination = getLandingPlanTarget({
       isAuthenticated: !!user,
       role,
       isPaidPlan,
+    });
+
+    trackEvent(isPaidPlan ? "select_plan" : "start_free_plan", withBlogAttribution({
+      pricing_context: "landing",
+      plan_id: plan.id,
+      plan_name: plan.name,
+      plan_type: isPaidPlan ? "paid" : "free",
+      destination,
+      user_role: role ?? "anonymous",
+      is_authenticated: !!user,
     }));
+
+    navigate(destination);
   }
 
   return (
@@ -178,7 +209,7 @@ const Pricing = () => {
               </ul>
               <div className="mt-auto pt-3">
                 <Button
-                  onClick={() => handlePlanClick(plan.price !== "0")}
+                  onClick={() => handlePlanClick(plan)}
                   variant={plan.buttonVariant}
                   className={`w-full rounded-lg py-2 text-xs font-semibold transition-all duration-300 hover:-translate-y-0.5 ${
                     plan.highlighted
