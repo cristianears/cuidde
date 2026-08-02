@@ -25,7 +25,7 @@ describe('family blog SEO articles', () => {
       expect(post?.sections.length).toBeGreaterThanOrEqual(5)
       expect(post?.title.toLowerCase()).not.toContain('vagas')
       expect(post?.image.src).toContain('/src/assets/blog/family-care-')
-      expect(post?.image.src).toContain('.jpg')
+      expect(post?.image.src).toContain('.webp')
       expect(post?.sections.flatMap((section) => section.body).join(' ').split(/\s+/).length).toBeGreaterThan(350)
       expect(post?.relatedSlugs?.length).toBeGreaterThanOrEqual(3)
     }
@@ -56,6 +56,7 @@ describe('family blog SEO articles', () => {
       expect(seoPost).toBeTruthy()
       expect(seoPost?.title.toLowerCase()).toContain('cuidador')
       expect(seoPost?.imagePath).toContain('/blog/family-care-')
+      expect(seoPost?.imagePath).toContain('.jpg')
       expect(seoPost?.relatedSlugs?.length).toBeGreaterThanOrEqual(3)
       expect(sitemap).toContain(`https://www.icuide.com.br/blog/${slug}/`)
     }

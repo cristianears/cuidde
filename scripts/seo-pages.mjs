@@ -9,7 +9,66 @@ const rootDir = join(__dirname, '..')
 const distDir = join(rootDir, 'dist')
 
 export const siteUrl = 'https://www.icuide.com.br'
-const defaultImage = `${siteUrl}/logo.png`
+const organizationLogo = `${siteUrl}/logo.png`
+const defaultImage = `${siteUrl}/blog/family-care-price-2026.jpg`
+const defaultImageAlt = 'Cuidadora aferindo a pressao de idoso em casa durante atendimento domiciliar'
+
+const imageMetadataByPath = {
+  '/logo.png': {
+    width: 500,
+    height: 500,
+    type: 'image/png',
+    alt: 'Logo da icuide',
+  },
+  '/blog/family-care-price-2026.jpg': {
+    width: 1600,
+    height: 878,
+    type: 'image/jpeg',
+    alt: 'Cuidadora aferindo a pressao de idoso em casa durante atendimento domiciliar',
+  },
+  '/blog/family-care-hiring-safety.jpg': {
+    width: 1536,
+    height: 1024,
+    type: 'image/jpeg',
+    alt: 'Cuidadora, familiar e idosa revisando combinados antes da contratacao',
+  },
+  '/blog/family-care-costs.jpg': {
+    width: 1400,
+    height: 933,
+    type: 'image/jpeg',
+    alt: 'Cuidadora ajudando idosa a revisar planejamento de custos em casa',
+  },
+  '/blog/family-care-schedule.jpg': {
+    width: 1400,
+    height: 933,
+    type: 'image/jpeg',
+    alt: 'Cuidadora e idoso organizando uma agenda de cuidados em casa',
+  },
+  '/blog/family-care-night.jpg': {
+    width: 1400,
+    height: 933,
+    type: 'image/jpeg',
+    alt: 'Cuidadora oferecendo apoio tranquilo a idosa durante rotina noturna em casa',
+  },
+  '/blog/family-care-alzheimer.jpg': {
+    width: 1400,
+    height: 933,
+    type: 'image/jpeg',
+    alt: 'Cuidadora acompanhando idosa em atividade de memoria com album de familia',
+  },
+  '/blog/family-care-sao-jose-dos-campos.jpg': {
+    width: 1400,
+    height: 933,
+    type: 'image/jpeg',
+    alt: 'Familia e cuidadora apoiando idosa com andador em casa',
+  },
+  '/blog/family-care-vale-do-paraiba.jpg': {
+    width: 1400,
+    height: 933,
+    type: 'image/jpeg',
+    alt: 'Cuidadora e familiar acompanhando idosa em casa com paisagem verde ao fundo',
+  },
+}
 
 export const blogPosts = blogPostContent
 export const localPages = localCarePages
@@ -70,6 +129,32 @@ function canonicalPath(path) {
 function absoluteUrl(path) {
   if (path.startsWith('http://') || path.startsWith('https://')) return path
   return `${siteUrl}${canonicalPath(path)}`
+}
+
+function imagePathFromUrl(image) {
+  if (!image) return '/blog/family-care-price-2026.jpg'
+  if (!image.startsWith('http://') && !image.startsWith('https://')) return image
+
+  try {
+    return new URL(image).pathname
+  } catch {
+    return image
+  }
+}
+
+function imageMetadata(image, page = {}) {
+  const metadata = imageMetadataByPath[imagePathFromUrl(image)]
+
+  return {
+    width: metadata?.width,
+    height: metadata?.height,
+    type: metadata?.type,
+    alt: page.imageAlt ?? metadata?.alt ?? defaultImageAlt,
+  }
+}
+
+function publishedDateTime(date) {
+  return date ? `${date}T00:00:00-03:00` : undefined
 }
 
 function list(items) {
@@ -367,7 +452,7 @@ function renderSchema(page) {
       '@id': `${siteUrl}/#organization`,
       name: 'icuide',
       url: siteUrl,
-      logo: defaultImage,
+      logo: organizationLogo,
       contactPoint: {
         '@type': 'ContactPoint',
         telephone: '+55-12-98852-7053',
@@ -459,22 +544,41 @@ export function renderPageHtml(shellHtml, page) {
   const title = escapeHtml(page.title)
   const type = page.type === 'article' ? 'article' : 'website'
   const image = page.image ?? defaultImage
+  const metadata = imageMetadata(image, page)
+  const imageAlt = escapeHtml(metadata.alt)
+  const articlePublishedTime = publishedDateTime(page.publishedAt)
   const headTags = [
     `<title>${title}</title>`,
     `<meta name="description" content="${description}">`,
     `<link rel="canonical" href="${canonical}">`,
     '<meta name="robots" content="index,follow">',
+    '<meta property="og:site_name" content="icuide">',
+    '<meta property="og:locale" content="pt_BR">',
     `<meta property="og:type" content="${type}">`,
     `<meta property="og:title" content="${title}">`,
     `<meta property="og:description" content="${description}">`,
     `<meta property="og:url" content="${canonical}">`,
     `<meta property="og:image" content="${image}">`,
+    `<meta property="og:image:secure_url" content="${image}">`,
+    metadata.type ? `<meta property="og:image:type" content="${metadata.type}">` : '',
+    metadata.width ? `<meta property="og:image:width" content="${metadata.width}">` : '',
+    metadata.height ? `<meta property="og:image:height" content="${metadata.height}">` : '',
+    `<meta property="og:image:alt" content="${imageAlt}">`,
+    page.type === 'article' && articlePublishedTime
+      ? `<meta property="article:published_time" content="${articlePublishedTime}">`
+      : '',
+    page.type === 'article' && articlePublishedTime
+      ? `<meta property="article:modified_time" content="${articlePublishedTime}">`
+      : '',
     '<meta name="twitter:card" content="summary_large_image">',
     `<meta name="twitter:title" content="${title}">`,
     `<meta name="twitter:description" content="${description}">`,
     `<meta name="twitter:image" content="${image}">`,
+    `<meta name="twitter:image:alt" content="${imageAlt}">`,
     `<script type="application/ld+json" data-seo="page">${renderSchema(page).replaceAll('<', '\\u003c')}</script>`,
-  ].join('\n    ')
+  ]
+    .filter(Boolean)
+    .join('\n    ')
 
   const withoutTitle = shellHtml.replace(/<title>[\s\S]*?<\/title>\s*/i, '')
   const withoutSeoTags = withoutTitle
