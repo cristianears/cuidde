@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackEvent, withBlogAttribution } from "@/lib/analytics";
 import { cleanCep, formatCep } from "@/lib/formatters";
 import { getLandingCepTarget } from "@/lib/landing-cep-flow";
 import heroBg from "@/assets/hero-bg.jpg";
@@ -17,11 +18,20 @@ const Hero = () => {
   const submitFamilyFlow = () => {
     setTouched(true);
     if (!isCepValid || isLoading) return;
-    navigate(getLandingCepTarget({
+    const destination = getLandingCepTarget({
       cepDigits,
       isAuthenticated: Boolean(user),
       role,
+    });
+
+    trackEvent("search_by_cep", withBlogAttribution({
+      cep_prefix: cepDigits.slice(0, 5),
+      destination,
+      user_role: role ?? "anonymous",
+      is_authenticated: Boolean(user),
     }));
+
+    navigate(destination);
   };
   const goFamilyFlow = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
