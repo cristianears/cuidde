@@ -24,9 +24,10 @@ const Hero = () => {
       role,
     });
 
-    trackEvent("search_by_cep", withBlogAttribution({
+    trackEvent("begin_lead", withBlogAttribution({
       cep_prefix: cepDigits.slice(0, 5),
       destination,
+      lead_step: "cep_search",
       user_role: role ?? "anonymous",
       is_authenticated: Boolean(user),
     }));

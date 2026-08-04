@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Hero from '../Hero'
+import { COOKIE_CONSENT_KEY } from '@/lib/cookie-consent'
 
 const mockNavigate = vi.fn()
 const mockAuthState = vi.hoisted(() => ({
@@ -33,6 +34,8 @@ function renderHero() {
 describe('Hero', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    window.localStorage.clear()
+    window.dataLayer = []
     mockAuthState.user = null
     mockAuthState.role = null
     mockAuthState.isLoading = false
@@ -46,5 +49,23 @@ describe('Hero', () => {
     fireEvent.keyDown(cepInput, { key: 'Enter', code: 'Enter' })
 
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063')
+  })
+
+  it('tracks begin_lead after a valid CEP search when analytics consent is accepted', () => {
+    window.localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted')
+    renderHero()
+
+    const cepInput = screen.getByLabelText('CEP')
+    fireEvent.change(cepInput, { target: { value: '12236-063' } })
+    fireEvent.keyDown(cepInput, { key: 'Enter', code: 'Enter' })
+
+    expect(window.dataLayer).toContainEqual({
+      event: 'begin_lead',
+      cep_prefix: '12236',
+      destination: '/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063',
+      lead_step: 'cep_search',
+      user_role: 'anonymous',
+      is_authenticated: false,
+    })
   })
 })
