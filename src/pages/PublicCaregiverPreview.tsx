@@ -185,7 +185,7 @@ const PublicCaregiverPreview = () => {
                   {isLoading
                     ? 'Buscando opções próximas...'
                     : hasSearched
-                      ? `${caregivers.length} prévia${caregivers.length !== 1 ? 's' : ''} disponível${caregivers.length !== 1 ? 'is' : ''}`
+                      ? `${caregivers.length} ${caregivers.length === 1 ? 'prévia disponível' : 'prévias disponíveis'}`
                       : 'Digite um CEP para ver opções próximas'}
                 </p>
               </div>
