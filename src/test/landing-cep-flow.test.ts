@@ -8,14 +8,14 @@ import {
 } from '@/lib/landing-cep-flow'
 
 describe('landing CEP flow', () => {
-  it('sends anonymous visitors to login with a search redirect instead of onboarding', () => {
+  it('sends anonymous visitors to the public caregiver preview before login', () => {
     expect(
       getLandingCepTarget({
         cepDigits: '12236063',
         isAuthenticated: false,
         role: null,
       }),
-    ).toBe('/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063')
+    ).toBe('/buscar-cuidadores?cep=12236063')
   })
 
   it('sends authenticated families directly to caregiver search with the landing CEP', () => {

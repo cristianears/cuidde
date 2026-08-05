@@ -119,6 +119,26 @@ describe('CaregiverCard', () => {
     expect(toast.error).toHaveBeenCalledWith('Assine um plano para favoritar perfis.')
   })
 
+  it('hides favorite controls and uses the custom CTA in public preview mode', () => {
+    const onContact = vi.fn()
+
+    render(
+      <CaregiverCard
+        caregiver={caregiver}
+        showFavorite={false}
+        ctaLabel="Criar conta para ver perfil"
+        footerNote="Prévia limitada."
+        onContact={onContact}
+      />,
+    )
+
+    expect(screen.queryByLabelText(/favoritar/i)).not.toBeInTheDocument()
+    expect(screen.getByText('Prévia limitada.')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta para ver perfil' }))
+    expect(onContact).toHaveBeenCalledWith('caregiver-1')
+  })
+
   it('shows an identity verified seal on the photo only when identity document was sent', () => {
     const { rerender } = render(<CaregiverCard caregiver={caregiver} />)
 

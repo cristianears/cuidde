@@ -36,6 +36,10 @@ interface CaregiverCardProps {
   hasReferencias?: boolean;
   hasCertificados?: boolean;
   distanceKm?: number;
+  showFavorite?: boolean;
+  ctaLabel?: string;
+  footerNote?: string;
+  photoPosition?: "top" | "center";
 }
 
 function Chip({ label, color = "gray" }: { label: string; color?: "gray" | "blue" | "emerald" }) {
@@ -77,6 +81,10 @@ const CaregiverCard = ({
   hasReferencias = false,
   hasCertificados = false,
   distanceKm,
+  showFavorite = true,
+  ctaLabel = "Ver perfil",
+  footerNote,
+  photoPosition = "top",
 }: CaregiverCardProps) => {
   const [photoFailed, setPhotoFailed] = useState(false);
 
@@ -126,7 +134,10 @@ const CaregiverCard = ({
                 <img
                   src={caregiver.photo_url}
                   alt={caregiver.full_name ?? "Cuidador"}
-                  className="absolute inset-0 w-full h-full object-cover object-top"
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover",
+                    photoPosition === "center" ? "object-center" : "object-top",
+                  )}
                   onError={() => setPhotoFailed(true)}
                 />
               ) : (
@@ -143,21 +154,23 @@ const CaregiverCard = ({
             {hasDocsSent && (
               <IdentityVerifiedSeal className="-left-1.5 -top-1.5" />
             )}
-            <button
-              onClick={handleFavorite}
-              aria-label={favoriteLabel}
-              aria-disabled={!canFavorite}
-              title={!canFavorite ? favoriteDisabledReason : undefined}
-              className={cn(
-                "absolute top-2 right-2 p-2 rounded-full transition-all z-10",
-                canFavorite ? "cursor-pointer" : "cursor-pointer opacity-70",
-                isFavorite && canFavorite
-                  ? "bg-destructive text-destructive-foreground"
-                  : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:bg-background"
-              )}
-            >
-              <Heart className={cn("w-4 h-4", isFavorite && canFavorite && "fill-current")} />
-            </button>
+            {showFavorite && (
+              <button
+                onClick={handleFavorite}
+                aria-label={favoriteLabel}
+                aria-disabled={!canFavorite}
+                title={!canFavorite ? favoriteDisabledReason : undefined}
+                className={cn(
+                  "absolute top-2 right-2 p-2 rounded-full transition-all z-10",
+                  canFavorite ? "cursor-pointer" : "cursor-pointer opacity-70",
+                  isFavorite && canFavorite
+                    ? "bg-destructive text-destructive-foreground"
+                    : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:bg-background"
+                )}
+              >
+                <Heart className={cn("w-4 h-4", isFavorite && canFavorite && "fill-current")} />
+              </button>
+            )}
           </div>
 
           {/* ── Conteúdo ── */}
@@ -269,12 +282,17 @@ const CaregiverCard = ({
 
             {/* CTA */}
             <div className="pt-1.5 mt-auto border-t border-border/50">
+              {footerNote && (
+                <p className="mb-1.5 text-xs leading-relaxed text-muted-foreground">
+                  {footerNote}
+                </p>
+              )}
               <Button
                 onClick={() => onContact?.(caregiver.id)}
                 size="sm"
                 className="w-full bg-accent hover:bg-accent/90 text-accent-foreground h-8 text-xs"
               >
-                Ver perfil
+                {ctaLabel}
               </Button>
             </div>
 

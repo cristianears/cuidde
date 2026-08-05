@@ -741,6 +741,34 @@ export interface Database {
         Args: { p_lat: number; p_lng: number; p_radius_km?: number }
         Returns: { id: string; distance_km: number }[]
       }
+      public_search_caregiver_previews: {
+        Args: { p_lat: number; p_lng: number; p_radius_km?: number; p_limit?: number }
+        Returns: Array<{
+          id: string
+          display_name: string | null
+          photo_url: string | null
+          bio_preview: string | null
+          experience_years: number | null
+          profissao_formacao: ProfissaoFormacao | null
+          city: string | null
+          state: string | null
+          price_per_hour: number | null
+          price_per_day: number | null
+          average_rating: number | null
+          review_count: number | null
+          specialties: string[] | null
+          modalities: string[] | null
+          idiomas: string[] | null
+          possui_cnh: boolean | null
+          has_insurance: boolean | null
+          emergency_available: boolean | null
+          has_rg_cnh: boolean | null
+          has_antecedentes: boolean | null
+          has_certificado: boolean | null
+          has_references: boolean | null
+          distance_km: number | null
+        }>
+      }
       family_private_caregiver_ids: {
         Args: Record<string, never>
         Returns: { caregiver_id: string }[]

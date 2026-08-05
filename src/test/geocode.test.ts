@@ -37,7 +37,8 @@ function mockEmptyNominatim() {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  mockFetch.mockReset()
+  mockViaCep.mockReset()
 })
 
 // ─── geocodeAddress ──────────────────────────────────────────────────────────
@@ -87,11 +88,11 @@ describe('geocodeAddress', () => {
 
     // Structured query: vazio
     mockEmptyNominatim()
-    // Free-text: retorna resultado
+    // Free-text: retorna resultado compatível com a rua/cidade do CEP
     mockFetch.mockResolvedValueOnce(mockOkResponse([{
       lat: '-23.55',
       lon: '-46.63',
-      display_name: 'São Paulo, SP, Brasil',
+      display_name: 'Rua Inexistente, Bairro X, São Paulo, SP, Brasil',
     }]))
 
     const result = await geocodeAddress({ cep: '01310-100' })
@@ -99,8 +100,70 @@ describe('geocodeAddress', () => {
     expect(result).toEqual({
       lat: -23.55,
       lng: -46.63,
-      formatted_address: 'São Paulo, SP, Brasil',
+      formatted_address: 'Rua Inexistente, Bairro X, São Paulo, SP, Brasil',
     })
+  })
+
+  it('ignora resultado genérico de cidade do Google para CEP com rua conhecida', async () => {
+    mockViaCep.mockResolvedValue({
+      street: 'Rua Angelo Bravini',
+      neighborhood: 'Jardim Terras do Sul',
+      city: 'Sao Jose dos Campos',
+      state: 'SP',
+    })
+
+    mockFetch.mockResolvedValueOnce(mockOkResponse({
+      status: 'OK',
+      results: [{
+        geometry: { location: { lat: -23.1867782, lng: -45.8854538 } },
+        formatted_address: 'Sao Jose dos Campos, SP, Brasil',
+      }],
+    }))
+
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.2465461',
+      lon: '-45.8953850',
+      display_name: 'Rua Angelo Bravini, Jardim Terras do Sul, Sao Jose dos Campos, SP, Brasil',
+    }]))
+
+    const result = await geocodeAddress({ cep: '12236-063' })
+
+    expect(result).toEqual({
+      lat: -23.2465461,
+      lng: -45.8953850,
+      formatted_address: 'Rua Angelo Bravini, Jardim Terras do Sul, Sao Jose dos Campos, SP, Brasil',
+    })
+  })
+
+  it('nao usa fallback generico de cidade quando CEP tem rua ou bairro', async () => {
+    mockGoogleDenied()
+
+    mockViaCep.mockResolvedValue({
+      street: 'Rua Angelo Bravini',
+      neighborhood: 'Jardim Terras do Sul',
+      city: 'Sao Jose dos Campos',
+      state: 'SP',
+    })
+
+    // Structured query nao encontrou a rua.
+    mockEmptyNominatim()
+
+    // Free-text retornou so a cidade; isso nao pode virar coordenada do CEP.
+    mockFetch.mockResolvedValueOnce(mockOkResponse([{
+      lat: '-23.1867782',
+      lon: '-45.8854538',
+      display_name: 'Sao Jose dos Campos, SP, Brasil',
+    }]))
+
+    const result = await geocodeAddress({ cep: '12236-063' })
+
+    expect(result).toBeNull()
+
+    const nominatimUrls = mockFetch.mock.calls
+      .map((call) => call[0] as string)
+      .filter((url) => url.includes('nominatim'))
+
+    expect(nominatimUrls.some((url) => url.includes('city=') && !url.includes('street='))).toBe(false)
   })
 
   it('fallback para geocodeByCity quando free-text também falha', async () => {
@@ -187,6 +250,8 @@ describe('geocodeAddress', () => {
   })
 
   it('ignora resultado do Nominatim quando ele aponta para outro CEP brasileiro', async () => {
+    mockGoogleDenied()
+
     mockViaCep.mockResolvedValue({
       street: 'Rua Esperanca',
       neighborhood: 'Chacara Canaa',
@@ -200,20 +265,9 @@ describe('geocodeAddress', () => {
       display_name: 'Rua Esperanca, Tremembe, Sao Paulo, 02327-190, Brasil',
     }]))
 
-    mockEmptyNominatim()
-    mockFetch.mockResolvedValueOnce(mockOkResponse([{
-      lat: '-22.9641763',
-      lon: '-45.5489548',
-      display_name: 'Tremembe, Sao Paulo, Brasil',
-    }]))
-
     const result = await geocodeAddress({ cep: '12122-650' })
 
-    expect(result).toEqual({
-      lat: -22.9641763,
-      lng: -45.5489548,
-      formatted_address: 'Tremembe, Sao Paulo, Brasil',
-    })
+    expect(result).toBeNull()
   })
 })
 

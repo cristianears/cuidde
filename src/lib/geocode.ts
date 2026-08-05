@@ -52,7 +52,11 @@ export async function geocodeAddress(params: { cep?: string; address?: string })
       })
       if (result) return result
 
-      // 3) Fallback: structured query só com cidade + estado
+      // 3) Para CEPs com rua/bairro, não usar coordenada genérica da cidade.
+      // Isso evita mostrar distâncias incorretas como se fossem do CEP informado.
+      if (addr.street || addr.neighborhood) return null
+
+      // 4) Fallback: structured query só com cidade + estado
       return geocodeByCity(addr.city, addr.state)
     }
 
@@ -170,6 +174,7 @@ async function geocodeNominatimStructured(params: {
 
     const result = params.cep
       ? data.find((item) => isCepNominatimResultCompatible(item, params.cep!, {
+        street: params.street,
         city: params.city,
         state: params.state,
       }))
@@ -189,7 +194,7 @@ async function geocodeNominatimStructured(params: {
 
 async function geocodeWithNominatim(
   query: string,
-  opts?: { cep?: string; address?: Pick<ViaCepAddress, 'city' | 'state'> },
+  opts?: { cep?: string; address?: CepCompatibilityAddress },
 ): Promise<GeocodeResult | null> {
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=1`
@@ -231,22 +236,35 @@ function extractBrazilianPostalCodes(value: string): string[] {
   return Array.from(value.matchAll(/\b\d{5}-?\d{3}\b/g), (match) => onlyDigits(match[0]))
 }
 
-function isCepTextCompatible(text: string, cep: string, address: Pick<ViaCepAddress, 'city' | 'state'>): boolean {
+type CepCompatibilityAddress = Pick<ViaCepAddress, 'city' | 'state'> & Partial<Pick<ViaCepAddress, 'street' | 'neighborhood'>>
+
+function isCepTextCompatible(text: string, cep: string, address: CepCompatibilityAddress): boolean {
   const cleanCep = onlyDigits(cep)
   const postalCodes = extractBrazilianPostalCodes(text)
+  const normalized = normalizeForCompare(text)
+  const hasCity = normalized.includes(normalizeForCompare(address.city))
+  const hasStreet = !!address.street && normalized.includes(normalizeForCompare(address.street))
+  const hasNeighborhood = !!address.neighborhood && normalized.includes(normalizeForCompare(address.neighborhood))
+  const hasStreetLevelMatch = hasCity && (hasStreet || hasNeighborhood)
 
   if (postalCodes.length > 0) {
-    return postalCodes.includes(cleanCep)
+    if (postalCodes.includes(cleanCep)) return true
+
+    // Public map providers sometimes return a nearby postal code for the same
+    // street. Accept that only when the street/bairro matches and the postal
+    // area is still clearly local; reject unrelated same-city matches.
+    return hasStreetLevelMatch && postalCodes.some((postalCode) => postalCode.slice(0, 3) === cleanCep.slice(0, 3))
   }
 
-  const normalized = normalizeForCompare(text)
-  return normalized.includes(normalizeForCompare(address.city))
+  if (address.street || address.neighborhood) return hasStreetLevelMatch
+
+  return hasCity
 }
 
 function isCepGeocodeResultCompatible(
   result: GeocodeResult | null,
   cep: string,
-  address: Pick<ViaCepAddress, 'city' | 'state'>,
+  address: CepCompatibilityAddress,
 ): result is GeocodeResult {
   if (!result) return false
   return isCepTextCompatible(result.formatted_address, cep, address)
@@ -255,7 +273,7 @@ function isCepGeocodeResultCompatible(
 function isCepNominatimResultCompatible(
   result: { display_name?: string | null },
   cep: string,
-  address: Pick<ViaCepAddress, 'city' | 'state'>,
+  address: CepCompatibilityAddress,
 ): boolean {
   return isCepTextCompatible(result.display_name ?? '', cep, address)
 }

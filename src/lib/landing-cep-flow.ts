@@ -42,6 +42,12 @@ function getFamilySearchPath(cepDigits: string): string {
   return `/family/search?${params.toString()}`
 }
 
+function getPublicCaregiverPreviewPath(cepDigits: string): string {
+  const params = new URLSearchParams()
+  params.set('cep', cepDigits)
+  return `/buscar-cuidadores?${params.toString()}`
+}
+
 function isSafeAppRedirect(redirect?: string | null): redirect is string {
   return !!redirect
     && redirect.startsWith('/')
@@ -89,12 +95,7 @@ export function getLandingCepTarget({
     return getFamilySearchPath(cepDigits)
   }
 
-  const params = new URLSearchParams()
-  params.set('redirect', '/family/search')
-  params.set('type', 'family')
-  params.set('cep', cepDigits)
-
-  return `/login?${params.toString()}`
+  return getPublicCaregiverPreviewPath(cepDigits)
 }
 
 export function getLoginRegisterTarget({

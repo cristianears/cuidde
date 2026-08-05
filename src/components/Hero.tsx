@@ -32,6 +32,13 @@ const Hero = () => {
       is_authenticated: Boolean(user),
     }));
 
+    trackEvent("search_by_cep", withBlogAttribution({
+      cep_prefix: cepDigits.slice(0, 5),
+      destination,
+      user_role: role ?? "anonymous",
+      is_authenticated: Boolean(user),
+    }));
+
     navigate(destination);
   };
   const goFamilyFlow = (event: FormEvent<HTMLFormElement>) => {

@@ -48,7 +48,7 @@ describe('Hero', () => {
     fireEvent.change(cepInput, { target: { value: '12236-063' } })
     fireEvent.keyDown(cepInput, { key: 'Enter', code: 'Enter' })
 
-    expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063')
+    expect(mockNavigate).toHaveBeenCalledWith('/buscar-cuidadores?cep=12236063')
   })
 
   it('tracks begin_lead after a valid CEP search when analytics consent is accepted', () => {
@@ -62,8 +62,15 @@ describe('Hero', () => {
     expect(window.dataLayer).toContainEqual({
       event: 'begin_lead',
       cep_prefix: '12236',
-      destination: '/login?redirect=%2Ffamily%2Fsearch&type=family&cep=12236063',
+      destination: '/buscar-cuidadores?cep=12236063',
       lead_step: 'cep_search',
+      user_role: 'anonymous',
+      is_authenticated: false,
+    })
+    expect(window.dataLayer).toContainEqual({
+      event: 'search_by_cep',
+      cep_prefix: '12236',
+      destination: '/buscar-cuidadores?cep=12236063',
       user_role: 'anonymous',
       is_authenticated: false,
     })
