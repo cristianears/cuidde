@@ -96,6 +96,13 @@ const PublicCaregiverPreview = () => {
     const params = new URLSearchParams()
     params.set('cep', cepDigits)
     navigate(`/buscar-cuidadores?${params.toString()}`, { replace: true })
+    trackEvent('begin_lead', withBlogAttribution({
+      cep_prefix: cepDigits.slice(0, 5),
+      destination: '/buscar-cuidadores',
+      lead_step: 'cep_search',
+      user_role: 'anonymous',
+      is_authenticated: false,
+    }))
     trackEvent('search_by_cep', withBlogAttribution({
       cep_prefix: cepDigits.slice(0, 5),
       destination: '/buscar-cuidadores',

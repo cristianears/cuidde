@@ -1,4 +1,5 @@
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import TwoPaths from "@/components/TwoPaths";
@@ -27,6 +28,23 @@ const roleHomeMap: Record<UserRole, string> = {
 
 const Index = () => {
   const { user, profile, role, isLoading } = useAuth();
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (isLoading || !hash) return;
+
+    const targetId = decodeURIComponent(hash.slice(1));
+    const timer = window.setTimeout(() => {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+
+      const headerOffset = 88;
+      const targetTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+      window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+    }, 50);
+
+    return () => window.clearTimeout(timer);
+  }, [hash, isLoading]);
 
   if (isLoading) {
     return (

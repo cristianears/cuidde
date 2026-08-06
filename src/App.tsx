@@ -13,6 +13,7 @@ import BlogIndex from './pages/BlogIndex'
 import BlogPost from './pages/BlogPost'
 import LocalCarePage from './pages/LocalCarePage'
 import PublicCaregiverPreview from './pages/PublicCaregiverPreview'
+import AdsCaregiverLanding from './pages/AdsCaregiverLanding'
 import NotFound from './pages/NotFound'
 import Login from './pages/auth/Login'
 import VerifyEmail from './pages/auth/VerifyEmail'
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/cuidador-de-idosos-jacarei" element={<LocalCarePage />} />
             <Route path="/cuidador-de-idosos-vale-do-paraiba" element={<LocalCarePage />} />
             <Route path="/cuidador-noturno-sao-jose-dos-campos" element={<LocalCarePage />} />
+            <Route path="/cuidadores-sjc-jacarei" element={<AdsCaregiverLanding />} />
             <Route path="/buscar-cuidadores" element={<PublicCaregiverPreview />} />
             <Route path="/blog" element={<BlogIndex />} />
             <Route path="/blog/:slug" element={<BlogPost />} />

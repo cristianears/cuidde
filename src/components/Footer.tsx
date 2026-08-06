@@ -37,13 +37,15 @@ const Footer = () => {
               Conectando famílias a profissionais de cuidado com transparência, informação e segurança para decidir melhor.
             </p>
             <div className="flex gap-2.5">
-              <span
-                role="img"
+              <a
+                href="https://www.instagram.com/icuideapp/"
+                target="_blank"
+                rel="noreferrer"
                 aria-label="Instagram"
-                className="w-8 h-8 rounded-lg bg-footer-foreground/10 flex items-center justify-center"
+                className="w-8 h-8 rounded-lg bg-footer-foreground/10 flex items-center justify-center transition-colors hover:bg-footer-foreground/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-footer-foreground"
               >
                 <Instagram className="w-4 h-4" />
-              </span>
+              </a>
             </div>
           </div>
           {/* For Families */}
