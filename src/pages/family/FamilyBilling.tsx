@@ -153,6 +153,8 @@ const FamilyBilling = () => {
   const [cancelReason, setCancelReason] = useState<SubscriptionCancellationReason | "">("");
   const [cancelReasonDetails, setCancelReasonDetails] = useState("");
   const hasTrackedPricingView = useRef(false);
+  const hasHandledSuccessfulCheckout = useRef(false);
+  const checkoutSucceeded = searchParams.get("success") === "true";
 
   const featuredPlanId: SubscriptionPlan = "quarterly";
 
@@ -161,10 +163,31 @@ const FamilyBilling = () => {
     setCancelReasonDetails("");
   };
 
+  // Aguarda o webhook do Stripe confirmar a assinatura no perfil da família.
+  useEffect(() => {
+    if (!user || !checkoutSucceeded || (subscriptionStatus === "active" && stripeSubscriptionId)) return;
+
+    const refreshSubscription = () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.familyProfile(user.id) });
+    };
+    refreshSubscription();
+    let attempts = 0;
+    const interval = window.setInterval(() => {
+      if (++attempts >= 24) {
+        window.clearInterval(interval);
+        return;
+      }
+      refreshSubscription();
+    }, 2500);
+    return () => window.clearInterval(interval);
+  }, [user, checkoutSucceeded, subscriptionStatus, stripeSubscriptionId, queryClient]);
+
   // Feedback de retorno do Stripe Checkout
   useEffect(() => {
     if (!user) return
-    if (searchParams.get("success") === "true") {
+    if (checkoutSucceeded) {
+      if (subscriptionStatus !== "active" || !stripeSubscriptionId || hasHandledSuccessfulCheckout.current) return;
+      hasHandledSuccessfulCheckout.current = true;
       const checkoutPlan = getCheckoutPlanAttribution();
       trackEvent("subscribe_paid_plan", withBlogAttribution({
         pricing_context: "family_billing",
@@ -189,7 +212,7 @@ const FamilyBilling = () => {
       toast.info("Checkout cancelado. Você pode assinar a qualquer momento.");
       setSearchParams({}, { replace: true });
     }
-  }, [user, searchParams, setSearchParams, queryClient, plan]);
+  }, [user, searchParams, checkoutSucceeded, subscriptionStatus, stripeSubscriptionId, setSearchParams, queryClient, plan]);
 
   useEffect(() => {
     if (isLoading || hasTrackedPricingView.current) return;

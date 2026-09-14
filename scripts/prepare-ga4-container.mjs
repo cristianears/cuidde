@@ -23,7 +23,7 @@ for (const name of ['GA4 - sign_up - Cadastro criado', 'GA4 - begin_lead - Busca
   tag.parameter = tag.parameter.filter((item) => item.key !== 'eventSettingsTable');
   tag.parameter.push(structuredClone(eventSettings));
 }
-const events = ['blog_article_view', 'blog_cta_click', 'sign_up_start', 'sign_up_oauth_start', 'view_caregiver_preview', 'search_by_cep', 'view_pricing', 'select_plan', 'start_free_plan', 'begin_checkout', 'checkout_canceled', 'cta_click', 'generate_lead'];
+const events = ['blog_article_view', 'blog_cta_click', 'sign_up_start', 'sign_up_oauth_start', 'view_caregiver_preview', 'search_by_cep', 'view_pricing', 'select_plan', 'start_free_plan', 'begin_checkout', 'checkout_canceled', 'cta_click', 'subscribe_paid_plan'];
 const trigger = {
   triggerId: '200', name: 'Evento - Funil e blog iCuide', type: 'CUSTOM_EVENT',
   customEventFilter: [{ type: 'MATCH_REGEX', parameter: [template('arg0', '{{_event}}'), template('arg1', `^(${events.join('|')})$`)] }],

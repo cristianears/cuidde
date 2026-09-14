@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { queryKeys } from '@/lib/query-keys'
 import type { Appointment, AppointmentStatus, SubscriptionStatus } from '@/types/database'
 import { trackCaregiverInterest } from '@/hooks/useTrackCaregiverEvent'
-import { trackEvent, withBlogAttribution } from '@/lib/analytics'
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -274,10 +273,6 @@ export function useCreateAppointment() {
 
       // Tracking de interesse (best-effort)
       trackCaregiverInterest(payload.caregiver_id)
-      trackEvent('generate_lead', withBlogAttribution({
-        user_role: 'family',
-        lead_type: 'appointment_request',
-      }))
 
       return data
     },
