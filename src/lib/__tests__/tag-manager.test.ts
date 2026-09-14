@@ -37,7 +37,7 @@ describe("initializeTagManager", () => {
     initializeTagManager(CONTAINER_ID);
 
     expect(document.getElementById("google-tag-manager")).not.toBeInTheDocument();
-    expect(window.dataLayer).toContainEqual([
+    expect(window.dataLayer?.map((entry) => Array.from(entry as ArrayLike<unknown>))).toContainEqual([
       "consent",
       "update",
       expect.objectContaining({ analytics_storage: "denied" }),

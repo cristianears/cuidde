@@ -2,6 +2,10 @@ import { COOKIE_CONSENT_KEY } from "@/lib/cookie-consent";
 
 const BLOG_ATTRIBUTION_KEY = "cuidde_blog_attribution";
 const CHECKOUT_PLAN_KEY = "cuidde_checkout_plan";
+const EVENT_CONTEXT_KEYS = [
+  "user_role", "signup_method", "blog_slug", "blog_category", "blog_audience",
+  "blog_path", "lead_step", "lead_type", "cta_label", "cta_href", "plan_id", "plan_name",
+] as const;
 
 type AnalyticsValue = string | number | boolean | null | undefined;
 
@@ -45,12 +49,15 @@ function getDataLayer() {
 }
 
 export function trackEvent(event: string, params: AnalyticsParams = {}) {
-  if (typeof window === "undefined" || !hasAnalyticsConsent()) return;
+  if (typeof window === "undefined" || !hasAnalyticsConsent()) return false;
 
+  // GTM retains flat data-layer values between events unless they are cleared.
+  getDataLayer().push(Object.fromEntries(EVENT_CONTEXT_KEYS.map((key) => [key, null])));
   getDataLayer().push({
     event,
     ...cleanParams(params),
   });
+  return true;
 }
 
 export function setBlogAttribution(attribution: BlogAttribution) {

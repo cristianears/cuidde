@@ -71,8 +71,16 @@ const BlogPost = () => {
       blog_path: `/blog/${post.slug}/`,
     }
 
-    setBlogAttribution(attribution)
-    trackEvent('blog_article_view', attribution)
+    let recorded = false
+    const recordView = () => {
+      if (recorded) return
+      recorded = trackEvent('blog_article_view', attribution)
+      if (recorded) setBlogAttribution(attribution)
+    }
+
+    recordView()
+    window.addEventListener('cuidde-cookie-consent', recordView)
+    return () => window.removeEventListener('cuidde-cookie-consent', recordView)
   }, [post])
 
   if (!post) return <Navigate to="/blog" replace />

@@ -27,8 +27,14 @@ function ensureDataLayer() {
   return window.dataLayer;
 }
 
+function pushGoogleCommand(..._args: unknown[]) {
+  // Google's command queue consumes an Arguments object, not an Array.
+  // eslint-disable-next-line prefer-rest-params
+  ensureDataLayer().push(arguments);
+}
+
 function updateConsent(consent: CookieConsent) {
-  ensureDataLayer().push([
+  pushGoogleCommand(
     "consent",
     "update",
     {
@@ -37,7 +43,7 @@ function updateConsent(consent: CookieConsent) {
       ad_personalization: consent === "accepted" ? "granted" : "denied",
       analytics_storage: consent === "accepted" ? "granted" : "denied",
     },
-  ]);
+  );
 }
 
 function loadTagManager(containerId: string) {

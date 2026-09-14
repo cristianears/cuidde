@@ -1,6 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { COOKIE_CONSENT_KEY } from '@/lib/cookie-consent'
 import BlogPost from '../BlogPost'
 
 vi.mock('@/components/Header', () => ({ default: () => <div /> }))
@@ -18,6 +19,27 @@ function renderBlogPost(slug: string) {
 }
 
 describe('BlogPost', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.sessionStorage.clear()
+    window.dataLayer = []
+  })
+
+  it('records the current article once when consent is accepted after landing', () => {
+    const { unmount } = renderBlogPost('vagas-cuidador-idosos-jacarei')
+    expect(window.dataLayer).toEqual([])
+    window.localStorage.setItem(COOKIE_CONSENT_KEY, 'rejected')
+    act(() => window.dispatchEvent(new CustomEvent('cuidde-cookie-consent', { detail: 'rejected' })))
+    expect(window.dataLayer).toEqual([])
+    window.localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted')
+    act(() => window.dispatchEvent(new CustomEvent('cuidde-cookie-consent', { detail: 'accepted' })))
+    act(() => window.dispatchEvent(new CustomEvent('cuidde-cookie-consent', { detail: 'accepted' })))
+    const articleEvents = () => window.dataLayer?.filter((entry) => (entry as { event?: string }).event === 'blog_article_view')
+    expect(articleEvents()).toEqual([expect.objectContaining({ blog_slug: 'vagas-cuidador-idosos-jacarei' })])
+    unmount()
+    act(() => window.dispatchEvent(new CustomEvent('cuidde-cookie-consent', { detail: 'accepted' })))
+    expect(articleEvents()).toHaveLength(1)
+  })
   it('uses caregiver-oriented next-step copy for caregiver articles', () => {
     renderBlogPost('vagas-cuidador-idosos-jacarei')
 
