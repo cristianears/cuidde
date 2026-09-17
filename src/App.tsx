@@ -58,6 +58,7 @@ import InstallAppPrompt from '@/components/shared/InstallAppPrompt'
 import CookieConsentBanner from '@/components/shared/CookieConsentBanner'
 import RoleOnboardingGuide from '@/components/shared/RoleOnboardingGuide'
 import AppAttentionAlerts from '@/components/shared/AppAttentionAlerts'
+import WhatsAppSupportButton from '@/components/shared/WhatsAppSupportButton'
 
 // Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
 const AppInit = () => {
@@ -79,6 +80,7 @@ const App = () => (
           <CookieConsentBanner />
           <RoleOnboardingGuide />
           <AppAttentionAlerts />
+          <WhatsAppSupportButton />
           <Routes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
