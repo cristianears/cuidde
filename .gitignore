@@ -2,6 +2,7 @@
 .env
 .env.production
 .env.staging
+.env.sentry-build-plugin
 icuide-*.json
 *-service-account.json
 

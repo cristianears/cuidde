@@ -4,6 +4,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClient } from '@/lib/query-client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { wrapReactRouterRouting } from '@sentry/react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import Index from './pages/Index'
@@ -60,6 +61,8 @@ import RoleOnboardingGuide from '@/components/shared/RoleOnboardingGuide'
 import AppAttentionAlerts from '@/components/shared/AppAttentionAlerts'
 import WhatsAppSupportButton from '@/components/shared/WhatsAppSupportButton'
 
+const SentryRoutes = wrapReactRouterRouting(Routes)
+
 // Aplica dados pendentes do onboarding (endereço salvo antes da verificação de e-mail)
 const AppInit = () => {
   usePendingAddress()
@@ -81,7 +84,7 @@ const App = () => (
           <RoleOnboardingGuide />
           <AppAttentionAlerts />
           <WhatsAppSupportButton />
-          <Routes>
+          <SentryRoutes>
             {/* Rotas públicas */}
             <Route path="/" element={<Index />} />
             <Route path="/sobre" element={<About />} />
@@ -143,7 +146,7 @@ const App = () => (
             <Route path="/chat/:id" element={<ProtectedRoute><AppointmentChat /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
-          </Routes>
+          </SentryRoutes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
