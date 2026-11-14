@@ -13,6 +13,7 @@ const PUBLIC_PATHS = new Set([
   "/cuidador-de-idosos-jacarei",
   "/cuidador-de-idosos-vale-do-paraiba",
   "/cuidador-noturno-sao-jose-dos-campos",
+  "/encontrar-cuidadores",
   "/cuidadores-sjc-jacarei",
   "/buscar-cuidadores",
   "/login",

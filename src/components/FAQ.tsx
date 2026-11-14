@@ -36,7 +36,8 @@ const faqs = [
       "A família paga à icuide apenas a assinatura do plano escolhido para uso da plataforma. O pagamento pelo serviço prestado pelo profissional é feito diretamente a ele, nos valores e condições acordados entre as partes. A icuide não intermedia nem processa pagamentos de serviços de cuidado.",
   },
 ];
-const FAQ = () => {
+const FAQ = ({ excludeQuestions = [] }: { excludeQuestions?: string[] }) => {
+  const visibleFaqs = faqs.filter((faq) => !excludeQuestions.includes(faq.question));
   return (
     <section id="faq" className="py-12 md:py-16 bg-background relative">
       <div className="absolute top-0 left-0 right-0 h-px bg-section-divider" />
@@ -51,7 +52,7 @@ const FAQ = () => {
         </div>
         <div className="max-w-3xl mx-auto">
           <Accordion type="single" collapsible className="space-y-2.5">
-            {faqs.map((faq, index) => (
+            {visibleFaqs.map((faq, index) => (
               <AccordionItem
                 key={faq.question}
                 value={`item-${index}`}

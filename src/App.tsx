@@ -93,6 +93,7 @@ const App = () => (
             <Route path="/cuidador-de-idosos-jacarei" element={<LocalCarePage />} />
             <Route path="/cuidador-de-idosos-vale-do-paraiba" element={<LocalCarePage />} />
             <Route path="/cuidador-noturno-sao-jose-dos-campos" element={<LocalCarePage />} />
+            <Route path="/encontrar-cuidadores" element={<AdsCaregiverLanding />} />
             <Route path="/cuidadores-sjc-jacarei" element={<AdsCaregiverLanding />} />
             <Route path="/buscar-cuidadores" element={<PublicCaregiverPreview />} />
             <Route path="/blog" element={<BlogIndex />} />

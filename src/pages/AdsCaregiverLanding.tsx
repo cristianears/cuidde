@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
-  BadgeCheck,
   CalendarDays,
   CheckCircle,
   CircleDollarSign,
@@ -22,18 +21,37 @@ import {
 import Footer from '@/components/Footer'
 import BrandMark from '@/components/shared/BrandMark'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/contexts/AuthContext'
 import heroBg from '@/assets/hero-bg.jpg'
+import searchDemo from '@/assets/landing/caregiver-search-framed-matched.webp'
+import routineDemo from '@/assets/landing/care-routine-framed.webp'
+import Pricing from '@/components/Pricing'
+import FAQ from '@/components/FAQ'
 import { trackEvent, withBlogAttribution } from '@/lib/analytics'
 import { cleanCep, formatCep } from '@/lib/formatters'
 import { useSeo } from '@/hooks/useSeo'
 import { cn } from '@/lib/utils'
+import './AdsCaregiverLanding.css'
+
+const landingDemos = {
+  search: {
+    src: searchDemo,
+    title: 'Busca de cuidadores',
+    alt: 'Demonstração dos perfis de Kelly Oliveira no Tatuapé, a 2 km, com nota 4.5 em 7 avaliações, e Mariana Costa na Bela Vista, a 4 km, com nota 4.0 em 2 avaliações',
+  },
+  routine: {
+    src: routineDemo,
+    title: 'Rotina de cuidados',
+    alt: 'Demonstração do diário de cuidados com alimentação, hidratação, medicamentos e sinais vitais',
+  },
+}
 
 const benefitFacts = [
   {
     icon: MapPin,
     title: 'Proximidade real',
-    text: 'Encontre profissionais que atendem perto de você, em São José dos Campos e Jacareí.',
+    text: 'Encontre profissionais que atendem perto de você, na sua região.',
   },
   {
     icon: Stethoscope,
@@ -84,17 +102,17 @@ const steps = [
   {
     icon: Eye,
     title: 'Veja a prévia gratuita',
-    text: 'Explore especialidades, regiões atendidas e disponibilidades sem pagar nada.',
+    text: 'Na próxima página, veja até 5 prévias de perfis disponíveis na região antes de criar sua conta.',
   },
   {
     icon: ListChecks,
     title: 'Crie sua conta grátis',
-    text: 'Crie uma conta para continuar explorando os perfis e guardar seus favoritos.',
+    text: 'Crie sua conta para continuar explorando perfis com as limitações do plano gratuito.',
   },
   {
     icon: CircleDollarSign,
     title: 'Conecte-se diretamente',
-    text: 'Libere o plano quando quiser acessar os contatos e conversar com o cuidador ideal.',
+    text: 'Assine para acessar perfis completos, documentos disponíveis e solicitar contato com profissionais.',
   },
 ]
 
@@ -125,11 +143,13 @@ export default function AdsCaregiverLanding() {
   const { user, role } = useAuth()
   const [cepDigits, setCepDigits] = useState('')
   const [touched, setTouched] = useState(false)
+  const [selectedDemo, setSelectedDemo] = useState<keyof typeof landingDemos | null>(null)
+  const activeDemo = selectedDemo ? landingDemos[selectedDemo] : null
   const isCepValid = cepDigits.length === 8
   const showCepError = touched && !isCepValid
 
   useSeo({
-    title: 'Cuidadores de idosos em São José dos Campos e Jacareí | iCuide',
+    title: 'Cuidadores de idosos perto de você | iCuide',
     description: 'Busque cuidadores de idosos perto de você e veja uma prévia gratuita dos perfis disponíveis na iCuide.',
   })
 
@@ -173,7 +193,7 @@ export default function AdsCaregiverLanding() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div className="ads-caregiver-landing min-h-screen overflow-x-hidden bg-background text-foreground">
       <header className="absolute inset-x-0 top-0 z-30">
         <div className="container flex min-h-16 items-center justify-between gap-2 px-2.5 py-3 sm:min-h-[76px] sm:px-6 lg:px-8">
           <button
@@ -222,10 +242,10 @@ export default function AdsCaregiverLanding() {
             <div className="mx-auto max-w-3xl pt-3 text-center sm:pt-4">
               <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white/95 backdrop-blur-sm">
                 <MapPin className="h-4 w-4 text-accent" />
-                São José dos Campos e Jacareí
+                Cuidadores na sua região
               </p>
               <h1 className="mx-auto max-w-3xl text-4xl font-bold leading-[1.08] tracking-normal text-white sm:text-5xl lg:text-[56px]">
-                Encontre cuidadores de idosos a poucos minutos da sua casa
+                Encontre cuidadores de idosos perto de você
               </h1>
 
               <form noValidate onSubmit={submitCepSearch} className="mx-auto mt-7 max-w-xl">
@@ -257,10 +277,11 @@ export default function AdsCaregiverLanding() {
                   </p>
                 ) : (
                   <p id="landing-cep-note" className="mt-3 text-center text-sm leading-5 text-white/90">
-                    Usamos seu CEP somente para mostrar profissionais que atendem sua região.
+                    Veja até 5 prévias de perfis gratuitamente antes de criar sua conta.
                   </p>
                 )}
               </form>
+              <p className="mx-auto mt-3 max-w-xl text-xs leading-relaxed text-white/85">Crie sua conta grátis para continuar explorando. Perfis completos, documentos disponíveis e contato são recursos dos planos pagos.</p>
 
               <ul className="mx-auto mt-6 grid max-w-2xl gap-2 text-sm font-medium text-white/95 sm:grid-cols-3 sm:gap-4">
                 {['Veja uma prévia grátis', 'Avaliações de outras famílias', 'Você decide quando avançar'].map((item) => (
@@ -280,7 +301,7 @@ export default function AdsCaregiverLanding() {
               <p className="text-sm font-bold uppercase tracking-[0.08em] text-primary">Para a sua família</p>
               <h2 className="mt-3 text-3xl font-bold leading-tight text-foreground sm:text-4xl">Cuidar de quem amamos não precisa ser uma jornada solitária</h2>
               <p className="mt-5 text-base leading-7 text-muted-foreground sm:text-lg">
-                Sabemos como a rotina pode apertar: uma alta hospitalar inesperada, o avanço de uma limitação ou o cansaço de tentar dar conta de tudo. Na iCuide, você encontra profissionais qualificados e avaliados por outras famílias para começar sua busca com mais clareza e tranquilidade.
+                Sabemos como a rotina pode apertar: uma alta hospitalar inesperada, o avanço de uma limitação ou o cansaço de tentar dar conta de tudo. Na iCuide, você encontra informações sobre profissionais de cuidado para começar sua busca com mais clareza e tranquilidade.
               </p>
             </div>
 
@@ -289,6 +310,62 @@ export default function AdsCaregiverLanding() {
                 <LandingCard key={item.title} {...item} iconClassName="bg-primary/10 text-primary" />
               ))}
             </div>
+          </div>
+        </section>
+
+        <section className="border-y border-border/40 bg-card py-14 sm:py-20" aria-labelledby="caregiver-comparison-title">
+          <div className="landing-comparison-layout container grid px-4 sm:px-6 lg:px-8">
+            <div className="landing-search-copy">
+              <p className="text-sm font-bold uppercase tracking-[0.08em] text-primary">Conheça antes de decidir</p>
+              <h2 id="caregiver-comparison-title" className="mt-3 text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+                Compare profissionais com informações que fazem diferença
+              </h2>
+              <p className="mt-5 text-base leading-7 text-muted-foreground">
+                Experiência, especialidades, referências de trabalhos anteriores, avaliações de outras famílias atendidas, certificados, disponibilidade e valores de referência reunidos para facilitar a escolha da sua família.
+              </p>
+              <ul className="my-6 space-y-3 text-sm">
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Encontre perfis que atendem perto de você.
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Compare informações e experiências dos profissionais.
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Libere seu plano para ver perfis completos e documentos disponíveis.
+                </li>
+              </ul>
+              <Button type="button" variant="outline" onClick={goToCepSearch} className="gap-2 border-primary/30 text-primary">
+                Buscar profissionais pelo CEP
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <figure className="landing-search-figure">
+              <div className="landing-demo-stage">
+                <img
+                  src={landingDemos.search.src}
+                  alt={landingDemos.search.alt}
+                  width={1122}
+                  height={1402}
+                  loading="lazy"
+                  decoding="async"
+                  className="block h-auto w-full"
+                />
+              </div>
+              <figcaption className="mt-3 text-center text-xs leading-relaxed text-muted-foreground">
+                Imagem ilustrativa. Recursos e informações variam conforme o perfil e o plano.
+              </figcaption>
+              <button
+                type="button"
+                onClick={() => setSelectedDemo('search')}
+                className="mx-auto mt-2 block text-xs font-medium text-primary hover:underline"
+              >
+                Ampliar demonstração
+              </button>
+            </figure>
           </div>
         </section>
 
@@ -342,12 +419,77 @@ export default function AdsCaregiverLanding() {
           </div>
         </section>
 
+        <section className="bg-echo-blue py-14 sm:py-20" aria-labelledby="care-routine-title">
+          <div className="container grid items-center gap-8 px-4 sm:px-6 md:grid-cols-2 lg:gap-20 lg:px-8">
+            <div>
+              <p className="mb-4 inline-flex rounded-md bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                Exclusivo nos planos pagos
+              </p>
+              <h2 id="care-routine-title" className="text-3xl font-bold leading-tight text-foreground sm:text-4xl">
+                Acompanhe o cuidado, mesmo quando estiver longe
+              </h2>
+              <p className="mt-5 text-base leading-7 text-muted-foreground">
+                Com a Rotina de Cuidados, sua família consulta os registros compartilhados pelo profissional durante o atendimento.
+              </p>
+              <ul className="my-6 space-y-3 text-sm">
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Alimentação, hidratação e higiene pessoal.
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Registros de administração dos medicamentos informados pela família.
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Sinais vitais, bem-estar e ocorrências registradas.
+                </li>
+                <li className="flex gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  Histórico para acompanhar a rotina de cuidados.
+                </li>
+              </ul>
+              <p className="mb-6 text-xs leading-relaxed text-muted-foreground">
+                Os registros são preenchidos pelo profissional. A disponibilidade das informações depende do que é registrado no atendimento.
+              </p>
+            </div>
+
+            <figure className="landing-routine-figure">
+              <div className="landing-demo-stage">
+                <img
+                  src={landingDemos.routine.src}
+                  alt={landingDemos.routine.alt}
+                  width={1122}
+                  height={1402}
+                  loading="lazy"
+                  decoding="async"
+                  className="block h-auto w-full"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDemo('routine')}
+                className="mx-auto mt-3 block text-xs font-medium text-primary hover:underline"
+              >
+                Ampliar demonstração
+              </button>
+            </figure>
+          </div>
+        </section>
+        <Pricing />
+        <FAQ
+          excludeQuestions={[
+            'O cadastro do profissional é realmente gratuito?',
+            'Como funcionam os documentos e informações do perfil?',
+          ]}
+        />
+
         <section className="bg-primary py-14 text-primary-foreground sm:py-20">
           <div className="container px-4 text-center sm:px-6 lg:px-8">
             <Sparkles className="mx-auto h-7 w-7 text-accent-foreground" />
             <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-bold leading-tight sm:text-4xl">Dê o primeiro passo para trazer mais tranquilidade para sua casa</h2>
             <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-primary-foreground/90 sm:text-lg">
-              Não decida nada agora. Apenas veja quem são os profissionais disponíveis em São José dos Campos e Jacareí neste momento.
+              Não decida nada agora. Apenas veja quem são os profissionais disponíveis na sua região.
             </p>
             <Button type="button" onClick={goToCepSearch} className="mt-7 h-12 gap-2 bg-accent px-6 text-base font-bold text-accent-foreground shadow-lg shadow-primary-foreground/10 hover:bg-accent/90">
               Buscar cuidadores pelo CEP
@@ -361,7 +503,25 @@ export default function AdsCaregiverLanding() {
         </section>
       </main>
 
-      <Footer />
+      <Footer showCities={false} />
+
+      <Dialog open={selectedDemo !== null} onOpenChange={() => setSelectedDemo(null)}>
+        {activeDemo && (
+          <DialogContent className="w-[calc(100%-2rem)] max-w-6xl gap-0 overflow-hidden p-0">
+            <DialogHeader className="px-6 py-4 pr-12">
+              <DialogTitle>{activeDemo.title}</DialogTitle>
+              <DialogDescription>Demonstração ilustrativa com dados fictícios.</DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[80dvh] overflow-auto border-t border-border p-3 sm:p-4">
+              <img
+                src={activeDemo.src}
+                alt={activeDemo.alt}
+                className="h-auto w-full min-w-[760px]"
+              />
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   )
 }
