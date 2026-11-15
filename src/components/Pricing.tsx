@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { getLandingPlanTarget } from "@/lib/landing-cep-flow";
 import { trackEvent, withBlogAttribution } from "@/lib/analytics";
-import { useEffect, useRef } from "react";
+import { useTrackSectionView } from "@/hooks/useTrackSectionView";
 const plans = [
   {
     id: "free",
@@ -104,18 +104,11 @@ const plans = [
 const Pricing = () => {
   const navigate = useNavigate();
   const { user, role } = useAuth();
-  const hasTrackedPricingView = useRef(false);
-
-  useEffect(() => {
-    if (hasTrackedPricingView.current) return;
-    hasTrackedPricingView.current = true;
-
-    trackEvent("view_pricing", withBlogAttribution({
-      pricing_context: "landing",
-      user_role: role ?? "anonymous",
-      is_authenticated: !!user,
-    }));
-  }, [role, user]);
+  const pricingHeadingRef = useTrackSectionView("view_pricing", withBlogAttribution({
+    pricing_context: "landing",
+    user_role: role ?? "anonymous",
+    is_authenticated: !!user,
+  }));
 
   function handlePlanClick(plan: typeof plans[number]) {
     const isPaidPlan = plan.price !== "0";
@@ -143,7 +136,7 @@ const Pricing = () => {
       <div className="absolute top-0 left-0 right-0 h-px bg-section-divider" />
       <div className="container mx-auto px-6 md:px-10">
         <div className="text-center mb-8">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
+          <h2 ref={pricingHeadingRef} className="text-xl md:text-2xl lg:text-3xl font-bold text-foreground mb-2 tracking-tight">
             Planos para encontrar cuidadores de idosos
           </h2>
           <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">

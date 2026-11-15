@@ -41,6 +41,7 @@ export const queryKeys = {
   familyReviewedAppointments: (userId: string) => ['family_reviewed_appointments', userId] as const,
   invoices: (userId: string) => ['invoices', userId] as const,
   invoice: (id: string) => ['invoice', id] as const,
+  checkoutPurchase: (userId: string, sessionId: string) => ['checkoutPurchase', userId, sessionId] as const,
   // ─── Admin ────────────────────────────────────────────────────────────────
   adminCaregiversRoot: ['admin', 'caregivers'] as const,
   adminCaregivers: (status: string) => ['admin', 'caregivers', status] as const,

@@ -29,7 +29,8 @@ declare global {
   }
 }
 
-function hasAnalyticsConsent() {
+export function hasAnalyticsConsent() {
+  if (typeof window === "undefined") return false;
   try {
     return window.localStorage.getItem(COOKIE_CONSENT_KEY) === "accepted";
   } catch {
@@ -48,7 +49,7 @@ function getDataLayer() {
   return window.dataLayer;
 }
 
-export function trackEvent(event: string, params: AnalyticsParams = {}) {
+export function trackEvent(event: string, params: AnalyticsParams = {}, ecommerce?: Record<string, unknown>) {
   if (typeof window === "undefined" || !hasAnalyticsConsent()) return false;
 
   // GTM retains flat data-layer values between events unless they are cleared.
@@ -56,6 +57,7 @@ export function trackEvent(event: string, params: AnalyticsParams = {}) {
   getDataLayer().push({
     event,
     ...cleanParams(params),
+    ...(ecommerce ? { ecommerce } : {}),
   });
   return true;
 }

@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/query-keys";
 import { useFamilyProfile } from "@/hooks/useFamilyProfile";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useCheckoutPurchase } from "@/hooks/useCheckoutPurchase";
 import { STRIPE_PRICE_IDS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -155,6 +156,8 @@ const FamilyBilling = () => {
   const hasTrackedPricingView = useRef(false);
   const hasHandledSuccessfulCheckout = useRef(false);
   const checkoutSucceeded = searchParams.get("success") === "true";
+  const [checkoutSessionId] = useState(() => checkoutSucceeded ? searchParams.get("session_id") : null);
+  useCheckoutPurchase(user?.id, checkoutSessionId, subscriptionStatus === "active" && !!stripeSubscriptionId);
 
   const featuredPlanId: SubscriptionPlan = "quarterly";
 
@@ -188,13 +191,6 @@ const FamilyBilling = () => {
     if (checkoutSucceeded) {
       if (subscriptionStatus !== "active" || !stripeSubscriptionId || hasHandledSuccessfulCheckout.current) return;
       hasHandledSuccessfulCheckout.current = true;
-      const checkoutPlan = getCheckoutPlanAttribution();
-      trackEvent("subscribe_paid_plan", withBlogAttribution({
-        pricing_context: "family_billing",
-        plan_id: checkoutPlan.plan_id ?? plan ?? "unknown",
-        plan_name: checkoutPlan.plan_name,
-        user_role: "family",
-      }));
       clearCheckoutPlanAttribution();
       toast.success("Assinatura realizada com sucesso! Bem-vinda à plataforma.");
       setSearchParams({}, { replace: true });

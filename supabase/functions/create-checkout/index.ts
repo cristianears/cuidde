@@ -379,7 +379,7 @@ serve(async (req) => {
     customer: customerId,
     mode: 'subscription',
     line_items: [{ price: price_id, quantity: 1 }],
-    success_url: `${origin}/family/billing?success=true`,
+    success_url: `${origin}/family/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/family/billing?canceled=true`,
     metadata: { family_id },
   })
