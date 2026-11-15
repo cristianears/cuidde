@@ -50,6 +50,9 @@ Separe páginas públicas (`/`, `/encontrar-cuidadores`, `/sobre`, `/para-cuidad
 - Regras `sign_up_family` e `sign_up_caregiver` e a lista de eventos principais foram verificadas após recarregar a página.
 - Checkout e assinatura têm instrumentação configurada, mas não tiveram ocorrências no período consultado. Foram testadas visibilidade, consentimento, verificação de pertencimento da compra, valores, rejeição de pagamentos inválidos e deduplicação. Não foi realizado pagamento nem criado cadastro artificial nesta auditoria; a validação de uma contratação completa no ambiente real ainda depende de uma ação controlada da família.
 - Publicadas no Supabase: `checkout-analytics` v1, autenticada, somente leitura; `create-checkout` v20, preservando a função de produção e alterando apenas `success_url` para incluir `{CHECKOUT_SESSION_ID}`.
+- Validação autenticada em produção: seleção do plano mensal, confirmação e abertura do Checkout do Stripe por R$ 127/mês, seguida de retorno por `canceled=true`. Nenhum dado de cartão ou código do Link foi informado e nenhum pagamento foi concluído. A assinatura permaneceu sem vínculo Stripe.
+- Encontrada e corrigida a expiração de checkout: o webhook só marca como `incomplete` perfis `free`/`incomplete` sem assinatura Stripe vinculada, usando filtros na própria atualização para preservar assinaturas ativas mesmo com eventos concorrentes.
+- A credencial de teste do Stripe configurada está sem `checkout_session_read`. Uma compra completa no ambiente de teste continua pendente; não registrar uma compra fictícia como venda real no GA4.
 - Evidências locais: `output/analytics/ga4-cadastros-separados.jpg` e `output/analytics/ga4-eventos-principais.jpg`.
 
 ## Campanhas futuras

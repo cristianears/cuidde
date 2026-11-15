@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import Stripe from 'npm:stripe@14'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getInvoicePaymentIntentId } from './invoice-payment.ts'
+import { markExpiredCheckout } from './checkout-expiration.ts'
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, {
   apiVersion: '2024-06-20',
@@ -327,10 +328,7 @@ serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session
       const familyId = session.metadata?.family_id
       if (familyId) {
-        await supabase
-          .from('family_profiles')
-          .update({ subscription_status: 'incomplete', payment_failed_at: null })
-          .eq('id', familyId)
+        await markExpiredCheckout(supabase, familyId)
       }
       break
     }
