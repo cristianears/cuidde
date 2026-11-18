@@ -59,7 +59,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 const PLAN_VALUES: Record<string, number> = {
   monthly: 127,
-  quarterly: 297,
+  quarterly: 239.97,
   annual: 997,
 };
 
